@@ -39,4 +39,16 @@ int bits_write(struct block *input_bitvector, uint32_t from, uint32_t to,
 int bits_read(struct block *input_bitvector, uint32_t from, uint32_t to,
               uint32_t *result);
 
+int bits_write_bv(struct block *input_bitvector, struct block *output_bitvector,
+                  int start_src, int start_dst, int length);
+
+int bits_write_uarray_small(uint32_t *input_uarr, int sz, uint32_t from,
+                            uint32_t to, uint32_t to_write);
+int bits_read_uarray_small(uint32_t *input_uarr, int sz, uint32_t from,
+                           uint32_t to, uint32_t *result);
+
+int bits_write_uarray(uint32_t *input_uarr, int input_size,
+                      uint32_t *output_uarr, int output_size, int start_src,
+                      int start_dst, int length);
+
 #endif /* _BITVECTOR_H_ */

@@ -62,28 +62,172 @@ int main(void){
 Also see examples.
 
 
-# API
+# API: Only blocks tree
 
 (From block.h)
 
 ```c
+
 int has_point(struct block *input_block, ulong col, ulong row,
               struct queries_state *qs, int *result);
+
 int insert_point(struct block *input_block, ulong col, ulong row,
                  struct queries_state *qs, int *already_exists);
 
+int delete_point(struct block *input_block, ulong col, ulong row,
+                 struct queries_state *qs, int *already_not_exists);
+
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
-                      struct vector *result);
+                      struct vector_pair2dl_t *result);
+
+int scan_points_interactively(struct block *input_block,
+                              struct queries_state *qs,
+                              point_reporter_fun_t point_reporter,
+                              void *report_state);
 
 int report_column(struct block *input_block, ulong col,
-                  struct queries_state *qs, struct vector *result);
-int report_row(struct block *input_block, ulong row, struct queries_state *qs,
-               struct vector *result);
+                  struct queries_state *qs, struct vector_pair2dl_t *result);
 
-struct block *create_block(TREE_DEPTH_T tree_depth);
+int report_row(struct block *input_block, ulong row, struct queries_state *qs,
+               struct vector_pair2dl_t *result);
+
+int report_column_interactively(struct block *input_block, ulong col,
+                                struct queries_state *qs,
+                                point_reporter_fun_t point_reporter,
+                                void *report_state);
+
+int report_row_interactively(struct block *input_block, ulong row,
+                             struct queries_state *qs,
+                             point_reporter_fun_t point_reporter,
+                             void *report_state);
+
+int sip_join(struct sip_join_input input, coord_reporter_fun_t coord_reporter,
+             void *report_state);
+
+struct block *create_block(void);
+
 int free_rec_block(struct block *input_block);
+
 int free_block(struct block *input_block);
+
+struct k2tree_measurement measure_tree_size(struct block *input_block);
+
+int naive_scan_points_lazy_init(struct block *input_block,
+                                struct queries_state *qs,
+                                struct lazy_handler_naive_scan_t *lazy_handler);
+
+int naive_scan_points_lazy_clean(
+    struct lazy_handler_naive_scan_t *lazy_handler);
+
+int naive_scan_points_lazy_next(struct lazy_handler_naive_scan_t *lazy_handler,
+                                pair2dl_t *result);
+
+int naive_scan_points_lazy_has_next(
+    struct lazy_handler_naive_scan_t *lazy_handler, int *result);
+
+int naive_scan_points_lazy_reset(
+    struct lazy_handler_naive_scan_t *lazy_handler);
+
+int report_row_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
+                         struct block *input_block, struct queries_state *qs,
+                         uint64_t coord);
+int report_column_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
+                            struct block *input_block, struct queries_state *qs,
+                            uint64_t coord);
+
+int report_band_lazy_clean(struct lazy_handler_report_band_t *lazy_handler);
+int report_band_next(struct lazy_handler_report_band_t *lazy_handler,
+                     uint64_t *result);
+int report_band_reset(struct lazy_handler_report_band_t *lazy_handler);
+
+int report_band_has_next(struct lazy_handler_report_band_t *lazy_handler,
+                         int *result);
 ```
+
+
+# API: Mixed Tree
+
+This tree's upper levels are a tree of pointers,
+its leaves are the block's trees.
+
+(From k2node.h)
+
+```c
+int k2node_has_point(struct k2node *k2node, ulong col, ulong row,
+                     struct k2qstate *st, int *result);
+int k2node_insert_point(struct k2node *input_node, ulong col, ulong row,
+                        struct k2qstate *st, int *already_exists);
+int k2node_delete_point(struct k2node *input_node, ulong col, ulong row,
+                        struct k2qstate *st, int *already_not_exists);
+
+int k2node_naive_scan_points(struct k2node *input_node, struct k2qstate *st,
+                             struct vector_pair2dl_t *result);
+
+int k2node_scan_points_interactively(struct k2node *input_node,
+                                     struct k2qstate *st,
+                                     point_reporter_fun_t point_reporter,
+                                     void *report_state);
+
+int k2node_report_column(struct k2node *input_node, ulong col,
+                         struct k2qstate *st, struct vector_pair2dl_t *result);
+int k2node_report_row(struct k2node *input_node, ulong row, struct k2qstate *st,
+                      struct vector_pair2dl_t *result);
+
+int k2node_report_column_interactively(struct k2node *input_node, ulong col,
+                                       struct k2qstate *st,
+                                       point_reporter_fun_t point_reporter,
+                                       void *report_state);
+int k2node_report_row_interactively(struct k2node *input_node, ulong row,
+                                    struct k2qstate *st,
+                                    point_reporter_fun_t point_reporter,
+                                    void *report_state);
+
+struct k2node *create_k2node(void);
+int free_rec_k2node(struct k2node *input_node, ulong current_depth,
+                    ulong cut_depth);
+
+int init_k2qstate(struct k2qstate *st, TREE_DEPTH_T treedepth,
+                  MAX_NODE_COUNT_T max_nodes_count, TREE_DEPTH_T cut_depth);
+int clean_k2qstate(struct k2qstate *st);
+struct k2tree_measurement k2node_measure_tree_size(struct k2node *input_node,
+                                                   ulong cut_depth);
+
+int k2node_naive_scan_points_lazy_init(
+    struct k2node *input_node, struct k2qstate *st,
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler);
+
+int k2node_naive_scan_points_lazy_clean(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler);
+
+int k2node_naive_scan_points_lazy_next(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler, pair2dl_t *result);
+
+int k2node_naive_scan_points_lazy_has_next(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler, int *result);
+
+int k2node_naive_scan_points_lazy_reset(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler);
+
+int k2node_report_row_lazy_init(
+    struct k2node_lazy_handler_report_band_t *lazy_handler,
+    struct k2node *input_node, struct k2qstate *st, uint64_t coord);
+int k2node_report_column_lazy_init(
+    struct k2node_lazy_handler_report_band_t *lazy_handler,
+    struct k2node *input_node, struct k2qstate *st, uint64_t coord);
+
+int k2node_report_band_lazy_clean(
+    struct k2node_lazy_handler_report_band_t *lazy_handler);
+int k2node_report_band_next(
+    struct k2node_lazy_handler_report_band_t *lazy_handler, uint64_t *result);
+
+int k2node_report_band_has_next(
+    struct k2node_lazy_handler_report_band_t *lazy_handler, int *result);
+
+int k2node_report_band_reset(
+    struct k2node_lazy_handler_report_band_t *lazy_handler);
+```
+
+# Some explanations
 
 ### `has_point`
 
@@ -145,3 +289,4 @@ Will recursively deallocate a block and its children blocks starting at `input_b
 
 Will deallocate a single specified block
 
+### More to be documented on k2node...

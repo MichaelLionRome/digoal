@@ -191,6 +191,9 @@ int add_frontier_node(struct block *input_block,
   input_block->children_blocks = new_children_blocks;
   input_block->children++;
 
+  // printf("block added to frontier: %p\n", (void
+  // *)(&new_children_blocks[insertion_point]));
+
   return SUCCESS_ECODE_K2T;
 }
 

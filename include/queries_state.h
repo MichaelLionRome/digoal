@@ -63,6 +63,12 @@ struct queries_state {
 #endif
 };
 
+struct deletion_state {
+  struct morton_code mc;
+  struct int_stack nodes_to_delete;
+  struct queries_state *qs;
+};
+
 int init_queries_state(struct queries_state *qs, uint32_t tree_depth,
                        MAX_NODE_COUNT_T max_nodes_count,
                        struct block *root_block);

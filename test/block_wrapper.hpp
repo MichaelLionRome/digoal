@@ -80,6 +80,13 @@ public:
       throw runtime_error("CANT INSERT, ERROR CODE= " + to_string(err_check));
   }
 
+  void erase(unsigned long col, unsigned long row) {
+    int already_not_exists;
+    int err_check = delete_point(b, col, row, &qs, &already_not_exists);
+    if (err_check)
+      throw runtime_error("CANT DELETE, ERROR CODE= " + to_string(err_check));
+  }
+
   bool has(unsigned long col, unsigned long row) {
     int result;
     has_point(b, col, row, &qs, &result);
@@ -145,10 +152,11 @@ public:
     return ss.str();
   }
   void printSubBlocks() {
-    for (int i = 0; i < (int)b->children; i++) {
-      struct block *sb = &b->children_blocks[i];
-      cout << getStringRepBlock(sb, true) << endl;
-    }
+    //    for (int i = 0; i < (int)b->children; i++) {
+    //      struct block *sb = &b->children_blocks[i];
+    //      cout << getStringRepBlock(sb, true) << endl;
+    //    }
+    debug_print_block_rec(b);
   }
 
   void bitset(uint32_t position) {

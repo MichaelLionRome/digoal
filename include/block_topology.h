@@ -55,4 +55,10 @@ uint32_t get_nodes_count(struct block *bt);
 int set_nodes_count(struct block *bt, uint32_t nodes_count);
 uint32_t get_nodes_capacity(struct block *bt);
 
+int copy_nodes_between_blocks(struct block *src, struct block *dst,
+                              int src_start, int dst_start, int amount);
+int copy_nodes_between_blocks_uarr(uint32_t *src, int src_sz, uint32_t *dst,
+                                   int dst_sz, int src_start, int dst_start,
+                                   int amount);
+
 #endif /* _BLOCK_TOPOLOGY_H */

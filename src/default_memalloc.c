@@ -52,7 +52,7 @@ void *k2tree_alloc_preorders(int capacity) {
   return malloc(sizeof(NODES_BV_T) * capacity);
 }
 struct block *k2tree_alloc_blocks_array(int capacity) {
-  return (struct block *)malloc(sizeof(struct block) * capacity);
+  return (struct block *)calloc(capacity, sizeof(struct block));
 }
 void k2tree_free_preorders(void *preorders) { free(preorders); }
 void k2tree_free_blocks_array(struct block *blocks_array) {

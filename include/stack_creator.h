@@ -40,7 +40,8 @@ SOFTWARE.
   type pop_##type##_stack(struct type##_stack *s);                             \
   int empty_##type##_stack(struct type##_stack *s);                            \
   type top_##type##_stack(struct type##_stack *s);                             \
-  type *top_ref_##type##_stack(struct type##_stack *s);
+  type *top_ref_##type##_stack(struct type##_stack *s);                        \
+  int size_##type##_stack(struct type##_stack *s);
 
 #define declare_stack_of_type(type)                                            \
   void init_##type##_stack(struct type##_stack *s, int capacity) {             \
@@ -72,6 +73,7 @@ SOFTWARE.
   }                                                                            \
   type *top_ref_##type##_stack(struct type##_stack *s) {                       \
     return s->data + s->index;                                                 \
-  }
+  }                                                                            \
+  int size_##type##_stack(struct type##_stack *s) { return s->index + 1; }
 
 #endif

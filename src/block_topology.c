@@ -33,11 +33,7 @@ SOFTWARE.
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
-#define CEIL_OF_DIV(dividend, divisor)                                         \
-  (((dividend) / (divisor)) + (((dividend) % (divisor)) == 0 ? 0 : 1))
-#define BITS_SIZE(type) (sizeof(type) * 8)
-
-uint32_t uint_bits = BITS_SIZE(uint32_t);
+const uint32_t uint_bits = BITS_SIZE(uint32_t);
 
 /* PRIVATE PROTOTYPES */
 
@@ -224,11 +220,6 @@ int insert_node_at(struct block *input_block, NODES_COUNT_T node_index,
   uint32_t end_position = start_position + 3; // inclusive
   uint32_t four_bits_rep = to_4_bits_table[code];
   uint32_t nodes_count = get_nodes_count(input_block);
-  /*
-  if (node_index >= nodes_count) {
-    CHECK_ERR(enlarge_block_size_to(input_block, node_index + 1));
-  }
-  */
 
   _SAFE_OP_K2(
       bits_write(input_block, start_position, end_position, four_bits_rep));
@@ -408,4 +399,16 @@ int set_nodes_count(struct block *input_block, uint32_t nodes_count) {
 
 uint32_t get_nodes_capacity(struct block *input_block) {
   return input_block->container_size * (uint_bits / 4);
+}
+
+int copy_nodes_between_blocks(struct block *src, struct block *dst,
+                              int src_start, int dst_start, int amount) {
+  return bits_write_bv(src, dst, src_start * 4, dst_start * 4, amount * 4);
+}
+
+int copy_nodes_between_blocks_uarr(uint32_t *src, int src_sz, uint32_t *dst,
+                                   int dst_sz, int src_start, int dst_start,
+                                   int amount) {
+  return bits_write_uarray(src, src_sz, dst, dst_sz, 4 * src_start,
+                           4 * dst_start, 4 * amount);
 }

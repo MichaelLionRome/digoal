@@ -108,6 +108,9 @@ int has_point(struct block *input_block, ulong col, ulong row,
 int insert_point(struct block *input_block, ulong col, ulong row,
                  struct queries_state *qs, int *already_exists);
 
+int delete_point(struct block *input_block, ulong col, ulong row,
+                 struct queries_state *qs, int *already_not_exists);
+
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
                       struct vector_pair2dl_t *result);
 

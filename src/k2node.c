@@ -50,12 +50,29 @@ k2node_measure_tree_size_rec(struct k2node *input_node, ulong current_depth,
                              ulong cut_depth);
 
 void interactive_transform_points(ulong col, ulong row, void *data);
+
+int k2node_sip_join_rec(struct k2node_sip_input input,
+                        TREE_DEPTH_T current_depth, TREE_DEPTH_T treedepth,
+                        TREE_DEPTH_T cut_depth, struct morton_code *mc,
+                        struct k2node **current_nodes,
+                        struct sip_ipoint *join_coords,
+                        coord_reporter_fun_t coord_reporter,
+                        void *report_state);
+
+int k2node_has_more_than_one_child(struct k2node *input_node, int current_depth,
+                                   int cut_depth);
+
+int k2node_delete_point_rec(struct k2node *input_node, struct k2qstate *st,
+                            ulong col, ulong row, int current_depth,
+                            int *already_not_exists, int *has_children);
+
+void sip_select_child(long coord, coord_t coord_type, int *selected_children,
+                      long half_length);
 /* private implementations */
 
 struct k2_find_subtree_result k2_find_subtree(struct k2node *node,
                                               struct k2qstate *st, ulong col,
                                               ulong row, ulong current_depth) {
-  ulong remaining_depth = st->k2tree_depth - current_depth;
   if (current_depth == st->cut_depth) {
     struct k2_find_subtree_result result;
     result.col = col;
@@ -80,6 +97,7 @@ struct k2_find_subtree_result k2_find_subtree(struct k2node *node,
     result.subtree_root = NULL;
     return result;
   }
+  ulong remaining_depth = st->k2tree_depth - current_depth;
   ulong half_length = 1 << (remaining_depth - 1);
 
   return k2_find_subtree(next_node, st, col % half_length, row % half_length,
@@ -324,6 +342,97 @@ k2node_measure_tree_size_rec(struct k2node *input_node, ulong current_depth,
 
   return measurement;
 }
+
+int k2node_has_more_than_one_child(struct k2node *input_node, int current_depth,
+                                   int cut_depth) {
+  if (current_depth == cut_depth) {
+    return input_node->k2subtree.block_child != NULL;
+  }
+  int count = 0;
+  for (int i = 0; i < 4; i++) {
+    if (input_node->k2subtree.children[i])
+      count++;
+    if (count > 1)
+      return TRUE;
+  }
+  return FALSE;
+}
+
+int k2node_delete_point_rec(struct k2node *input_node, struct k2qstate *st,
+                            ulong col, ulong row, int current_depth,
+                            int *already_not_exists, int *has_children) {
+
+  if (current_depth == st->cut_depth) {
+    struct block *block_tree = input_node->k2subtree.block_child;
+
+    if (block_tree == NULL) {
+      *already_not_exists = TRUE;
+      return SUCCESS_ECODE_K2T;
+    }
+
+    CHECK_ERR(delete_point(block_tree, col, row, &st->qs, already_not_exists));
+
+    if (block_tree->nodes_count == 0) {
+      k2tree_free_block(block_tree);
+      *has_children = FALSE;
+      input_node->k2subtree.block_child = NULL;
+    }
+    return SUCCESS_ECODE_K2T;
+  }
+
+  ulong remaining_depth = st->k2tree_depth - current_depth;
+  ulong half_length = 1 << (remaining_depth - 1);
+
+  uint32_t child_pos = get_code_at_morton_code(&st->mc, current_depth);
+  struct k2node *next_node = input_node->k2subtree.children[child_pos];
+  if (next_node == NULL) {
+    *already_not_exists = TRUE;
+    return SUCCESS_ECODE_K2T;
+  }
+
+  int next_depth = current_depth + 1;
+  CHECK_ERR(k2node_delete_point_rec(next_node, st, col % half_length,
+                                    row % half_length, next_depth,
+                                    already_not_exists, has_children));
+
+  if (*already_not_exists || *has_children)
+    return SUCCESS_ECODE_K2T;
+
+  if (!k2node_has_more_than_one_child(next_node, next_depth, st->cut_depth)) {
+    k2tree_free_k2node(next_node);
+    input_node->k2subtree.children[child_pos] = NULL;
+  } else {
+    *has_children = TRUE;
+  }
+
+  return SUCCESS_ECODE_K2T;
+}
+
+void sip_select_child(long coord, coord_t coord_type, int *selected_children,
+                      long half_length) {
+  switch (coord_type) {
+  case COLUMN_COORD:
+    if (coord < half_length) {
+      selected_children[0] = 0;
+      selected_children[1] = 1;
+    } else {
+      selected_children[0] = 2;
+      selected_children[1] = 3;
+    }
+    break;
+  case ROW_COORD:
+  default:
+    if (coord < half_length) {
+      selected_children[0] = 0;
+      selected_children[1] = 2;
+    } else {
+      selected_children[0] = 1;
+      selected_children[1] = 3;
+    }
+    break;
+  }
+}
+
 /* public implementations */
 
 int k2node_has_point(struct k2node *root_node, ulong col, ulong row,
@@ -433,31 +542,6 @@ int clean_k2qstate(struct k2qstate *st) {
   return SUCCESS_ECODE_K2T;
 }
 
-static inline void sip_select_child(long coord, coord_t coord_type,
-                                    int *selected_children, long half_length) {
-  switch (coord_type) {
-  case COLUMN_COORD:
-    if (coord < half_length) {
-      selected_children[0] = 0;
-      selected_children[1] = 1;
-    } else {
-      selected_children[0] = 2;
-      selected_children[1] = 3;
-    }
-    break;
-  case ROW_COORD:
-  default:
-    if (coord < half_length) {
-      selected_children[0] = 0;
-      selected_children[1] = 2;
-    } else {
-      selected_children[0] = 1;
-      selected_children[1] = 3;
-    }
-    break;
-  }
-}
-
 static inline void sip_assign_valid_part(int *valid_parts,
                                          int *selected_children, int index,
                                          struct k2node **current_nodes) {
@@ -481,12 +565,13 @@ static void intermediate_reporter(ulong coord, void *report_state) {
   ird->rep_fun(coord + ird->base_coord, ird->report_state);
 }
 
-static int
-k2node_sip_join_rec(struct k2node_sip_input input, TREE_DEPTH_T current_depth,
-                    TREE_DEPTH_T treedepth, TREE_DEPTH_T cut_depth,
-                    struct morton_code *mc, struct k2node **current_nodes,
-                    struct sip_ipoint *join_coords,
-                    coord_reporter_fun_t coord_reporter, void *report_state) {
+int k2node_sip_join_rec(struct k2node_sip_input input,
+                        TREE_DEPTH_T current_depth, TREE_DEPTH_T treedepth,
+                        TREE_DEPTH_T cut_depth, struct morton_code *mc,
+                        struct k2node **current_nodes,
+                        struct sip_ipoint *join_coords,
+                        coord_reporter_fun_t coord_reporter,
+                        void *report_state) {
 
   if (current_depth == cut_depth) {
     struct pair2dl pair;
@@ -948,6 +1033,16 @@ int k2node_report_band_has_next(
     struct k2node_lazy_handler_report_band_t *lazy_handler, int *result) {
   *result = lazy_handler->has_next;
   return SUCCESS_ECODE_K2T;
+}
+
+int k2node_delete_point(struct k2node *input_node, ulong col, ulong row,
+                        struct k2qstate *st, int *already_not_exists) {
+
+  *already_not_exists = FALSE;
+  convert_coordinates_to_morton_code(col, row, st->k2tree_depth, &st->mc);
+  int has_children = TRUE;
+  return k2node_delete_point_rec(input_node, st, col, row, 0,
+                                 already_not_exists, &has_children);
 }
 
 declare_stack_of_type(k2node_lazy_naive_state)

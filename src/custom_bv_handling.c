@@ -64,10 +64,9 @@ int custom_clean_bitvector(struct block *input_bitvector) {
     return K2TREE_ERR_NULL_BITVECTOR_CONTAINER;
 
   uint32_t *to_free = input_bitvector->container;
-  if (to_free) {
-    k2tree_free_u32array(to_free, input_bitvector->container_size);
-    input_bitvector->container = NULL;
-  }
+
+  k2tree_free_u32array(to_free, input_bitvector->container_size);
+  input_bitvector->container = NULL;
 
   return SUCCESS_ECODE_K2T;
 }

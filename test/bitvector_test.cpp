@@ -133,3 +133,32 @@ TEST(writeT, test2) {
   uint32_t read_value = bv.bitsread(32, 63);
   ASSERT_EQ(to_write, read_value);
 }
+
+TEST(write_bv_to_bv, test1) {
+  for (int j = 0; j < 1024 - 100; j++)
+    for (int i = 0; i < 1024 - 100; i++) {
+
+      BlockWrapper bv(127, 8192);
+      bv.init_topology_debug(4096);
+
+      uint32_t to_write = (uint32_t)-1;
+
+      bv.bitswrite(32 + i, 63 + i, to_write);
+      bv.bitswrite(64 + i, 95 + i, to_write);
+
+      BlockWrapper bv2(127, 8192);
+      bv2.init_topology_debug(4096);
+
+      auto *root1 = bv.get_root();
+      auto *root2 = bv2.get_root();
+
+      ASSERT_EQ(bits_write_bv(root1, root2, 32 + i, 0 + j, 64), 0);
+
+      uint32_t rd1;
+      uint32_t rd2;
+      bits_read(root2, 0 + j, 31 + j, &rd1);
+      bits_read(root2, 32 + j, 63 + j, &rd2);
+      ASSERT_EQ((int)rd1, -1);
+      ASSERT_EQ((int)rd2, -1);
+    }
+}

@@ -55,6 +55,8 @@ int k2node_has_point(struct k2node *k2node, ulong col, ulong row,
                      struct k2qstate *st, int *result);
 int k2node_insert_point(struct k2node *input_node, ulong col, ulong row,
                         struct k2qstate *st, int *already_exists);
+int k2node_delete_point(struct k2node *input_node, ulong col, ulong row,
+                        struct k2qstate *st, int *already_not_exists);
 
 int k2node_naive_scan_points(struct k2node *input_node, struct k2qstate *st,
                              struct vector_pair2dl_t *result);

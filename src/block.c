@@ -30,9 +30,9 @@ SOFTWARE.
 #include "morton_code.h"
 #include "stacks.h"
 #include "vectors.h"
+#include <assert.h>
 #include <bitvector.h>
 
-#include "custom_bv_handling.h"
 #include "memalloc.h"
 
 #ifdef DEBUG_STATS
@@ -168,6 +168,16 @@ int report_rec_interactively(ulong current_col, struct queries_state *qs,
 
 int free_rec_block_internal(struct block *input_block);
 
+int delete_point_rec(struct block *input_block, struct deletion_state *ds,
+                     struct child_result cr, int *already_not_exists,
+                     int *has_children);
+
+int delete_nodes_in_block(struct block *input_block, struct deletion_state *ds,
+                          int *total_deleted);
+
+int merge_blocks(struct block *parent_block, struct block *child_block,
+                 uint32_t frontier_node_in_parent);
+
 /* END PRIVATE FUNCTIONS  PROTOTYPES */
 
 /* PRIVATE FUNCTIONS IMPLEMENTATIONS */
@@ -206,8 +216,9 @@ int child(struct block *input_block, uint32_t input_node_idx,
   if (is_frontier) {
     struct block *child_block =
         get_child_block(input_block, frontier_traversal_idx);
-    int child_err_code = child(child_block, 0, requested_child_position, 0,
-                               result, qs, block_depth + 1);
+    int child_err_code =
+        child(child_block, 0, requested_child_position, 0, result, qs,
+              block_depth + input_node_relative_depth);
     if (child_err_code != SUCCESS_ECODE_K2T &&
         child_err_code != DOES_NOT_EXIST_CHILD_ERR) {
       return child_err_code;
@@ -459,6 +470,7 @@ int find_point(struct block *input_block, struct queries_state *qs,
       prev_cr.previous_block = prev_cr.resulting_block;
       prev_cr.resulting_block = current_cr.resulting_block;
       prev_cr.block_depth = current_cr.block_depth;
+      prev_cr.went_frontier = current_cr.went_frontier;
 
       prev_cr.previous_depth = prev_cr.resulting_relative_depth;
       prev_cr.previous_preorder = prev_cr.resulting_node_idx;
@@ -821,7 +833,7 @@ int split_block(struct block *input_block, struct queries_state *qs,
  * @param insertion_block  The block in which the point would be inserted
  * @param il Describes the location at where the point would be inserted
  * @param qs Describes the point to be inserted and auxilliary data
- * @return int
+ * @return int error code
  */
 int insert_point_at(struct block *insertion_block,
                     struct insertion_location *il, struct queries_state *qs,
@@ -872,6 +884,9 @@ int insert_point_at(struct block *insertion_block,
   }
 
   CHECK_ERR(split_block(insertion_block, qs, block_depth));
+
+  // printf("after split...\n");
+  // debug_print_block_rec(qs->root);
 #ifdef DEBUG_STATS
   qs->dstats.split_count++;
 #endif
@@ -1267,6 +1282,7 @@ int free_rec_block_internal(struct block *input_block) {
 int free_block(struct block *input_block) {
   CHECK_ERR(free_block_topology(input_block));
   free_block_frontier(input_block);
+  // k2tree_free_blocks_array(input_block);
   // k2tree_free_block(input_block);
   return SUCCESS_ECODE_K2T;
 }
@@ -1448,6 +1464,7 @@ int sip_join(struct sip_join_input input, coord_reporter_fun_t coord_reporter,
   return SUCCESS_ECODE_K2T;
 }
 
+// Returns 0 when the block is valid
 int debug_validate_block(struct block *input_block) {
   for (int node_i = 0; node_i < (int)input_block->nodes_count; node_i++) {
     int container_i = (node_i * 4) / 32;
@@ -1480,8 +1497,8 @@ int debug_validate_block_rec(struct block *input_block) {
 }
 
 void debug_print_block(struct block *b) {
-  printf("nodes count: %d, container size: %d\n", b->nodes_count,
-         b->container_size);
+  printf("nodes count: %d, container size: %d, block ptr: %p\n", b->nodes_count,
+         b->container_size, (void *)b);
   for (unsigned int i = 0; i < b->container_size; i++) {
     if ((i * 32) >= 4 * b->nodes_count)
       break;
@@ -1772,6 +1789,387 @@ int report_band_reset(struct lazy_handler_report_band_t *lazy_handler) {
   push_lazy_report_band_state_t_stack(&lazy_handler->stack, first_state);
   report_band_next(lazy_handler, &lazy_handler->next_result);
 
+  return SUCCESS_ECODE_K2T;
+}
+
+int delete_nodes_in_block(struct block *input_block, struct deletion_state *ds,
+                          int *total_deleted) {
+
+  int amount_to_delete = size_int_stack(&ds->nodes_to_delete);
+  if (amount_to_delete >= input_block->nodes_count - 1 &&
+      top_int_stack(&ds->nodes_to_delete) != 0) {
+    push_int_stack(&ds->nodes_to_delete, 0);
+    amount_to_delete++;
+  }
+
+  if (empty_int_stack(&ds->nodes_to_delete)) {
+    *total_deleted = 0;
+    return SUCCESS_ECODE_K2T;
+  }
+
+  int next_amount_of_nodes = input_block->nodes_count - amount_to_delete;
+
+  int new_size_bits = next_amount_of_nodes * 4;
+  int new_container_size = CEIL_OF_DIV(new_size_bits, BITS_SIZE(uint32_t));
+  uint32_t *next_container = NULL;
+  if (new_container_size > 0) {
+    next_container = k2tree_alloc_u32array(new_container_size);
+  }
+
+  // int next_node_to_delete = pop_int_stack(&ds->nodes_to_delete);
+
+  int left_side = 0;
+  int current_deleted = 0;
+  uint32_t frontier_traversal_pos = 0;
+  int next_node_to_delete = -1;
+  while (!empty_int_stack(&ds->nodes_to_delete)) {
+    next_node_to_delete = pop_int_stack(&ds->nodes_to_delete);
+
+    int src_left;
+    int dst_left;
+    int dst_right;
+    src_left = left_side;
+
+    if (left_side == 0) {
+      dst_left = 0;
+    } else {
+      dst_left = left_side - (current_deleted - 1);
+    }
+    dst_right = next_node_to_delete - (current_deleted + 1);
+
+    int amount = dst_right - dst_left + 1;
+
+    if (amount > 0) {
+      int err = (copy_nodes_between_blocks_uarr(
+          input_block->container, input_block->container_size, next_container,
+          new_container_size, src_left, dst_left, amount));
+
+      if (err) {
+        fprintf(stderr, "ERRRORRRR\n");
+        exit(1);
+      }
+    }
+
+    // adjust preorders
+    int upper_bound_node = 0;
+    if (!empty_int_stack(&ds->nodes_to_delete)) {
+      upper_bound_node = top_int_stack(&ds->nodes_to_delete);
+    } else {
+      upper_bound_node = input_block->nodes_count;
+    }
+
+    int is_frontier = frontier_check(input_block, next_node_to_delete,
+                                     &frontier_traversal_pos);
+
+    if (is_frontier) {
+      NODES_BV_T *new_preorders = NULL;
+      struct block *new_children = NULL;
+      int next_preorders_amount = (int)input_block->children - 1;
+      if (next_preorders_amount > 0) {
+        new_preorders = k2tree_alloc_preorders(next_preorders_amount);
+        new_children = k2tree_alloc_blocks_array(next_preorders_amount);
+        int right_hand_preorders_amount =
+            (int)input_block->children - (frontier_traversal_pos + 1);
+
+        if (frontier_traversal_pos > 0) {
+          memcpy(new_preorders, input_block->preorders,
+                 sizeof(NODES_BV_T) * frontier_traversal_pos);
+          memcpy(new_children, input_block->children_blocks,
+                 sizeof(struct block) * frontier_traversal_pos);
+        }
+        if (right_hand_preorders_amount > 0) {
+          memcpy(new_preorders + frontier_traversal_pos,
+                 input_block->preorders + frontier_traversal_pos + 1,
+                 sizeof(NODES_BV_T) * right_hand_preorders_amount);
+          memcpy(new_children + frontier_traversal_pos,
+                 input_block->children_blocks + frontier_traversal_pos + 1,
+                 sizeof(struct block) * right_hand_preorders_amount);
+        }
+      }
+
+      k2tree_free_preorders(input_block->preorders);
+      k2tree_free_blocks_array(input_block->children_blocks);
+      input_block->preorders = new_preorders;
+      input_block->children_blocks = new_children;
+      input_block->children = next_preorders_amount;
+
+      // frontier_traversal_pos = 0;
+    }
+
+    for (uint32_t node_pos = next_node_to_delete + 1;
+         node_pos < (uint32_t)upper_bound_node; node_pos++) {
+      is_frontier =
+          frontier_check(input_block, node_pos, &frontier_traversal_pos);
+      if (is_frontier) {
+        input_block->preorders[frontier_traversal_pos] -= (current_deleted + 1);
+      }
+    }
+    // end: adjust preorders
+
+    left_side = next_node_to_delete;
+    current_deleted++;
+  }
+
+  if (next_node_to_delete < input_block->nodes_count - 1) {
+    int amount = input_block->nodes_count - next_node_to_delete - 1;
+
+    int err = (copy_nodes_between_blocks_uarr(
+        input_block->container, input_block->container_size, next_container,
+        new_container_size, next_node_to_delete + 1,
+        next_node_to_delete - (current_deleted - 1), amount));
+
+    if (err) {
+      fprintf(stderr, "ERRRORRRR\n");
+      exit(1);
+    }
+  }
+
+  k2tree_free_u32array(input_block->container, input_block->container_size);
+  input_block->container = next_container;
+  input_block->container_size = new_container_size;
+  input_block->nodes_count = next_amount_of_nodes;
+  *total_deleted = amount_to_delete;
+  return SUCCESS_ECODE_K2T;
+}
+
+int merge_blocks(struct block *parent_block, struct block *child_block,
+                 uint32_t frontier_node_in_parent) {
+
+  int merged_nodes = parent_block->nodes_count + child_block->nodes_count - 1;
+  int merged_nodes_bits_amount = merged_nodes * 4;
+  int new_container_size =
+      CEIL_OF_DIV(merged_nodes_bits_amount, BITS_SIZE(uint32_t));
+  uint32_t *new_container = k2tree_alloc_u32array(new_container_size);
+
+  int err;
+  // build merged topology
+  err = (copy_nodes_between_blocks_uarr(
+      parent_block->container, parent_block->container_size, new_container,
+      new_container_size, 0, 0, (int)frontier_node_in_parent));
+  if (err) {
+    fprintf(stderr, "Error copying nodes 1\n");
+    exit(1);
+  }
+
+  err = (copy_nodes_between_blocks_uarr(
+      child_block->container, child_block->container_size, new_container,
+      new_container_size, 0, (int)frontier_node_in_parent,
+      child_block->nodes_count));
+  if (err) {
+    fprintf(stderr, "Error copying nodes 2\n");
+    exit(1);
+  }
+
+  int rightmost_amount =
+      (int)parent_block->nodes_count - (frontier_node_in_parent + 1);
+  if (rightmost_amount > 0) {
+    err = (copy_nodes_between_blocks_uarr(
+        parent_block->container, parent_block->container_size, new_container,
+        new_container_size, (int)(frontier_node_in_parent + 1),
+        frontier_node_in_parent + child_block->nodes_count, rightmost_amount));
+    if (err) {
+      fprintf(stderr, "Error copying nodes 3\n");
+      exit(1);
+    }
+  }
+
+  int new_children_size = parent_block->children - 1 + child_block->children;
+  NODES_BV_T *new_preorders = NULL;
+  struct block *new_children = NULL;
+  if (new_children_size > 0) {
+    new_preorders = k2tree_alloc_preorders(new_children_size);
+    new_children = k2tree_alloc_blocks_array(new_children_size);
+  }
+
+  // Find the preorder of the frontier node in parent which will be removed
+  int deleting_preorder_position = -1;
+  for (int i = 0; i < (int)parent_block->children; i++) {
+    NODES_BV_T curr_preorder = parent_block->preorders[i];
+    if (curr_preorder == frontier_node_in_parent) {
+      deleting_preorder_position = i;
+      break;
+    }
+  }
+  // It always has to be found, because otherwise we wouldn't be merging
+  // anything
+  assert(deleting_preorder_position >= 0);
+
+  int right_most_preorders_count =
+      (int)parent_block->children - 1 - deleting_preorder_position;
+
+  // If zero, then it means we will have an empty frontier
+  if (new_children_size > 0) {
+    /* children blocks */
+
+    memcpy(new_children, parent_block->children_blocks,
+           deleting_preorder_position * sizeof(struct block));
+    memcpy(new_children + deleting_preorder_position,
+           child_block->children_blocks,
+           child_block->children * sizeof(struct block));
+    memcpy(new_children + deleting_preorder_position + child_block->children,
+           parent_block->children_blocks + deleting_preorder_position + 1,
+           right_most_preorders_count * sizeof(struct block));
+    /* end:  children blocks */
+    /* preorders */
+    memcpy(new_preorders, parent_block->preorders,
+           deleting_preorder_position * sizeof(NODES_BV_T));
+
+    for (int i = deleting_preorder_position, j = 0;
+         i < deleting_preorder_position + child_block->children; i++, j++) {
+      // offset by the amount of nodes before the cut
+      new_preorders[i] = child_block->preorders[j] + frontier_node_in_parent;
+    }
+
+    for (int i = deleting_preorder_position + child_block->children, j = 0;
+         i < deleting_preorder_position + child_block->children +
+                 right_most_preorders_count;
+         i++, j++) {
+      new_preorders[i] =
+          parent_block->preorders[deleting_preorder_position + 1 + j] +
+          child_block->nodes_count - 1;
+    }
+    /* end: preorders */
+  }
+
+  int next_nodes_count =
+      parent_block->nodes_count - 1 + child_block->nodes_count;
+
+  k2tree_free_u32array(child_block->container, child_block->container_size);
+  k2tree_free_preorders(child_block->preorders);
+  k2tree_free_blocks_array(child_block->children_blocks);
+
+  k2tree_free_u32array(parent_block->container, parent_block->container_size);
+  k2tree_free_preorders(parent_block->preorders);
+  k2tree_free_blocks_array(
+      parent_block->children_blocks); // child block ceased to exist
+
+  parent_block->preorders = new_preorders;
+  parent_block->children = new_children_size;
+  parent_block->container = new_container;
+  parent_block->container_size = new_container_size;
+  parent_block->children_blocks = new_children;
+  parent_block->nodes_count = next_nodes_count;
+
+  return SUCCESS_ECODE_K2T;
+}
+
+static int delete_from_node_if_needed(struct block *input_block,
+                                      struct block *next_block,
+                                      struct deletion_state *ds,
+                                      int current_node_id, int child_pos,
+                                      int did_merge, int *already_not_exists,
+                                      int *has_children) {
+
+  int has_bit = FALSE;
+  int bit_position = current_node_id * 4 + child_pos;
+  CHECK_ERR(bit_read(input_block, bit_position, &has_bit));
+
+  if (!has_bit) {
+    *already_not_exists = TRUE;
+    return SUCCESS_ECODE_K2T;
+  }
+
+  uint32_t node = 0;
+  CHECK_ERR(read_node(input_block, current_node_id, &node));
+  int amount_of_children = POP_COUNT(node);
+
+  if (amount_of_children == 1) {
+    *has_children = FALSE;
+    // printf("piling node %d\n", current_node_id);
+    push_int_stack(&ds->nodes_to_delete, (int)current_node_id);
+  } else {
+    *has_children = TRUE;
+    // printf("clearing bit 4*%d + %d\n", current_node_id, child_pos);
+    CHECK_ERR(bit_clear(input_block, bit_position));
+    if (!did_merge && input_block != next_block) {
+      // int next_abs_depth = cr->block_depth + cr->resulting_relative_depth;
+      CHECK_ERR(bit_clear(next_block, child_pos));
+    }
+  }
+
+  return SUCCESS_ECODE_K2T;
+}
+
+int delete_point_rec(struct block *input_block, struct deletion_state *ds,
+                     struct child_result cr, int *already_not_exists,
+                     int *has_children) {
+
+  if (cr.is_leaf_result) {
+    return SUCCESS_ECODE_K2T;
+  }
+
+  uint32_t current_node_id = cr.resulting_node_idx;
+
+  int current_abs_depth = cr.block_depth + cr.resulting_relative_depth;
+  int child_pos = get_code_at_morton_code(&ds->mc, current_abs_depth);
+  child(input_block, cr.resulting_node_idx, child_pos,
+        cr.resulting_relative_depth, &cr, ds->qs, cr.block_depth);
+  if (!cr.exists) {
+    *already_not_exists = TRUE;
+    return SUCCESS_ECODE_K2T;
+  }
+  CHECK_ERR(delete_point_rec(cr.resulting_block, ds, cr, already_not_exists,
+                             has_children));
+
+  if (*already_not_exists)
+    return SUCCESS_ECODE_K2T;
+
+  int total_deleted = 0;
+  int previous_nodes_amount = cr.resulting_block->nodes_count;
+  int next_amount_of_nodes_child = previous_nodes_amount;
+
+  if (input_block != cr.resulting_block) {
+    CHECK_ERR(delete_nodes_in_block(cr.resulting_block, ds, &total_deleted));
+    next_amount_of_nodes_child = previous_nodes_amount - total_deleted;
+    if (next_amount_of_nodes_child == 0) {
+      *has_children = FALSE;
+      // return delete_frontier_subtree(ds, current_node_id,
+      // cr.resulting_block);
+    }
+  }
+
+  int did_merge = FALSE;
+  if (input_block != cr.resulting_block) {
+    if (next_amount_of_nodes_child > 0 &&
+        next_amount_of_nodes_child + input_block->nodes_count <
+            ds->qs->max_nodes_count) {
+      CHECK_ERR(merge_blocks(input_block, cr.resulting_block, current_node_id));
+      did_merge = TRUE;
+      cr.resulting_block = NULL;
+    }
+  }
+
+  if (*has_children) {
+    return SUCCESS_ECODE_K2T;
+  }
+
+  return delete_from_node_if_needed(input_block, cr.resulting_block, ds,
+                                    current_node_id, child_pos, did_merge,
+                                    already_not_exists, has_children);
+}
+
+int delete_point(struct block *input_block, ulong col, ulong row,
+                 struct queries_state *qs, int *already_not_exists) {
+  *already_not_exists = FALSE;
+  struct deletion_state ds;
+  ds.qs = qs;
+  init_morton_code(&ds.mc, qs->treedepth);
+  init_int_stack(&ds.nodes_to_delete, qs->treedepth);
+  convert_coordinates_to_morton_code(col, row, qs->treedepth, &ds.mc);
+
+  struct child_result cr;
+  clean_child_result(&cr);
+  cr.resulting_block = input_block;
+  cr.exists = TRUE;
+  int has_children = FALSE;
+  CHECK_ERR(delete_point_rec(input_block, &ds, cr, already_not_exists,
+                             &has_children));
+
+  int total_deleted = 0;
+  CHECK_ERR(delete_nodes_in_block(input_block, &ds, &total_deleted));
+
+  free_int_stack(&ds.nodes_to_delete);
+  clean_morton_code(&ds.mc);
   return SUCCESS_ECODE_K2T;
 }
 

@@ -123,4 +123,8 @@ typedef uint32_t BLOCK_INDEX_T;
 
 #define __UNUSED(x) (void)(x)
 
+#define CEIL_OF_DIV(dividend, divisor)                                         \
+  (((dividend) / (divisor)) + (((dividend) % (divisor)) == 0 ? 0 : 1))
+#define BITS_SIZE(type) (sizeof(type) * 8)
+
 #endif /* _K2TREE_DEFINITIONS_H_ */

@@ -51,6 +51,15 @@ SOFTWARE.
     }                                                                          \
   } while (0)
 
+#define CHECK_BOUNDARIES_UARRAY(position, size)                                \
+  do {                                                                         \
+    if ((position) >= ((size)*BVCTYPE_BITS)) {                                 \
+      fprintf(stderr, "CHECK BOUNDARIES ARRAY; %d >= %d", (int)(position),     \
+              (int)((size)*BVCTYPE_BITS));                                     \
+      return ERR_OUT_OF_BOUNDARIES;                                            \
+    }                                                                          \
+  } while (0)
+
 #define BLOCK_INDEX(block_size_in_bits, bit_position)                          \
   ((bit_position) / (block_size_in_bits))
 
@@ -157,13 +166,20 @@ static inline uint32_t _extract_right_side(uint32_t input_block,
 
 int bits_write(struct block *input_bitvector, uint32_t from, uint32_t to,
                BVCTYPE to_write) {
-  CHECK_BOUNDARIES(input_bitvector, from);
-  CHECK_BOUNDARIES(input_bitvector, to);
+  return bits_write_uarray_small(input_bitvector->container,
+                                 input_bitvector->container_size, from, to,
+                                 to_write);
+}
+
+int bits_write_uarray_small(uint32_t *input_uarr, int sz, uint32_t from,
+                            uint32_t to, uint32_t to_write) {
+  CHECK_BOUNDARIES_UARRAY(from, sz);
+  CHECK_BOUNDARIES_UARRAY(to, sz);
   if (from > to) {
     return ERR_BITS_WRITE_FROM_GT_TO;
   }
 
-  BVCTYPE *container = input_bitvector->container;
+  BVCTYPE *container = input_uarr;
 
   uint32_t right_pos_in_block = POSITION_IN_BLOCK(BVCTYPE_BITS, to);
 
@@ -206,13 +222,20 @@ int bits_write(struct block *input_bitvector, uint32_t from, uint32_t to,
 
 int bits_read(struct block *input_bitvector, uint32_t from, uint32_t to,
               uint32_t *result) {
-  CHECK_BOUNDARIES(input_bitvector, from);
-  CHECK_BOUNDARIES(input_bitvector, to);
+  return bits_read_uarray_small(input_bitvector->container,
+                                input_bitvector->container_size, from, to,
+                                result);
+}
+
+int bits_read_uarray_small(uint32_t *input_uarr, int sz, uint32_t from,
+                           uint32_t to, uint32_t *result) {
+  CHECK_BOUNDARIES_UARRAY(from, sz);
+  CHECK_BOUNDARIES_UARRAY(to, sz);
   if (from > to) {
     return ERR_BITS_WRITE_FROM_GT_TO;
   }
 
-  BVCTYPE *container = input_bitvector->container;
+  BVCTYPE *container = input_uarr;
 
   uint32_t right_pos_in_block = POSITION_IN_BLOCK(BVCTYPE_BITS, to);
 
@@ -245,5 +268,80 @@ int bits_read(struct block *input_bitvector, uint32_t from, uint32_t to,
       << left_shift;
 
   *result = right_block_shifted + left_block_shifted;
+  return SUCCESS_ECODE;
+}
+
+int bits_write_bv(struct block *input_bitvector, struct block *output_bitvector,
+                  int start_src, int start_dst, int length) {
+  return bits_write_uarray(
+      input_bitvector->container, input_bitvector->container_size,
+      output_bitvector->container, output_bitvector->container_size, start_src,
+      start_dst, length);
+}
+
+int bits_write_uarray(uint32_t *input_uarr, int input_size,
+                      uint32_t *output_uarr, int output_size, int start_src,
+                      int start_dst, int length) {
+  int from_src = start_src;
+  int to_src = start_src + length - 1;
+  int from_dst = start_dst;
+  int to_dst = start_dst + length - 1;
+
+  CHECK_BOUNDARIES_UARRAY((uint32_t)from_src, input_size);
+  CHECK_BOUNDARIES_UARRAY((uint32_t)to_src, input_size);
+  if (from_src > to_src) {
+    return ERR_BITS_WRITE_FROM_GT_TO;
+  }
+  CHECK_BOUNDARIES_UARRAY((uint32_t)from_dst, output_size);
+  CHECK_BOUNDARIES_UARRAY((uint32_t)to_dst, output_size);
+  if (from_dst > to_dst) {
+    return ERR_BITS_WRITE_FROM_GT_TO;
+  }
+
+  int leftmost_src_container = BLOCK_INDEX(BVCTYPE_BITS, from_src);
+  int rightmost_src_container = BLOCK_INDEX(BVCTYPE_BITS, to_src);
+  if (leftmost_src_container == rightmost_src_container) {
+    uint32_t src_portion;
+    CHECK_ERR(bits_read_uarray_small(input_uarr, input_size, from_src, to_src,
+                                     &src_portion));
+    CHECK_ERR(bits_write_uarray_small(output_uarr, output_size, from_dst,
+                                      to_dst, src_portion));
+    return SUCCESS_ECODE;
+  }
+
+  int left_rbound = ((leftmost_src_container + 1) * BVCTYPE_BITS) - 1;
+  int first_sz = left_rbound - from_src;
+
+  uint32_t src_portion;
+
+  bits_read_uarray_small(input_uarr, input_size, from_src, left_rbound,
+                         &src_portion);
+  bits_write_uarray_small(output_uarr, output_size, from_dst,
+                          from_dst + first_sz, src_portion);
+
+  int intermediate_block_count =
+      rightmost_src_container - leftmost_src_container - 1;
+
+  intermediate_block_count =
+      intermediate_block_count < 0 ? 0 : intermediate_block_count;
+
+  for (int i = 0; i < intermediate_block_count; i++) {
+    bits_read_uarray_small(input_uarr, input_size,
+                           left_rbound + 1 + i * BVCTYPE_BITS,
+                           left_rbound + (i + 1) * BVCTYPE_BITS, &src_portion);
+    bits_write_uarray_small(
+        output_uarr, output_size, from_dst + first_sz + 1 + i * BVCTYPE_BITS,
+        from_dst + first_sz + (i + 1) * BVCTYPE_BITS, src_portion);
+  }
+
+  bits_read_uarray_small(input_uarr, input_size,
+                         left_rbound + 1 +
+                             intermediate_block_count * BVCTYPE_BITS,
+                         to_src, &src_portion);
+  bits_write_uarray_small(output_uarr, output_size,
+                          from_dst + first_sz + 1 +
+                              intermediate_block_count * BVCTYPE_BITS,
+                          to_dst, src_portion);
+
   return SUCCESS_ECODE;
 }

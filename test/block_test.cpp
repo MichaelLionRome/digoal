@@ -1284,15 +1284,16 @@ TEST(block_test, random_test_2) {
       random_shuffle(indexes.begin(), indexes.end());
 
       for (ulong i = 0; i < matrix_size; i++) {
-        ulong col = i / side;
-        ulong row = i % side;
+        ulong col = indexes[i];
+        ulong row = (indexes[i] + matrix_size * 7) % matrix_size;
         b.insert(col, row);
       }
       for (ulong i = 0; i < matrix_size; i++) {
-        ulong col = i / side;
-        ulong row = i % side;
+        ulong col = indexes[i];
+        ulong row = (indexes[i] + matrix_size * 7) % matrix_size;
         ASSERT_TRUE(b.has(col, row)) << "(depth = " << treedepth << ")"
-                                     << "doesn't have " << col << ", " << row;
+                                     << "doesn't have " << col << ", " << row
+                                     << ". At seed = " << seed << ", i = " << i;
       }
       ASSERT_EQ(debug_validate_block_rec(b.b), 0);
     }

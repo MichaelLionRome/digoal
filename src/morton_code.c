@@ -27,8 +27,12 @@ SOFTWARE.
 
 void init_morton_code(struct morton_code *mc, uint32_t treedepth) {
   mc->treedepth = treedepth;
+  /*
   mc->container =
-      (MC_CONTAINER_T *)malloc(2 * mc->treedepth * sizeof(MC_CONTAINER_T));
+      (MC_CONTAINER_T *)calloc(2 * mc->treedepth, sizeof(MC_CONTAINER_T));
+      */
+  mc->container =
+      (MC_CONTAINER_T *)calloc(mc->treedepth, sizeof(MC_CONTAINER_T));
 }
 
 void clean_morton_code(struct morton_code *mc) {
@@ -41,12 +45,15 @@ void clean_morton_code(struct morton_code *mc) {
 
 void add_element_morton_code(struct morton_code *mc, uint32_t position,
                              uint32_t code) {
-  mc->container[2 * position] = (code & 2) > 0 ? 1 : 0;
-  mc->container[2 * position + 1] = (code & 1) > 0 ? 1 : 0;
+  // mc->container[2 * position] = (code & 2) > 0 ? 1 : 0;
+  // mc->container[2 * position + 1] = (code & 1) > 0 ? 1 : 0;
+  mc->container[position] = code;
 }
 
 uint32_t get_code_at_morton_code(struct morton_code *mc, uint32_t position) {
-  return (mc->container[2 * position] << 1) + mc->container[2 * position + 1];
+  // return (mc->container[2 * position] << 1) + mc->container[2 * position +
+  // 1];
+  return mc->container[position];
 }
 
 uint32_t leaf_child_morton_code(struct morton_code *mc) {
