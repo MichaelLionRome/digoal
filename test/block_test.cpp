@@ -1336,3 +1336,80 @@ TEST(block_test, diag_failing_split_2) {
   int v = debug_validate_block_rec(b.get_root());
   ASSERT_EQ(v, 0);
 }
+
+TEST(block_test, naive_scan_test_1) {
+  BlockWrapper b(32, 256);
+
+  int cols = 300;
+  int rows = 300;
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      b.insert(i, j);
+    }
+  }
+
+  struct vector_pair2dl_t resulting_pairs;
+  vector_pair2dl_t__init_vector_with_capacity(&resulting_pairs, cols * rows);
+  naive_scan_points(b.get_root(), b.get_qs(), &resulting_pairs);
+  ASSERT_EQ(resulting_pairs.nof_items, cols * rows);
+  int count = 0;
+  for (int i = 0; i < resulting_pairs.nof_items; i++) {
+    pair2dl p = resulting_pairs.data[i];
+    ASSERT_TRUE(b.has(p.col, p.row));
+    count++;
+  }
+  ASSERT_EQ(count, cols * rows);
+
+  vector_pair2dl_t__free_vector(&resulting_pairs);
+}
+
+TEST(block_test, band_scan_test_1) {
+  BlockWrapper b(32, 256);
+
+  int cols = 300;
+  int rows = 300;
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      b.insert(i, j);
+    }
+  }
+
+  struct vector_pair2dl_t resulting_pairs;
+  vector_pair2dl_t__init_vector_with_capacity(&resulting_pairs, cols * rows);
+  report_column(b.get_root(), 0, b.get_qs(), &resulting_pairs);
+  ASSERT_EQ(resulting_pairs.nof_items, rows);
+  int count = 0;
+  for (int i = 0; i < resulting_pairs.nof_items; i++) {
+    pair2dl p = resulting_pairs.data[i];
+    ASSERT_TRUE(b.has(p.col, p.row));
+    count++;
+  }
+  ASSERT_EQ(count, rows);
+
+  vector_pair2dl_t__free_vector(&resulting_pairs);
+}
+TEST(block_test, band_scan_test_2) {
+  BlockWrapper b(32, 256);
+
+  int cols = 300;
+  int rows = 300;
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      b.insert(i, j);
+    }
+  }
+
+  struct vector_pair2dl_t resulting_pairs;
+  vector_pair2dl_t__init_vector_with_capacity(&resulting_pairs, cols * rows);
+  report_row(b.get_root(), 0, b.get_qs(), &resulting_pairs);
+  ASSERT_EQ(resulting_pairs.nof_items, cols);
+  int count = 0;
+  for (int i = 0; i < resulting_pairs.nof_items; i++) {
+    pair2dl p = resulting_pairs.data[i];
+    ASSERT_TRUE(b.has(p.col, p.row));
+    count++;
+  }
+  ASSERT_EQ(count, cols);
+
+  vector_pair2dl_t__free_vector(&resulting_pairs);
+}
