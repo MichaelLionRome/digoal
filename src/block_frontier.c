@@ -50,7 +50,7 @@ void init_block_frontier_with_capacity(struct block *input_block,
 
   input_block->preorders = (NODES_BV_T *)malloc(sizeof(NODES_BV_T) * capacity);
   input_block->children_blocks =
-      (struct block **)malloc(sizeof(struct block *) * capacity);
+      (struct block *)malloc(sizeof(struct block) * capacity);
 }
 
 void free_block_frontier(struct block *input_block) {
@@ -85,7 +85,7 @@ struct block *get_child_block(struct block *input_block,
             (int)frontier_node_idx, (int)input_block->children);
     exit(1);
   }
-  return input_block->children_blocks[frontier_node_idx];
+  return &input_block->children_blocks[frontier_node_idx];
 }
 
 int find_insertion_point(struct block *input_block, uint32_t preorder) {
@@ -131,27 +131,27 @@ int extract_sub_block_frontier(struct block *input_block,
            sub_block_size * sizeof(uint32_t));
     memcpy(to_fill_bf->children_blocks,
            input_block->children_blocks + from_index_loc,
-           sub_block_size * sizeof(struct block *));
+           sub_block_size * sizeof(struct block));
   }
 
   uint32_t next_children = from_index_loc + terminal_block_size;
   NODES_BV_T *new_parent_preorders = NULL;
-  struct block **new_parent_cblocks = NULL;
+  struct block *new_parent_cblocks = NULL;
   if (next_children > 0) {
     new_parent_preorders =
         (NODES_BV_T *)malloc(sizeof(NODES_BV_T) * next_children);
     new_parent_cblocks =
-        (struct block **)malloc(sizeof(struct block *) * next_children);
+        (struct block *)malloc(sizeof(struct block) * next_children);
     memcpy(new_parent_preorders, input_block->preorders,
            from_index_loc * sizeof(NODES_BV_T));
     memcpy(new_parent_cblocks, input_block->children_blocks,
-           from_index_loc * sizeof(struct block *));
+           from_index_loc * sizeof(struct block));
     memcpy(new_parent_preorders + from_index_loc,
            input_block->preorders + to_index_loc,
            terminal_block_size * sizeof(NODES_BV_T));
     memcpy(new_parent_cblocks + from_index_loc,
            input_block->children_blocks + to_index_loc,
-           terminal_block_size * sizeof(struct block *));
+           terminal_block_size * sizeof(struct block));
   }
 
   free_block_frontier(input_block);
@@ -171,13 +171,13 @@ int add_frontier_node(struct block *input_block,
   uint32_t children = (uint32_t)input_block->children;
   NODES_BV_T *new_preorders =
       (NODES_BV_T *)malloc(sizeof(NODES_BV_T) * (children + 1));
-  struct block **new_children_blocks =
-      (struct block **)malloc(sizeof(struct block *) * (children + 1));
+  struct block *new_children_blocks =
+      (struct block *)malloc(sizeof(struct block) * (children + 1));
   if (children > 0) {
     memcpy(new_preorders, input_block->preorders,
            insertion_point * sizeof(NODES_BV_T));
     memcpy(new_children_blocks, input_block->children_blocks,
-           insertion_point * sizeof(struct block *));
+           insertion_point * sizeof(struct block));
   }
 
   if (children > insertion_point) {
@@ -186,11 +186,11 @@ int add_frontier_node(struct block *input_block,
            (children - insertion_point) * sizeof(NODES_BV_T));
     memcpy(new_children_blocks + insertion_point + 1,
            input_block->children_blocks + insertion_point,
-           (children - insertion_point) * sizeof(struct block *));
+           (children - insertion_point) * sizeof(struct block));
   }
 
   new_preorders[insertion_point] = new_frontier_node_preorder;
-  new_children_blocks[insertion_point] = b;
+  new_children_blocks[insertion_point] = *b;
 
   free_block_frontier(input_block);
 
@@ -253,7 +253,7 @@ int collapse_frontier_nodes(struct block *input_block, uint32_t from_preorder,
 
   memmove(input_block->children_blocks + left_extreme,
           input_block->children_blocks + (right_extreme + 1),
-          (children - right_extreme) * sizeof(struct block *));
+          (children - right_extreme) * sizeof(struct block));
 
   input_block->children = new_size;
 

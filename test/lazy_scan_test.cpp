@@ -172,6 +172,8 @@ TEST(lazy_scan_test, test_k2node_full_scan_1) {
   ASSERT_EQ(results_lazy, expected_results);
 
   k2node_naive_scan_points_lazy_clean(&lh);
+  free_rec_k2node(root_node, 0, st.cut_depth);
+  clean_k2qstate(&st);
 }
 
 TEST(lazy_scan_test, test_k2node_band_scan_1) {
@@ -213,4 +215,6 @@ TEST(lazy_scan_test, test_k2node_band_scan_1) {
   ASSERT_EQ(results_lazy, expected_results);
 
   k2node_report_band_lazy_clean(&lh);
+  free_rec_k2node(root_node, 0, st.cut_depth);
+  clean_k2qstate(&st);
 }

@@ -23,6 +23,8 @@ SOFTWARE.
 */
 #include "queries_state.h"
 
+#include <math.h>
+
 /* PRIVATE PROTOTYPES */
 int init_sequential_scan_result(struct sequential_scan_result *scr,
                                 MAX_NODE_COUNT_T max_nodes_count);
@@ -60,8 +62,9 @@ int finish_queries_state(struct queries_state *qs) {
 /* PRIVATE FUNCTIONS IMPLEMENTATION */
 int init_sequential_scan_result(struct sequential_scan_result *scr,
                                 MAX_NODE_COUNT_T max_nodes_count) {
-  scr->subtrees_count_map = k2tree_alloc_u32array(max_nodes_count);
-  scr->relative_depth_map = k2tree_alloc_u32array(max_nodes_count);
+  int sz = 1 << (int)ceil(log2(max_nodes_count));
+  scr->subtrees_count_map = k2tree_alloc_u32array(sz);
+  scr->relative_depth_map = k2tree_alloc_u32array(sz);
 
   return SUCCESS_ECODE_K2T;
 }

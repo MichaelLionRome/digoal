@@ -54,7 +54,7 @@ SOFTWARE.
 
 struct block {
   NODES_BV_T *preorders;
-  struct block **children_blocks;
+  struct block *children_blocks;
 
   BVCTYPE *container;
 

@@ -146,7 +146,7 @@ public:
   }
   void printSubBlocks() {
     for (int i = 0; i < (int)b->children; i++) {
-      struct block *sb = b->children_blocks[i];
+      struct block *sb = &b->children_blocks[i];
       cout << getStringRepBlock(sb, true) << endl;
     }
   }

@@ -136,7 +136,7 @@ int make_room(struct block *input_block, struct insertion_location *il);
 int insert_point_mc(struct block *input_block, struct morton_code *mc,
                     struct insertion_location *il);
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
-                   struct block **new_block);
+                   struct block *new_block);
 int split_block(struct block *input_block, struct queries_state *qs,
                 TREE_DEPTH_T block_depth);
 int reset_sequential_scan_child(struct queries_state *qs);
@@ -165,6 +165,8 @@ int report_rec_interactively(ulong current_col, struct queries_state *qs,
                              point_reporter_fun_t point_reporter,
                              struct child_result *current_cr, int which_report,
                              void *report_state);
+
+int free_rec_block_internal(struct block *input_block);
 
 /* END PRIVATE FUNCTIONS  PROTOTYPES */
 
@@ -650,25 +652,25 @@ int insert_point_mc(struct block *input_block, struct morton_code *mc,
  * @param from Starting location in input_block of the new block
  * @param to End location in input_block of the new block (inclusive)
  * @param relative_depth Relative depth of the new block w/r to the tree
- * @param new_block Gives a pointer to the new block
+ * @param new_block New block to be created
  * @return int Result code
  */
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
-                   struct block **new_block) {
-  struct block *created_block = create_block();
+                   struct block *new_block) {
+  // struct block *created_block = create_block();
 
   /* initialize block topology */
-  CHECK_ERR(init_block_topology(created_block, to - from + 1));
+  CHECK_ERR(init_block_topology(new_block, to - from + 1));
   uint32_t new_bv_start_pos = 4 * from;
   uint32_t new_bv_end_pos = 4 * (to + 1) - 1;
   CHECK_ERR(extract_sub_bitvector(input_block, new_bv_start_pos, new_bv_end_pos,
-                                  created_block));
+                                  new_block));
   /* shrink parent bitvector */
   CHECK_ERR(collapse_nodes(input_block, from + 1, to));
   /* initialize block frontier */
-  CHECK_ERR(extract_sub_block_frontier(input_block, from, to, created_block));
+  CHECK_ERR(extract_sub_block_frontier(input_block, from, to, new_block));
 
-  *new_block = created_block;
+  //*new_block = created_block;
 
   return SUCCESS_ECODE_K2T;
 }
@@ -779,11 +781,18 @@ int split_block(struct block *input_block, struct queries_state *qs,
 
   uint32_t right_index = qs->sc_result.child_preorder;
 
-  struct block *new_block;
+  struct block new_block;
+  new_block.children = 0;
+  new_block.children_blocks = NULL;
+  new_block.nodes_count = 0;
+  new_block.container_size = 0;
+  new_block.container = NULL;
+  new_block.preorders = NULL;
   CHECK_ERR(make_new_block(input_block, new_frontier_node_position, right_index,
                            &new_block));
 
-  CHECK_ERR(fix_frontier_indexes(new_block, 0, new_frontier_node_position + 1));
+  CHECK_ERR(
+      fix_frontier_indexes(&new_block, 0, new_frontier_node_position + 1));
 
   int delta_indexes_parent = right_index - new_frontier_node_position;
 
@@ -791,7 +800,7 @@ int split_block(struct block *input_block, struct queries_state *qs,
                                  delta_indexes_parent));
 
   CHECK_ERR(
-      add_frontier_node(input_block, new_frontier_node_position, new_block));
+      add_frontier_node(input_block, new_frontier_node_position, &new_block));
 
   return SUCCESS_ECODE_K2T;
 }
@@ -1240,18 +1249,25 @@ struct block *create_block(void) {
 }
 
 int free_rec_block(struct block *input_block) {
+  CHECK_ERR(free_rec_block_internal(input_block));
+  k2tree_free_block(input_block);
+  return SUCCESS_ECODE_K2T;
+}
+
+int free_rec_block_internal(struct block *input_block) {
   for (int i = 0; i < (int)input_block->children; i++) {
-    struct block *current_block = input_block->children_blocks[i];
-    CHECK_ERR(free_rec_block(current_block));
+    struct block *current_block = &input_block->children_blocks[i];
+    CHECK_ERR(free_rec_block_internal(current_block));
   }
 
-  return free_block(input_block);
+  CHECK_ERR(free_block(input_block));
+  return SUCCESS_ECODE_K2T;
 }
 
 int free_block(struct block *input_block) {
   CHECK_ERR(free_block_topology(input_block));
   free_block_frontier(input_block);
-  k2tree_free_block(input_block);
+  // k2tree_free_block(input_block);
   return SUCCESS_ECODE_K2T;
 }
 
@@ -1263,7 +1279,7 @@ struct k2tree_measurement measure_tree_size(struct block *input_block) {
   for (int child_block_index = 0;
        child_block_index < (int)input_block->children; child_block_index++) {
     struct k2tree_measurement children_measurement =
-        measure_tree_size(input_block->children_blocks[child_block_index]);
+        measure_tree_size(&input_block->children_blocks[child_block_index]);
     children_total_bytes += children_measurement.total_bytes;
     children_total_blocks += children_measurement.total_blocks;
     children_bytes_topology += children_measurement.bytes_topology;
@@ -1456,7 +1472,7 @@ int debug_validate_block_rec(struct block *input_block) {
     return 1;
 
   for (int i = 0; i < (int)input_block->children; i++) {
-    int res = debug_validate_block_rec(input_block->children_blocks[i]);
+    int res = debug_validate_block_rec(&input_block->children_blocks[i]);
     if (res)
       return res + 1;
   }
@@ -1491,7 +1507,7 @@ void debug_print_block(struct block *b) {
 void debug_print_block_rec(struct block *b) {
   debug_print_block(b);
   for (int i = 0; i < (int)b->children; i++) {
-    debug_print_block_rec(b->children_blocks[i]);
+    debug_print_block_rec(&b->children_blocks[i]);
   }
 }
 int naive_scan_points_lazy_init(
