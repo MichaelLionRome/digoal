@@ -162,6 +162,8 @@ define_stack_of_type(lazy_naive_state)
   struct lazy_naive_state_stack states_stack;
   pair2dl_t next_result;
   int has_next;
+
+  struct block *tree_root;
 };
 
 typedef struct {
@@ -178,6 +180,9 @@ define_stack_of_type(lazy_report_band_state_t)
   int which_report;
   uint64_t next_result;
   int has_next;
+
+  uint64_t coord_to_report;
+  struct block *tree_root;
 };
 
 int naive_scan_points_lazy_init(struct block *input_block,
@@ -193,6 +198,9 @@ int naive_scan_points_lazy_next(struct lazy_handler_naive_scan_t *lazy_handler,
 int naive_scan_points_lazy_has_next(
     struct lazy_handler_naive_scan_t *lazy_handler, int *result);
 
+int naive_scan_points_lazy_reset(
+    struct lazy_handler_naive_scan_t *lazy_handler);
+
 int report_row_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
                          struct block *input_block, struct queries_state *qs,
                          uint64_t coord);
@@ -203,6 +211,7 @@ int report_column_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
 int report_band_lazy_clean(struct lazy_handler_report_band_t *lazy_handler);
 int report_band_next(struct lazy_handler_report_band_t *lazy_handler,
                      uint64_t *result);
+int report_band_reset(struct lazy_handler_report_band_t *lazy_handler);
 
 int report_band_has_next(struct lazy_handler_report_band_t *lazy_handler,
                          int *result);

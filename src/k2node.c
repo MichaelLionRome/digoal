@@ -645,10 +645,31 @@ int k2node_naive_scan_points_lazy_init(
   lazy_handler->sub_handler.qs = &st->qs;
   lazy_handler->sub_handler.has_next = FALSE;
   lazy_handler->at_leaf = FALSE;
+  lazy_handler->tree_root = input_node;
 
   k2node_lazy_naive_state first_state;
   first_state.current_depth = 0;
   first_state.input_node = input_node;
+  first_state.last_iteration = 0;
+  push_k2node_lazy_naive_state_stack(&lazy_handler->states_stack, first_state);
+  k2node_naive_scan_points_lazy_next(lazy_handler, &lazy_handler->next_result);
+
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_naive_scan_points_lazy_reset(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler) {
+  lazy_handler->has_next = FALSE;
+  lazy_handler->at_leaf = FALSE;
+
+  lazy_handler->sub_handler.has_next = FALSE;
+
+  reset_lazy_naive_state_stack(&lazy_handler->sub_handler.states_stack);
+  reset_k2node_lazy_naive_state_stack(&lazy_handler->states_stack);
+
+  k2node_lazy_naive_state first_state;
+  first_state.current_depth = 0;
+  first_state.input_node = lazy_handler->tree_root;
   first_state.last_iteration = 0;
   push_k2node_lazy_naive_state_stack(&lazy_handler->states_stack, first_state);
   k2node_naive_scan_points_lazy_next(lazy_handler, &lazy_handler->next_result);
@@ -770,6 +791,8 @@ int k2node_report_band_lazy_init(
   lazy_handler->sub_handler.has_next = FALSE;
   lazy_handler->at_leaf = FALSE;
   lazy_handler->which_report = which_report;
+  lazy_handler->tree_root = input_node;
+  lazy_handler->coord_report = coord;
 
   k2node_lazy_report_band_state_t first_state;
 
@@ -801,6 +824,26 @@ int k2node_report_band_lazy_clean(
     struct k2node_lazy_handler_report_band_t *lazy_handler) {
   report_band_lazy_clean(&lazy_handler->sub_handler);
   free_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack);
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_report_band_reset(
+    struct k2node_lazy_handler_report_band_t *lazy_handler) {
+  lazy_handler->has_next = FALSE;
+  lazy_handler->sub_handler.has_next = FALSE;
+  lazy_handler->at_leaf = FALSE;
+  reset_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack);
+  reset_lazy_report_band_state_t_stack(&lazy_handler->sub_handler.stack);
+
+  k2node_lazy_report_band_state_t first_state;
+
+  first_state.current_depth = 0;
+  first_state.input_node = lazy_handler->tree_root;
+  first_state.last_iteration = 0;
+  first_state.current_coord = lazy_handler->coord_report;
+  push_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack, first_state);
+  k2node_report_band_next(lazy_handler, &lazy_handler->next_result);
+
   return SUCCESS_ECODE_K2T;
 }
 

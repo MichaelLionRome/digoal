@@ -112,6 +112,8 @@ define_stack_of_type(k2node_lazy_naive_state)
   int at_leaf;
   ulong base_col;
   ulong base_row;
+
+  struct k2node *tree_root;
 };
 
 typedef struct {
@@ -133,6 +135,8 @@ define_stack_of_type(k2node_lazy_report_band_state_t)
   int has_next;
   ulong base_col;
   ulong base_row;
+  struct k2node *tree_root;
+  uint64_t coord_report;
 };
 
 int k2node_naive_scan_points_lazy_init(
@@ -148,6 +152,9 @@ int k2node_naive_scan_points_lazy_next(
 int k2node_naive_scan_points_lazy_has_next(
     struct k2node_lazy_handler_naive_scan_t *lazy_handler, int *result);
 
+int k2node_naive_scan_points_lazy_reset(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler);
+
 int k2node_report_row_lazy_init(
     struct k2node_lazy_handler_report_band_t *lazy_handler,
     struct k2node *input_node, struct k2qstate *st, uint64_t coord);
@@ -162,5 +169,8 @@ int k2node_report_band_next(
 
 int k2node_report_band_has_next(
     struct k2node_lazy_handler_report_band_t *lazy_handler, int *result);
+
+int k2node_report_band_reset(
+    struct k2node_lazy_handler_report_band_t *lazy_handler);
 
 #endif

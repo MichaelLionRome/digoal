@@ -1501,6 +1501,7 @@ int naive_scan_points_lazy_init(
   init_lazy_naive_state_stack(&lazy_handler->states_stack, qs->treedepth * 4);
   lazy_handler->qs = qs;
   lazy_handler->has_next = FALSE;
+  lazy_handler->tree_root = input_block;
 
   lazy_naive_state first_state;
   first_state.block_depth = 0;
@@ -1595,6 +1596,24 @@ int naive_scan_points_lazy_has_next(
   return SUCCESS_ECODE_K2T;
 }
 
+int naive_scan_points_lazy_reset(
+    struct lazy_handler_naive_scan_t *lazy_handler) {
+  reset_lazy_naive_state_stack(&lazy_handler->states_stack);
+
+  lazy_handler->has_next = FALSE;
+
+  lazy_naive_state first_state;
+  first_state.block_depth = 0;
+  first_state.input_block = lazy_handler->tree_root;
+  first_state.last_iteration = 0;
+  clean_child_result(&first_state.cr);
+
+  push_lazy_naive_state_stack(&lazy_handler->states_stack, first_state);
+  naive_scan_points_lazy_next(lazy_handler, &lazy_handler->next_result);
+
+  return SUCCESS_ECODE_K2T;
+}
+
 int report_band_next(struct lazy_handler_report_band_t *lazy_handler,
                      uint64_t *result) {
   *result = lazy_handler->next_result;
@@ -1682,6 +1701,8 @@ int report_band_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
   lazy_handler->which_report = which_report;
   lazy_handler->has_next = FALSE;
   lazy_handler->qs = qs;
+  lazy_handler->coord_to_report = coord;
+  lazy_handler->tree_root = input_block;
 
   init_lazy_report_band_state_t_stack(&lazy_handler->stack,
                                       lazy_handler->qs->treedepth * 4);
@@ -1719,6 +1740,22 @@ int report_band_lazy_clean(struct lazy_handler_report_band_t *lazy_handler) {
 int report_band_has_next(struct lazy_handler_report_band_t *lazy_handler,
                          int *result) {
   *result = lazy_handler->has_next;
+  return SUCCESS_ECODE_K2T;
+}
+
+int report_band_reset(struct lazy_handler_report_band_t *lazy_handler) {
+  reset_lazy_report_band_state_t_stack(&lazy_handler->stack);
+  lazy_handler->has_next = FALSE;
+
+  lazy_report_band_state_t first_state;
+  first_state.current_coord = lazy_handler->coord_to_report;
+  clean_child_result(&first_state.current_cr);
+  first_state.current_cr.resulting_block = lazy_handler->tree_root;
+  first_state.last_iteration = 0;
+
+  push_lazy_report_band_state_t_stack(&lazy_handler->stack, first_state);
+  report_band_next(lazy_handler, &lazy_handler->next_result);
+
   return SUCCESS_ECODE_K2T;
 }
 

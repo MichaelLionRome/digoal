@@ -193,3 +193,115 @@ TEST(usages, report_row_test_1) {
   finish_queries_state(&qs);
   free_rec_block(root_block);
 }
+
+TEST(usages, report_row_test_lazy_wreset_1) {
+  uint32_t treedepth = 5;
+  struct block *root_block = create_block();
+
+  struct queries_state qs;
+  init_queries_state(&qs, treedepth, MAX_NODES_IN_BLOCK, root_block);
+
+  std::vector<struct pair2dl> init_elements = {
+      {0, 0},  {3, 3}, {15, 3}, {3, 15}, {30, 31}, {31, 8},
+      {3, 30}, {3, 2}, {3, 29}, {8, 15}, {9, 15},  {15, 15}};
+
+  int qty = init_elements.size();
+  int already_exists;
+  for (int i = 0; i < qty; i++) {
+    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs,
+                 &already_exists);
+  }
+
+  lazy_handler_report_band_t lh;
+  report_row_lazy_init(&lh, root_block, &qs, 15);
+
+  int has_next = TRUE;
+
+  std::set<unsigned long> expected_values = {3, 8, 9, 15};
+
+  std::set<unsigned long> values;
+  std::set<unsigned long> values2;
+  for (;;) {
+    report_band_has_next(&lh, &has_next);
+    if (!has_next)
+      break;
+
+    uint64_t result;
+    report_band_next(&lh, &result);
+    values.insert(result);
+  }
+
+  ASSERT_EQ(values, expected_values);
+
+  report_band_reset(&lh);
+  for (;;) {
+    report_band_has_next(&lh, &has_next);
+    if (!has_next)
+      break;
+
+    uint64_t result;
+    report_band_next(&lh, &result);
+    values2.insert(result);
+  }
+
+  ASSERT_EQ(values2, expected_values);
+
+  report_band_lazy_clean(&lh);
+  finish_queries_state(&qs);
+  free_rec_block(root_block);
+}
+
+TEST(usages, report_all_test_lazy_wreset_1) {
+  uint32_t treedepth = 5;
+  struct block *root_block = create_block();
+
+  struct queries_state qs;
+  init_queries_state(&qs, treedepth, MAX_NODES_IN_BLOCK, root_block);
+
+  std::set<std::pair<unsigned long, unsigned long>> init_elements = {
+      {0, 0},  {3, 3}, {15, 3}, {3, 15}, {30, 31}, {31, 8},
+      {3, 30}, {3, 2}, {3, 29}, {8, 15}, {9, 15},  {15, 15}};
+
+  int already_exists;
+  for (auto &p : init_elements) {
+    insert_point(root_block, p.first, p.second, &qs, &already_exists);
+  }
+
+  lazy_handler_naive_scan_t lh;
+  naive_scan_points_lazy_init(root_block, &qs, &lh);
+
+  int has_next = TRUE;
+
+  std::set<std::pair<unsigned long, unsigned long>> values;
+  std::set<std::pair<unsigned long, unsigned long>> values2;
+
+  for (;;) {
+    naive_scan_points_lazy_has_next(&lh, &has_next);
+    if (!has_next)
+      break;
+
+    struct pair2dl result;
+    naive_scan_points_lazy_next(&lh, &result);
+    values.insert({result.col, result.row});
+  }
+
+  ASSERT_EQ(values, init_elements);
+
+  naive_scan_points_lazy_reset(&lh);
+
+  for (;;) {
+    naive_scan_points_lazy_has_next(&lh, &has_next);
+    if (!has_next)
+      break;
+
+    struct pair2dl result;
+    naive_scan_points_lazy_next(&lh, &result);
+    values2.insert({result.col, result.row});
+  }
+
+  ASSERT_EQ(values2, init_elements);
+
+  naive_scan_points_lazy_clean(&lh);
+  finish_queries_state(&qs);
+  free_rec_block(root_block);
+}
