@@ -39,6 +39,7 @@ extern "C" {
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <random>
 #include <vector>
 
 using namespace std;
@@ -246,6 +247,10 @@ TEST(block_delete_test, random_test_1) {
   auto gen_row = [](const std::vector<unsigned long> &ids, size_t i) {
     return (ids[i] + ids.size() * 33) % ids.size();
   };
+
+  std::random_device rd;
+  std::mt19937 g(rd());
+
   for (uint32_t treedepth = 3; treedepth <= 6; treedepth++) {
     for (int seed = 0; seed < 1000; seed++) {
       srand(seed);
@@ -258,7 +263,7 @@ TEST(block_delete_test, random_test_1) {
       for (unsigned long i = 0; i < matrix_size; i++)
         ids[i] = i;
 
-      random_shuffle(ids.begin(), ids.end());
+      shuffle(ids.begin(), ids.end(), g);
 
       for (unsigned long i = 0; i < matrix_size; i++) {
         unsigned long col = gen_col(ids, i);

@@ -9,7 +9,7 @@ Arroyuelo, Diego & de Bernardo, Guillermo & Gagie, Travis & Navarro, Gonzalo. (2
 * Build tested on Ubuntu 18.04, 19.10, 20.04; Debian 10.6 (buster)
 * Most likely won't work on Windows, but might work with custom compilation flow, the only platform dependent code
 is __builtin_popcount, can be redefined in definitions.h (with POP_COUNT(u32_input))
-* Untested on OS X
+* Working on macOS Monterey
 
 ```
 ./fetch_deps.sh

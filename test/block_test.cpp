@@ -34,9 +34,13 @@ extern "C" {
 
 #include <algorithm>
 #include <iostream>
+#include <random>
 #include <vector>
 
 using namespace std;
+
+std::random_device rd;
+std::mt19937 g(rd());
 
 TEST(block_test, problematic_input_seq_1_test) {
   uint32_t tree_depth = 22;
@@ -1242,7 +1246,7 @@ TEST(block_test, random_test_1) {
       for (unsigned long i = 0; i < matrix_size; i++)
         indexes[i] = i;
 
-      random_shuffle(indexes.begin(), indexes.end());
+      shuffle(indexes.begin(), indexes.end(), g);
 
       for (unsigned long i = 0; i < matrix_size; i++) {
         unsigned long col = i / side;
@@ -1281,7 +1285,7 @@ TEST(block_test, random_test_2) {
       for (unsigned long i = 0; i < matrix_size; i++)
         indexes[i] = i;
 
-      random_shuffle(indexes.begin(), indexes.end());
+      shuffle(indexes.begin(), indexes.end(), g);
 
       for (unsigned long i = 0; i < matrix_size; i++) {
         unsigned long col = indexes[i];

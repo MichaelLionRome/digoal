@@ -33,6 +33,7 @@ extern "C" {
 
 #include <algorithm>
 #include <iostream>
+#include <random>
 #include <vector>
 
 int main() {
@@ -49,7 +50,10 @@ int main() {
     for (unsigned long i = 0; i < matrix_size; i++)
       indexes[i] = i;
 
-    random_shuffle(indexes.begin(), indexes.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    shuffle(indexes.begin(), indexes.end(), g);
 
     for (unsigned long i = 0; i < matrix_size; i++) {
       unsigned long col = i / side;

@@ -2172,8 +2172,10 @@ int delete_point(struct block *input_block, unsigned long col,
   CHECK_ERR(delete_point_rec(input_block, &ds, cr, already_not_exists,
                              &has_children));
 
-  int total_deleted = 0;
-  CHECK_ERR(delete_nodes_in_block(input_block, &ds, &total_deleted));
+  if (!(*already_not_exists)) {
+    int total_deleted = 0;
+    CHECK_ERR(delete_nodes_in_block(input_block, &ds, &total_deleted));
+  }
 
   free_int_stack(&ds.nodes_to_delete);
   clean_morton_code(&ds.mc);
