@@ -69,15 +69,6 @@ struct k2tree_measurement {
   unsigned long bytes_topology;
 };
 
-struct sip_join_input {
-  struct block **blocks;
-  struct queries_state **qss;
-  struct sip_ipoint *join_coords;
-  int join_size;
-
-  struct sip_ipoint *_join_coords;
-};
-
 struct child_result {
   struct block *resulting_block;
   uint32_t resulting_node_idx;
@@ -137,9 +128,6 @@ int report_row_interactively(struct block *input_block, unsigned long row,
                              point_reporter_fun_t point_reporter,
                              void *report_state);
 
-int sip_join(struct sip_join_input input, coord_reporter_fun_t coord_reporter,
-             void *report_state);
-
 struct block *create_block(void);
 
 int free_rec_block(struct block *input_block);
@@ -158,6 +146,7 @@ typedef struct {
   struct child_result cr;
   TREE_DEPTH_T block_depth;
   uint32_t last_iteration;
+  uint32_t frontier_traversal_idx;
 } lazy_naive_state;
 
 define_stack_of_type(lazy_naive_state)
@@ -175,6 +164,7 @@ typedef struct {
   struct child_result current_cr;
   uint64_t current_coord;
   uint32_t last_iteration;
+  uint32_t frontier_traversal_idx;
 } lazy_report_band_state_t;
 
 define_stack_of_type(lazy_report_band_state_t)
@@ -185,7 +175,6 @@ define_stack_of_type(lazy_report_band_state_t)
   int which_report;
   uint64_t next_result;
   int has_next;
-
   uint64_t coord_to_report;
   struct block *tree_root;
 };
@@ -222,5 +211,7 @@ int report_band_has_next(struct lazy_handler_report_band_t *lazy_handler,
                          int *result);
 
 int clean_child_result(struct child_result *cresult);
+
+void debug_print_block_tree_structure(struct block *input_block);
 
 #endif /* _BLOCK_H_ */

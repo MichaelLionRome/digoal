@@ -57,6 +57,12 @@ struct queries_state {
   MAX_NODE_COUNT_T max_nodes_count;
   TREE_DEPTH_T treedepth;
 
+  int level_threshold_1;
+  int level_threshold_2;
+
+  int max_nodes_1;
+  int max_nodes_2;
+
   struct block *root;
 #ifdef DEBUG_STATS
   struct debug_stats dstats;

@@ -21,7 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include <algorithm>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <utility>
+#include <vector>
 
 extern "C" {
 #include <block.h>
@@ -30,11 +34,6 @@ extern "C" {
 #include <k2node.h>
 #include <queries_state.h>
 }
-
-#include <algorithm>
-#include <iostream>
-#include <utility>
-#include <vector>
 
 TEST(k2node_tests, problematic_input_seq_1_test) {
   std::vector<std::pair<unsigned long, unsigned long>> pairs = {

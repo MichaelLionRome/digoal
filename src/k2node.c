@@ -55,14 +55,6 @@ k2node_measure_tree_size_rec(struct k2node *input_node,
 void interactive_transform_points(unsigned long col, unsigned long row,
                                   void *data);
 
-int k2node_sip_join_rec(struct k2node_sip_input input,
-                        TREE_DEPTH_T current_depth, TREE_DEPTH_T treedepth,
-                        TREE_DEPTH_T cut_depth, struct morton_code *mc,
-                        struct k2node **current_nodes,
-                        struct sip_ipoint *join_coords,
-                        coord_reporter_fun_t coord_reporter,
-                        void *report_state);
-
 int k2node_has_more_than_one_child(struct k2node *input_node, int current_depth,
                                    int cut_depth);
 
@@ -71,8 +63,6 @@ int k2node_delete_point_rec(struct k2node *input_node, struct k2qstate *st,
                             int current_depth, int *already_not_exists,
                             int *has_children);
 
-void sip_select_child(unsigned long coord, coord_t coord_type,
-                      int *selected_children, unsigned long half_length);
 /* private implementations */
 
 struct k2_find_subtree_result
@@ -420,31 +410,6 @@ int k2node_delete_point_rec(struct k2node *input_node, struct k2qstate *st,
   return SUCCESS_ECODE_K2T;
 }
 
-void sip_select_child(unsigned long coord, coord_t coord_type,
-                      int *selected_children, unsigned long half_length) {
-  switch (coord_type) {
-  case COLUMN_COORD:
-    if (coord < half_length) {
-      selected_children[0] = 0;
-      selected_children[1] = 1;
-    } else {
-      selected_children[0] = 2;
-      selected_children[1] = 3;
-    }
-    break;
-  case ROW_COORD:
-  default:
-    if (coord < half_length) {
-      selected_children[0] = 0;
-      selected_children[1] = 2;
-    } else {
-      selected_children[0] = 1;
-      selected_children[1] = 3;
-    }
-    break;
-  }
-}
-
 /* public implementations */
 
 int k2node_has_point(struct k2node *root_node, unsigned long col,
@@ -555,146 +520,11 @@ int clean_k2qstate(struct k2qstate *st) {
   return SUCCESS_ECODE_K2T;
 }
 
-static inline void sip_assign_valid_part(int *valid_parts,
-                                         int *selected_children, int index,
-                                         struct k2node **current_nodes) {
-  for (int i = 0; i < 2; i++) {
-    if (valid_parts[i])
-      valid_parts[i] =
-          (current_nodes[index]->k2subtree.children[selected_children[i]] !=
-           NULL);
-  }
-}
-
 struct intermediate_reporter_data {
   coord_reporter_fun_t rep_fun;
   void *report_state;
   unsigned long base_coord;
 };
-
-static void intermediate_reporter(unsigned long coord, void *report_state) {
-  struct intermediate_reporter_data *ird =
-      (struct intermediate_reporter_data *)report_state;
-  ird->rep_fun(coord + ird->base_coord, ird->report_state);
-}
-
-int k2node_sip_join_rec(struct k2node_sip_input input,
-                        TREE_DEPTH_T current_depth, TREE_DEPTH_T treedepth,
-                        TREE_DEPTH_T cut_depth, struct morton_code *mc,
-                        struct k2node **current_nodes,
-                        struct sip_ipoint *join_coords,
-                        coord_reporter_fun_t coord_reporter,
-                        void *report_state) {
-
-  if (current_depth == cut_depth) {
-    struct pair2dl pair;
-    convert_morton_code_to_coordinates(mc, &pair);
-    unsigned long base_coord;
-    switch (join_coords[input.join_size - 1].coord_type) {
-    case COLUMN_COORD:
-      base_coord = pair.row;
-      break;
-    case ROW_COORD:
-    default:
-      base_coord = pair.col;
-      break;
-    }
-    base_coord = base_coord << (treedepth - cut_depth);
-
-    struct sip_join_input sji;
-    sji.blocks = input._blocks;
-    sji.qss = input._qss;
-    sji.join_coords = join_coords + current_depth * input.join_size;
-    sji.join_size = input.join_size;
-    for (int j = 0; j < input.join_size; j++) {
-      int jindex = current_depth * input.join_size + j;
-      struct block *root_block = current_nodes[jindex]->k2subtree.block_child;
-      sji.blocks[j] = root_block;
-      sji.qss[j] = &input.sts[j]->qs;
-    }
-
-    struct intermediate_reporter_data ird;
-    ird.base_coord = base_coord;
-    ird.rep_fun = coord_reporter;
-    ird.report_state = report_state;
-
-    return sip_join(sji, intermediate_reporter, &ird);
-  }
-
-  unsigned long half_length = 1UL
-                              << ((unsigned long)treedepth - current_depth - 1);
-
-  int valid_parts[2] = {TRUE, TRUE};
-  int selected_children[2];
-
-  for (int j = 0; j < input.join_size; j++) {
-    int jindex = input.join_size * current_depth + j;
-    sip_select_child(join_coords[jindex].coord, join_coords[jindex].coord_type,
-                     selected_children, half_length);
-
-    sip_assign_valid_part(valid_parts, selected_children, jindex,
-                          current_nodes);
-  }
-
-  for (int i = 0; i < 2; i++) {
-    if (valid_parts[i]) {
-      // Will always be the last given band
-      for (int j = 0; j < input.join_size; j++) {
-        int jindex = current_depth * input.join_size + j;
-        int next_jindex = (current_depth + 1) * input.join_size + j;
-        sip_select_child(join_coords[jindex].coord,
-                         join_coords[jindex].coord_type, selected_children,
-                         half_length);
-        current_nodes[next_jindex] =
-            current_nodes[jindex]->k2subtree.children[selected_children[i]];
-        join_coords[next_jindex].coord_type = join_coords[jindex].coord_type;
-        join_coords[next_jindex].coord =
-            join_coords[jindex].coord % half_length;
-      }
-      add_element_morton_code(mc, current_depth, selected_children[i]);
-      CHECK_ERR(k2node_sip_join_rec(input, current_depth + 1, treedepth,
-                                    cut_depth, mc, current_nodes, join_coords,
-                                    coord_reporter, report_state));
-    }
-  }
-
-  return SUCCESS_ECODE_K2T;
-}
-
-int k2node_sip_join(struct k2node_sip_input input,
-                    coord_reporter_fun_t coord_reporter, void *report_state) {
-
-  TREE_DEPTH_T treedepth = input.sts[0]->k2tree_depth;
-  TREE_DEPTH_T cut_depth = input.sts[0]->cut_depth;
-  struct k2node **current_nodes =
-      malloc(sizeof(struct k2node *) * input.join_size * (cut_depth + 1));
-  memcpy(current_nodes, input.nodes, sizeof(struct k2node *) * input.join_size);
-
-  struct morton_code mc;
-
-  init_morton_code(&mc, cut_depth);
-
-  struct sip_ipoint *join_coords =
-      malloc(sizeof(struct sip_ipoint) * input.join_size * (cut_depth + 1));
-  memcpy(join_coords, input.join_coords,
-         sizeof(struct sip_ipoint) * input.join_size);
-
-  input._qss = (struct queries_state **)malloc(sizeof(struct queries_state *) *
-                                               input.join_size);
-  input._blocks =
-      (struct block **)malloc(sizeof(struct block *) * input.join_size);
-
-  CHECK_ERR(k2node_sip_join_rec(input, 0, treedepth, cut_depth, &mc,
-                                current_nodes, join_coords, coord_reporter,
-                                report_state));
-
-  clean_morton_code(&mc);
-  free(input._qss);
-  free(input._blocks);
-  free(current_nodes);
-  free(join_coords);
-  return SUCCESS_ECODE_K2T;
-}
 
 int debug_validate_k2node(struct k2node *input_node, struct k2qstate *st,
                           TREE_DEPTH_T current_depth) {
@@ -809,6 +639,7 @@ int k2node_naive_scan_points_lazy_next(
         first_state.block_depth = 0;
         first_state.input_block = node->k2subtree.block_child;
         first_state.last_iteration = 0;
+        first_state.frontier_traversal_idx = 0;
         clean_child_result(&first_state.cr);
 
         push_lazy_naive_state_stack(&lazy_handler->sub_handler.states_stack,
@@ -980,6 +811,7 @@ int k2node_report_band_next(
         first_state.current_coord = current_state.current_coord;
         clean_child_result(&first_state.current_cr);
         first_state.last_iteration = 0;
+        first_state.frontier_traversal_idx = 0;
         first_state.current_cr.resulting_block = node->k2subtree.block_child;
 
         push_lazy_report_band_state_t_stack(&lazy_handler->sub_handler.stack,

@@ -43,6 +43,12 @@ int init_queries_state(struct queries_state *qs, uint32_t tree_depth,
   qs->max_nodes_count = max_nodes_count;
   qs->root = root_block;
   qs->treedepth = tree_depth;
+
+  qs->level_threshold_1 = 4;
+  qs->level_threshold_2 = 8;
+  qs->max_nodes_1 = 64 < max_nodes_count ? 64 : max_nodes_count;
+  qs->max_nodes_2 = 128 < max_nodes_count ? 128 : max_nodes_count;
+
 #ifdef DEBUG_STATS
   qs->dstats.time_on_sequential_scan = 0;
   qs->dstats.time_on_frontier_check = 0;

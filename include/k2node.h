@@ -41,16 +41,6 @@ struct k2node {
   } k2subtree;
 };
 
-struct k2node_sip_input {
-  struct k2node **nodes;
-  struct k2qstate **sts;
-  struct sip_ipoint *join_coords;
-  int join_size;
-
-  struct block **_blocks;
-  struct queries_state **_qss;
-};
-
 int k2node_has_point(struct k2node *k2node, unsigned long col,
                      unsigned long row, struct k2qstate *st, int *result);
 int k2node_insert_point(struct k2node *input_node, unsigned long col,
@@ -91,9 +81,6 @@ int init_k2qstate(struct k2qstate *st, TREE_DEPTH_T treedepth,
 int clean_k2qstate(struct k2qstate *st);
 struct k2tree_measurement k2node_measure_tree_size(struct k2node *input_node,
                                                    unsigned long cut_depth);
-
-int k2node_sip_join(struct k2node_sip_input input,
-                    coord_reporter_fun_t coord_reporter, void *report_state);
 
 int debug_validate_k2node(struct k2node *input_node, struct k2qstate *st,
                           TREE_DEPTH_T current_depth);

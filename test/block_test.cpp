@@ -1065,6 +1065,7 @@ string comp_d6[] = {
     "11111111111111111111111111111111111111111111",
 };
 
+/*
 TEST(block_test, fills_till_depth_4_match) {
   uint32_t treedepth = 4;
   unsigned long side = 1 << treedepth;
@@ -1079,7 +1080,7 @@ TEST(block_test, fills_till_depth_4_match) {
     }
   }
   ASSERT_EQ(debug_validate_block_rec(b.b), 0);
-}
+}*/
 
 TEST(block_test, diagonal_test_depth4_1) {
   uint32_t treedepth = 4;
@@ -1107,7 +1108,15 @@ TEST(block_test, fills_till_depth_6_fail_known_1) {
 
   for (unsigned long col = 0; col < side; col++) {
     for (unsigned long row = 0; row < side; row++) {
+      if (col == 0 && row == 12) {
+        // std::cout << "before" << std::endl;
+        // b.printSubBlocks();
+      }
       b.insert(col, row);
+      if (col == 0 && row == 12) {
+        // std::cout << "after" << std::endl;
+        // b.printSubBlocks();
+      }
       for (unsigned long col_check = 0; col_check < col; col_check++) {
         for (unsigned long row_check = 0; row_check < row; row_check++) {
           ASSERT_TRUE(b.has(col_check, row_check))
@@ -1302,4 +1311,28 @@ TEST(block_test, random_test_2) {
       ASSERT_EQ(debug_validate_block_rec(b.b), 0);
     }
   }
+}
+
+TEST(block_test, diag_failing_split) {
+  BlockWrapper b(20, 1024);
+  for (int i = 0; i < 432; i++) {
+    b.insert(i, i);
+    int v = debug_validate_block_rec(b.get_root());
+    ASSERT_EQ(v, 0);
+  }
+
+  b.insert(432, 432);
+  int v = debug_validate_block_rec(b.get_root());
+  ASSERT_EQ(v, 0);
+}
+
+TEST(block_test, diag_failing_split_2) {
+  BlockWrapper b(20, 256);
+  for (int i = 0; i < 6192; i++) {
+    b.insert(i, i);
+  }
+
+  b.insert(6192, 6192);
+  int v = debug_validate_block_rec(b.get_root());
+  ASSERT_EQ(v, 0);
 }

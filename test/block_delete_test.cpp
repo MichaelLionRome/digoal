@@ -65,11 +65,14 @@ TEST(block_delete_test, simple_delete) {
   };
 
   int already_exists;
+  int count = 0;
   for (const auto &p : data) {
+
     _SAFE_OP_K2(
         insert_point(root_block, p.first, p.second, &qs, &already_exists));
-
-    // debug_print_block_rec(root_block);
+    int is_valid = debug_validate_block_rec(root_block) == 0;
+    ASSERT_TRUE(is_valid) << "failed at insertion " << count;
+    count++;
   }
 
   int was_deleted;
@@ -171,13 +174,11 @@ TEST(block_delete_test, delete_full_2) {
 
   finish_queries_state(&qs);
   free_rec_block(root_block);
-  // k2tree_free_block(root_block);
 }
 
 TEST(block_delete_test, ignore_non_existent_test_1) {
   int tree_depth = 3;
   unsigned long side = 1u << tree_depth;
-  // unsigned long matrix_size = side * side;
   BlockWrapper b(tree_depth, 16);
   for (unsigned long i = 0; i < side; i++)
     for (unsigned long j = 0; j < side; j++) {
@@ -185,7 +186,6 @@ TEST(block_delete_test, ignore_non_existent_test_1) {
     }
 
   std::string prev_rep;
-  // auto prev_rep = b.getStringRep();
   for (int k = 0; k < 100; k++) {
     b.erase(5, 5);
     auto curr_rep = b.getStringRep();
