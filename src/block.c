@@ -542,7 +542,6 @@ int find_point(struct block *input_block, struct queries_state *qs,
 
   uint32_t depth = block_depth;
   uint32_t relative_depth = 0;
-  int level = 0;
   for (depth = block_depth; depth < qs->treedepth; depth++) {
     relative_depth = depth - current_cr.block_depth;
     struct child_result prev_cr = current_cr;
@@ -570,7 +569,6 @@ int find_point(struct block *input_block, struct queries_state *qs,
 
       prev_cr.resulting_node_idx = 0;
       prev_cr.resulting_relative_depth = 0;
-      level++;
     }
 
     psr->treedepth = qs->treedepth;
@@ -579,7 +577,7 @@ int find_point(struct block *input_block, struct queries_state *qs,
       psr->last_child_result_reached = prev_cr;
       psr->depth_reached = depth;
       psr->point_exists = FALSE;
-      psr->level = level;
+      psr->level = current_cr.block_depth;
       return SUCCESS_ECODE_K2T;
     }
 
@@ -592,7 +590,7 @@ int find_point(struct block *input_block, struct queries_state *qs,
       psr->last_child_result_reached = current_cr;
       psr->depth_reached = depth + 1;
       psr->point_exists = does_child_exists;
-      psr->level = level;
+      psr->level = current_cr.block_depth;
       return SUCCESS_ECODE_K2T;
     }
   }
@@ -601,7 +599,7 @@ int find_point(struct block *input_block, struct queries_state *qs,
   psr->last_child_result_reached = current_cr;
   psr->depth_reached = depth - 1;
   psr->point_exists = TRUE;
-  psr->level = level;
+  psr->level = block_depth;
 
   return SUCCESS_ECODE_K2T;
 }
