@@ -39,9 +39,9 @@ uint32_t *k2tree_alloc_u32array(int size);
 int k2tree_free_block(struct block *);
 int k2tree_free_u32array(uint32_t *data, int size);
 
-NODES_BV_T *k2tree_alloc_preorders(int capacity);
+void *k2tree_alloc_preorders(int capacity);
 struct block *k2tree_alloc_blocks_array(int capacity);
 
-void k2tree_free_preorders(NODES_BV_T *preorders);
+void k2tree_free_preorders(void *preorders);
 void k2tree_free_blocks_array(struct block *blocks_array);
 #endif /* __MEMALLOC_H_ */

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 #include <stdlib.h>
 
+#include "bitvector.h"
 #include "block.h"
 #include "definitions.h"
 #include "memalloc.h"
@@ -46,13 +47,13 @@ int k2tree_free_u32array(uint32_t *data, int size) {
   return SUCCESS_ECODE_K2T;
 }
 
-NODES_BV_T *k2tree_alloc_preorders(int capacity) {
-  return (NODES_BV_T *)malloc(sizeof(NODES_BV_T) * capacity);
+void *k2tree_alloc_preorders(int capacity) {
+  return malloc(sizeof(NODES_BV_T) * capacity);
 }
 struct block *k2tree_alloc_blocks_array(int capacity) {
   return (struct block *)malloc(sizeof(struct block) * capacity);
 }
-void k2tree_free_preorders(NODES_BV_T *preorders) { free(preorders); }
+void k2tree_free_preorders(void *preorders) { free(preorders); }
 void k2tree_free_blocks_array(struct block *blocks_array) {
   free(blocks_array);
 }
