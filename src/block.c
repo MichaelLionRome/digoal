@@ -1557,6 +1557,7 @@ int naive_scan_points_lazy_next(struct lazy_handler_naive_scan_t *lazy_handler,
       }
 
       struct child_result cr;
+      clean_child_result(&cr);
       int err = child(input_block, cresult->resulting_node_idx, child_pos,
                       cresult->resulting_relative_depth, &cr, qs,
                       current.block_depth);
