@@ -177,4 +177,6 @@ int k2node_report_band_has_next(
 int k2node_report_band_reset(
     struct k2node_lazy_handler_report_band_t *lazy_handler);
 
+int print_debug_k2node(struct k2node *node, struct k2qstate *st);
+
 #endif

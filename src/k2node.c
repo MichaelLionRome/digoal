@@ -103,7 +103,7 @@ k2_find_subtree(struct k2node *node, struct k2qstate *st, unsigned long col,
     return result;
   }
   unsigned long remaining_depth = st->k2tree_depth - current_depth;
-  unsigned long half_length = 1 << (remaining_depth - 1);
+  unsigned long half_length = 1UL << (remaining_depth - 1UL);
 
   return k2_find_subtree(next_node, st, col % half_length, row % half_length,
                          current_depth + 1);
@@ -307,7 +307,7 @@ struct k2_find_subtree_result fill_insertion_path(struct k2node *from_node,
 
   from_node->k2subtree.children[child_pos] = create_k2node();
 
-  uint32_t half_length = 1 << (remaining_depth - 1);
+  unsigned long half_length = 1UL << (remaining_depth - 1UL);
 
   return fill_insertion_path(from_node->k2subtree.children[child_pos],
                              col % half_length, row % half_length, st,
@@ -1058,6 +1058,33 @@ int k2node_delete_point(struct k2node *input_node, unsigned long col,
   int has_children = TRUE;
   return k2node_delete_point_rec(input_node, st, col, row, 0,
                                  already_not_exists, &has_children);
+}
+
+static int print_debug_k2node_rec(struct k2node *node, int curr_depth,
+                                  struct k2qstate *st) {
+
+  if (curr_depth == st->cut_depth) {
+    if (node->k2subtree.block_child == NULL)
+      return 0;
+    printf(". BlOCK: \n");
+    debug_print_block_rec(node->k2subtree.block_child);
+    printf("\n\n");
+    return 0;
+  }
+
+  for (int i = 0; i < 4; i++) {
+    struct k2node *child = node->k2subtree.children[i];
+    if (child != NULL) {
+      printf("%d, ", i);
+      print_debug_k2node_rec(child, curr_depth + 1, st);
+    }
+  }
+  return 0;
+}
+
+int print_debug_k2node(struct k2node *node, struct k2qstate *st) {
+  print_debug_k2node_rec(node, 0, st);
+  return 0;
 }
 
 declare_stack_of_type(k2node_lazy_naive_state)

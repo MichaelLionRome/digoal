@@ -126,7 +126,6 @@ int convert_morton_code_to_coordinates_select_treedepth(
       break;
     default:
       return INVALID_MC_VALUE;
-      break;
     }
   }
   result->col = col;
