@@ -965,10 +965,12 @@ int k2node_report_band_next(
         convert_morton_code_to_coordinates_select_treedepth(
             &st->mc, &high_level_coordinates, st->cut_depth);
 
-        lazy_handler->base_col = high_level_coordinates.col
-                                 << (st->k2tree_depth - st->cut_depth);
-        lazy_handler->base_row = high_level_coordinates.row
-                                 << (st->k2tree_depth - st->cut_depth);
+        lazy_handler->base_col =
+            high_level_coordinates.col
+            << (unsigned long)(st->k2tree_depth - st->cut_depth);
+        lazy_handler->base_row =
+            high_level_coordinates.row
+            << (unsigned long)(st->k2tree_depth - st->cut_depth);
 
         lazy_handler->sub_handler.has_next = FALSE;
         lazy_handler->sub_handler.which_report = lazy_handler->which_report;
@@ -1009,8 +1011,8 @@ int k2node_report_band_next(
       continue;
     }
 
-    unsigned long next_remaining_depth = remaining_depth - 1;
-    unsigned long half_level = 1 << next_remaining_depth;
+    unsigned long next_remaining_depth = remaining_depth - 1UL;
+    unsigned long half_level = 1UL << next_remaining_depth;
 
     for (uint32_t child_pos = current_state.last_iteration; child_pos < 4;
          child_pos++) {

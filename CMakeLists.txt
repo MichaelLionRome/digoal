@@ -104,6 +104,7 @@ add_executable(k2node_delete_test test/k2node_delete_test.cpp)
 add_executable(block_small_tests test/block_small_tests.cpp)
 add_executable(k2node_small_tests test/k2node_small_tests.cpp)
 add_executable(k2node_problematic_input_tests test/k2node_problematic_input_tests.cpp)
+add_executable(k2node_problematic_input_tests2 test/k2node_problematic_input_tests2.cpp)
 
 target_link_libraries(block_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn)
 target_link_libraries(block_leak_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn)
@@ -121,6 +122,7 @@ target_link_libraries(k2node_delete_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread
 target_link_libraries(block_small_tests   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 target_link_libraries(k2node_small_tests   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 target_link_libraries(k2node_problematic_input_tests   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
+target_link_libraries(k2node_problematic_input_tests2   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 
 
 add_test(NAME block_test COMMAND ./block_test)
@@ -137,5 +139,6 @@ add_test(NAME k2node_delete_test COMMAND ./block_delete_test)
 add_test(NAME block_small_tests COMMAND ./block_small_tests)
 add_test(NAME k2node_small_tests COMMAND ./k2node_small_tests)
 add_test(NAME k2node_problematic_input_tests COMMAND ./k2node_problematic_input_tests)
+add_test(NAME k2node_problematic_input_tests2 COMMAND ./k2node_problematic_input_tests2)
 
 endif()
