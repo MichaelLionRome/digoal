@@ -54,11 +54,8 @@ void init_block_frontier_with_capacity(struct block *input_block,
 }
 
 void free_block_frontier(struct block *input_block) {
-
-  if (input_block->children > 0) {
-    free(input_block->preorders);
-    free(input_block->children_blocks);
-  }
+  free(input_block->preorders);
+  free(input_block->children_blocks);
 }
 
 int frontier_check(struct block *input_block, uint32_t node_idx,
