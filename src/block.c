@@ -1240,7 +1240,7 @@ struct block *create_block(void) {
 }
 
 int free_rec_block(struct block *input_block) {
-  for (int i = 0; i < input_block->children; i++) {
+  for (int i = 0; i < (int)input_block->children; i++) {
     struct block *current_block = input_block->children_blocks[i];
     CHECK_ERR(free_rec_block(current_block));
   }
@@ -1260,8 +1260,8 @@ struct k2tree_measurement measure_tree_size(struct block *input_block) {
   unsigned long children_total_blocks = 0;
   unsigned long children_bytes_topology = 0;
 
-  for (int child_block_index = 0; child_block_index < input_block->children;
-       child_block_index++) {
+  for (int child_block_index = 0;
+       child_block_index < (int)input_block->children; child_block_index++) {
     struct k2tree_measurement children_measurement =
         measure_tree_size(input_block->children_blocks[child_block_index]);
     children_total_bytes += children_measurement.total_bytes;
@@ -1434,7 +1434,7 @@ int sip_join(struct sip_join_input input, coord_reporter_fun_t coord_reporter,
 }
 
 int debug_validate_block(struct block *input_block) {
-  for (int node_i = 0; node_i < input_block->nodes_count; node_i++) {
+  for (int node_i = 0; node_i < (int)input_block->nodes_count; node_i++) {
     int container_i = (node_i * 4) / 32;
     uint32_t part = input_block->container[container_i];
     int node_in_part = (node_i * 4) % 32;
@@ -1455,7 +1455,7 @@ int debug_validate_block_rec(struct block *input_block) {
   if (debug_validate_block(input_block))
     return 1;
 
-  for (int i = 0; i < input_block->children; i++) {
+  for (int i = 0; i < (int)input_block->children; i++) {
     int res = debug_validate_block_rec(input_block->children_blocks[i]);
     if (res)
       return res + 1;
@@ -1490,7 +1490,7 @@ void debug_print_block(struct block *b) {
 
 void debug_print_block_rec(struct block *b) {
   debug_print_block(b);
-  for (int i = 0; i < b->children; i++) {
+  for (int i = 0; i < (int)b->children; i++) {
     debug_print_block_rec(b->children_blocks[i]);
   }
 }

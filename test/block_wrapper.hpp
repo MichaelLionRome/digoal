@@ -46,13 +46,11 @@ public:
   struct block *b;
   struct queries_state qs;
 
-  BlockWrapper(uint32_t tree_depth) {
-    b = create_block();
-    init_queries_state(&qs, tree_depth, MAX_NODES_IN_BLOCK, b);
-  }
+  BlockWrapper(uint32_t tree_depth)
+      : BlockWrapper(tree_depth, MAX_NODES_IN_BLOCK) {}
   BlockWrapper(uint32_t tree_depth, uint32_t max_node_count)
-      : BlockWrapper(tree_depth) {
-    qs.max_nodes_count = max_node_count;
+      : b(create_block()) {
+    init_queries_state(&qs, tree_depth, max_node_count, b);
   }
 
   ~BlockWrapper() noexcept(false) {
@@ -140,14 +138,14 @@ public:
 
   string frontierStr() {
     stringstream ss;
-    for (int i = 0; i < b->children; i++) {
+    for (int i = 0; i < (int)b->children; i++) {
       uint32_t fval = b->preorders[i];
       ss << fval << ", ";
     }
     return ss.str();
   }
   void printSubBlocks() {
-    for (int i = 0; i < b->children; i++) {
+    for (int i = 0; i < (int)b->children; i++) {
       struct block *sb = b->children_blocks[i];
       cout << getStringRepBlock(sb, true) << endl;
     }

@@ -203,7 +203,7 @@ int add_frontier_node(struct block *input_block,
 
 /* TODO: (OPTIMIZATION) replace by binary search if needed */
 int fix_frontier_indexes(struct block *input_block, uint32_t start, int delta) {
-  for (int i = 0; i < input_block->children; i++) {
+  for (int i = 0; i < (int)input_block->children; i++) {
     uint32_t current_preorder = input_block->preorders[i];
     if (current_preorder >= start) {
       if ((int)current_preorder < delta) {
@@ -227,7 +227,7 @@ int collapse_frontier_nodes(struct block *input_block, uint32_t from_preorder,
 
   int left_extreme = -1;
   int right_extreme = -1;
-  for (int i = 0; i < input_block->children; i++) {
+  for (int i = 0; i < (int)input_block->children; i++) {
     // uint32_t current_preorder = read_uint_element(&bf->frontier, i);
     uint32_t current_preorder = input_block->preorders[i];
     if (current_preorder >= from_preorder && left_extreme == -1) {
