@@ -26,6 +26,7 @@ SOFTWARE.
 #include "bitvector.h"
 #include "block.h"
 #include "definitions.h"
+#include "k2node.h"
 #include "memalloc.h"
 
 struct block *k2tree_alloc_block(void) {
@@ -57,3 +58,9 @@ void k2tree_free_preorders(void *preorders) { free(preorders); }
 void k2tree_free_blocks_array(struct block *blocks_array) {
   free(blocks_array);
 }
+
+struct k2node *k2tree_allocate_k2node(void) {
+  return calloc(1, sizeof(struct k2node));
+}
+
+void k2tree_free_k2node(struct k2node *node) { free(node); }

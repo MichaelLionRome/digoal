@@ -393,7 +393,7 @@ int k2node_report_row_interactively(struct k2node *input_node, ulong row,
 }
 
 struct k2node *create_k2node(void) {
-  return (struct k2node *)calloc(1, sizeof(struct k2node));
+  return k2tree_allocate_k2node();
 }
 
 int free_rec_k2node(struct k2node *input_node, ulong current_depth,
@@ -408,7 +408,7 @@ int free_rec_k2node(struct k2node *input_node, ulong current_depth,
     }
   }
 
-  free(input_node);
+  k2tree_free_k2node(input_node);
   return SUCCESS_ECODE_K2T;
 }
 

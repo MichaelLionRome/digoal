@@ -31,6 +31,7 @@ struct block_topology;
 struct block_frontier;
 
 struct bitvector;
+struct k2node;
 
 struct block *k2tree_alloc_block(void);
 
@@ -44,4 +45,7 @@ struct block *k2tree_alloc_blocks_array(int capacity);
 
 void k2tree_free_preorders(void *preorders);
 void k2tree_free_blocks_array(struct block *blocks_array);
+
+struct k2node *k2tree_allocate_k2node(void);
+void k2tree_free_k2node(struct k2node *node);
 #endif /* __MEMALLOC_H_ */
