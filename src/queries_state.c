@@ -26,7 +26,8 @@ SOFTWARE.
 /* PRIVATE PROTOTYPES */
 int init_sequential_scan_result(struct sequential_scan_result *scr,
                                 MAX_NODE_COUNT_T max_nodes_count);
-int clean_sequential_scan_result(struct sequential_scan_result *scr);
+int clean_sequential_scan_result(struct sequential_scan_result *scr,
+                                 MAX_NODE_COUNT_T max_nodes_count);
 /* END PRIVATE PROTOTYPES */
 
 /* IMPLEMENTATION PUBLIC FUNCTIONS */
@@ -52,7 +53,7 @@ int finish_queries_state(struct queries_state *qs) {
   free_nsi_t_stack(&qs->subtrees_count);
   free_int_stack(&qs->not_yet_traversed);
   clean_morton_code(&qs->mc);
-  return clean_sequential_scan_result(&qs->sc_result);
+  return clean_sequential_scan_result(&qs->sc_result, qs->max_nodes_count);
 }
 /* END IMPLEMENTATION PUBLIC FUNCTIONS */
 
@@ -65,10 +66,11 @@ int init_sequential_scan_result(struct sequential_scan_result *scr,
   return SUCCESS_ECODE_K2T;
 }
 
-int clean_sequential_scan_result(struct sequential_scan_result *scr) {
+int clean_sequential_scan_result(struct sequential_scan_result *scr,
+                                 MAX_NODE_COUNT_T max_nodes_count) {
 
-  k2tree_free_u32array(scr->subtrees_count_map);
-  k2tree_free_u32array(scr->relative_depth_map);
+  k2tree_free_u32array(scr->subtrees_count_map, max_nodes_count);
+  k2tree_free_u32array(scr->relative_depth_map, max_nodes_count);
 
   return SUCCESS_ECODE_K2T;
 }

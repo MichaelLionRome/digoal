@@ -23,15 +23,9 @@ SOFTWARE.
 */
 #include <stdlib.h>
 
-#include <bitvector.h>
-
-#include "memalloc.h"
-
 #include "block.h"
-#include "block_frontier.h"
-#include "block_topology.h"
-
 #include "definitions.h"
+#include "memalloc.h"
 
 struct block *k2tree_alloc_block(void) {
   return (struct block *)malloc(sizeof(struct block));
@@ -46,7 +40,8 @@ int k2tree_free_block(struct block *b) {
   return SUCCESS_ECODE_K2T;
 }
 
-int k2tree_free_u32array(uint32_t *data) {
+int k2tree_free_u32array(uint32_t *data, int size) {
+  __UNUSED(size);
   free(data);
   return SUCCESS_ECODE_K2T;
 }

@@ -37,6 +37,6 @@ struct block *k2tree_alloc_block(void);
 uint32_t *k2tree_alloc_u32array(int size);
 
 int k2tree_free_block(struct block *);
-int k2tree_free_u32array(uint32_t *data);
+int k2tree_free_u32array(uint32_t *data, int size);
 
 #endif /* __MEMALLOC_H_ */
