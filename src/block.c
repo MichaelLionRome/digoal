@@ -1025,8 +1025,10 @@ int report_rec(unsigned long current_col, struct queries_state *qs,
   TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
   if (real_depth + 1 == tree_depth) {
     // report the coordinate, because we have reached a leaf
-    unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
-    unsigned long half_length = side_length >> 1;
+
+    unsigned long half_length =
+        1UL << ((unsigned long)tree_depth - (unsigned long)real_depth - 1);
+
     for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
       if (!REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,
                                      child_pos)) {
@@ -1045,8 +1047,8 @@ int report_rec(unsigned long current_col, struct queries_state *qs,
     return SUCCESS_ECODE_K2T;
   }
 
-  unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
-  unsigned long half_length = side_length >> 1;
+  unsigned long half_length =
+      1UL << ((unsigned long)tree_depth - (unsigned long)real_depth - 1UL);
 
   uint32_t current_node_index = current_cr->resulting_node_idx;
 
@@ -1107,8 +1109,8 @@ int report_rec_interactively(unsigned long current_col,
   TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
   if (real_depth + 1 == tree_depth) {
     // report the coordinate, because we have reached a leaf
-    unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
-    unsigned long half_length = side_length >> 1;
+    unsigned long half_length =
+        1UL << ((unsigned long)tree_depth - (unsigned long)real_depth - 1UL);
     for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
       if (!REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,
                                      child_pos)) {
@@ -1127,8 +1129,8 @@ int report_rec_interactively(unsigned long current_col,
     return SUCCESS_ECODE_K2T;
   }
 
-  unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
-  unsigned long half_length = side_length >> 1;
+  unsigned long half_length =
+      1UL << ((unsigned long)tree_depth - (unsigned long)real_depth - 1UL);
 
   uint32_t current_node_index = current_cr->resulting_node_idx;
 
@@ -1316,9 +1318,10 @@ struct k2tree_measurement measure_tree_size(struct block *input_block) {
   return result;
 }
 
-static inline void sip_select_child(long coord, coord_t coord_type,
+static inline void sip_select_child(unsigned long coord, coord_t coord_type,
                                     int *selected_child_1,
-                                    int *selected_child_2, long half_length) {
+                                    int *selected_child_2,
+                                    unsigned long half_length) {
   switch (coord_type) {
   case COLUMN_COORD:
     if (coord < half_length) {
@@ -1367,8 +1370,8 @@ static int sip_join_rec(struct sip_join_input input,
   TREE_DEPTH_T relative_depth =
       crs[current_depth * input.join_size].resulting_relative_depth;
   TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
-  unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
-  unsigned long half_length = side_length >> 1;
+  unsigned long half_length =
+      1UL << ((unsigned long)tree_depth - (unsigned long)real_depth - 1UL);
 
   int valid_parts[2] = {TRUE, TRUE};
   int selected_children[2];
@@ -1664,8 +1667,8 @@ int report_band_next(struct lazy_handler_report_band_t *lazy_handler,
     TREE_DEPTH_T relative_depth = current_cr->resulting_relative_depth;
     TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
 
-    unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
-    unsigned long half_length = side_length >> 1;
+    unsigned long half_length =
+        1UL << ((unsigned long)tree_depth - (unsigned long)real_depth - 1);
 
     for (uint32_t child_pos = current_state.last_iteration; child_pos < 4;
          child_pos++) {

@@ -103,7 +103,7 @@ typedef struct pair2dl {
 typedef enum { COLUMN_COORD = 0, ROW_COORD = 1 } coord_t;
 
 struct sip_ipoint {
-  long coord;
+  unsigned long coord;
   coord_t coord_type;
 };
 

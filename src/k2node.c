@@ -71,8 +71,8 @@ int k2node_delete_point_rec(struct k2node *input_node, struct k2qstate *st,
                             int current_depth, int *already_not_exists,
                             int *has_children);
 
-void sip_select_child(long coord, coord_t coord_type, int *selected_children,
-                      long half_length);
+void sip_select_child(unsigned long coord, coord_t coord_type,
+                      int *selected_children, unsigned long half_length);
 /* private implementations */
 
 struct k2_find_subtree_result
@@ -420,8 +420,8 @@ int k2node_delete_point_rec(struct k2node *input_node, struct k2qstate *st,
   return SUCCESS_ECODE_K2T;
 }
 
-void sip_select_child(long coord, coord_t coord_type, int *selected_children,
-                      long half_length) {
+void sip_select_child(unsigned long coord, coord_t coord_type,
+                      int *selected_children, unsigned long half_length) {
   switch (coord_type) {
   case COLUMN_COORD:
     if (coord < half_length) {
