@@ -1355,7 +1355,7 @@ TEST(block_test, naive_scan_test_1) {
   int count = 0;
   for (int i = 0; i < resulting_pairs.nof_items; i++) {
     pair2dl p = resulting_pairs.data[i];
-    b.has(p.col, p.row);
+    ASSERT_TRUE(b.has(p.col, p.row));
     count++;
   }
   ASSERT_EQ(count, cols * rows);
@@ -1381,7 +1381,7 @@ TEST(block_test, band_scan_test_1) {
   int count = 0;
   for (int i = 0; i < resulting_pairs.nof_items; i++) {
     pair2dl p = resulting_pairs.data[i];
-    b.has(p.col, p.row);
+    ASSERT_TRUE(b.has(p.col, p.row));
     count++;
   }
   ASSERT_EQ(count, rows);
@@ -1406,7 +1406,7 @@ TEST(block_test, band_scan_test_2) {
   int count = 0;
   for (int i = 0; i < resulting_pairs.nof_items; i++) {
     pair2dl p = resulting_pairs.data[i];
-    b.has(p.col, p.row);
+    ASSERT_TRUE(b.has(p.col, p.row));
     count++;
   }
   ASSERT_EQ(count, cols);
