@@ -50,24 +50,32 @@ void add_element_morton_code(struct morton_code *mc, uint32_t position,
   mc->container[position] = code;
 }
 
-uint32_t get_code_at_morton_code(struct morton_code *mc, uint32_t position) {
+unsigned long get_code_at_morton_code(struct morton_code *mc,
+                                      unsigned long position) {
   // return (mc->container[2 * position] << 1) + mc->container[2 * position +
   // 1];
   return mc->container[position];
 }
 
-uint32_t leaf_child_morton_code(struct morton_code *mc) {
+unsigned long leaf_child_morton_code(struct morton_code *mc) {
   return get_code_at_morton_code(mc, mc->treedepth - 1);
 }
 
-void convert_coordinates_to_morton_code(ulong col, ulong row,
+void convert_coordinates_to_morton_code(unsigned long col, unsigned long row,
                                         uint32_t treedepth,
                                         struct morton_code *result) {
-  ulong current_level = (1L << (ulong)treedepth);
 
-  ulong half_level;
+  unsigned long half_level;
+  if (treedepth > 64) {
+    fprintf(stderr, "K2tree not implemented for depths higher than 64\n");
+    exit(1);
+  } else if (treedepth == 64) {
+    half_level = 1UL << 63UL;
+  } else {
+    half_level = (1UL << (unsigned long)(treedepth - 1));
+  }
   uint32_t mc_position = 0;
-  while ((half_level = current_level >> 1) > 0) {
+  while (half_level > 0) {
     uint32_t quadrant;
 
     if (col >= half_level && row >= half_level) {
@@ -82,7 +90,7 @@ void convert_coordinates_to_morton_code(ulong col, ulong row,
 
     col %= half_level;
     row %= half_level;
-    current_level = half_level;
+    half_level >>= 1UL;
 
     add_element_morton_code(result, mc_position++, quadrant);
   }
@@ -97,21 +105,22 @@ int convert_morton_code_to_coordinates(struct morton_code *input_mc,
 int convert_morton_code_to_coordinates_select_treedepth(
     struct morton_code *input_mc, struct pair2dl *result,
     TREE_DEPTH_T treedepth) {
-  long col = 0;
-  long row = 0;
-  for (unsigned int i = 0; i < treedepth; i++) {
-    uint32_t current = get_code_at_morton_code(input_mc, i);
-    uint32_t current_pow = treedepth - 1 - i;
+  unsigned long tree_depth_ul = treedepth;
+  unsigned long col = 0;
+  unsigned long row = 0;
+  for (unsigned long i = 0; i < tree_depth_ul; i++) {
+    unsigned long current = get_code_at_morton_code(input_mc, i);
+    unsigned long current_pow = tree_depth_ul - 1 - i;
     switch (current) {
     case 3:
-      col += 1 << current_pow;
-      row += 1 << current_pow;
+      col += 1UL << current_pow;
+      row += 1UL << current_pow;
       break;
     case 2:
-      col += 1 << current_pow;
+      col += 1UL << current_pow;
       break;
     case 1:
-      row += 1 << current_pow;
+      row += 1UL << current_pow;
       break;
     case 0:
       break;

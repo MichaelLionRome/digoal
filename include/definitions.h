@@ -86,8 +86,6 @@ SOFTWARE.
 #define POP_COUNT(u32_input) __builtin_popcount(u32_input)
 #endif
 
-typedef unsigned long ulong;
-
 #ifndef MAX_NODES_IN_BLOCK
 #define MAX_NODES_IN_BLOCK 256
 #endif
@@ -96,8 +94,8 @@ typedef unsigned long ulong;
 #endif
 
 typedef struct pair2dl {
-  long col;
-  long row;
+  unsigned long col;
+  unsigned long row;
 } pair2dl_t;
 
 // typedef struct pair2dl pair2dl_t;

@@ -98,18 +98,20 @@ struct child_result {
   TREE_DEPTH_T previous_depth;
 };
 
-typedef void (*point_reporter_fun_t)(ulong, ulong, void *);
+typedef void (*point_reporter_fun_t)(unsigned long, unsigned long, void *);
 
-typedef void (*coord_reporter_fun_t)(ulong, void *);
+typedef void (*coord_reporter_fun_t)(unsigned long, void *);
 
-int has_point(struct block *input_block, ulong col, ulong row,
+int has_point(struct block *input_block, unsigned long col, unsigned long row,
               struct queries_state *qs, int *result);
 
-int insert_point(struct block *input_block, ulong col, ulong row,
-                 struct queries_state *qs, int *already_exists);
+int insert_point(struct block *input_block, unsigned long col,
+                 unsigned long row, struct queries_state *qs,
+                 int *already_exists);
 
-int delete_point(struct block *input_block, ulong col, ulong row,
-                 struct queries_state *qs, int *already_not_exists);
+int delete_point(struct block *input_block, unsigned long col,
+                 unsigned long row, struct queries_state *qs,
+                 int *already_not_exists);
 
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
                       struct vector_pair2dl_t *result);
@@ -119,18 +121,18 @@ int scan_points_interactively(struct block *input_block,
                               point_reporter_fun_t point_reporter,
                               void *report_state);
 
-int report_column(struct block *input_block, ulong col,
+int report_column(struct block *input_block, unsigned long col,
                   struct queries_state *qs, struct vector_pair2dl_t *result);
 
-int report_row(struct block *input_block, ulong row, struct queries_state *qs,
-               struct vector_pair2dl_t *result);
+int report_row(struct block *input_block, unsigned long row,
+               struct queries_state *qs, struct vector_pair2dl_t *result);
 
-int report_column_interactively(struct block *input_block, ulong col,
+int report_column_interactively(struct block *input_block, unsigned long col,
                                 struct queries_state *qs,
                                 point_reporter_fun_t point_reporter,
                                 void *report_state);
 
-int report_row_interactively(struct block *input_block, ulong row,
+int report_row_interactively(struct block *input_block, unsigned long row,
                              struct queries_state *qs,
                              point_reporter_fun_t point_reporter,
                              void *report_state);

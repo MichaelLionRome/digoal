@@ -37,7 +37,7 @@ extern "C" {
 #include <vector>
 
 TEST(k2node_tests, problematic_input_seq_1_test) {
-  std::vector<std::pair<ulong, ulong>> pairs = {
+  std::vector<std::pair<unsigned long, unsigned long>> pairs = {
       {2435942, 1822678}, {2462421, 1920115}, {2366760, 1595921},
       {2117488, 1141805}, {2113889, 1131953}, {2385134, 1624246},
       {2408969, 1678218}, {2335783, 1541134}, {2449482, 1876875},
@@ -86,8 +86,8 @@ TEST(k2node_tests, can_traverse_column) {
 
   int already_exists;
 
-  ulong col_choice = 123123;
-  for (ulong row = 123123; row < 123123 + 1000; row++) {
+  unsigned long col_choice = 123123;
+  for (unsigned long row = 123123; row < 123123 + 1000; row++) {
     k2node_insert_point(root_node, col_choice, row, &st, &already_exists);
   }
 
@@ -96,7 +96,7 @@ TEST(k2node_tests, can_traverse_column) {
   k2node_report_column(root_node, col_choice, &st, &result);
 
   ASSERT_EQ(result.nof_items, 1000);
-  for (ulong i = 0; i < 1000; i++) {
+  for (unsigned long i = 0; i < 1000; i++) {
     ASSERT_EQ(result.data[i].row, 123123 + i) << "Failed at i=" << i;
   }
 
@@ -127,8 +127,8 @@ TEST(k2node_tests, can_traverse_column_interactively) {
 
   int already_exists;
 
-  ulong col_choice = 123123;
-  for (ulong row = 123123; row < 123123 + 1000; row++) {
+  unsigned long col_choice = 123123;
+  for (unsigned long row = 123123; row < 123123 + 1000; row++) {
     k2node_insert_point(root_node, col_choice, row, &st, &already_exists);
   }
 
@@ -139,7 +139,7 @@ TEST(k2node_tests, can_traverse_column_interactively) {
                                      &result);
 
   ASSERT_EQ(result.nof_items, 1000);
-  for (ulong i = 0; i < 1000; i++) {
+  for (unsigned long i = 0; i < 1000; i++) {
     ASSERT_EQ(result.data[i].row, 123123 + i) << "Failed at i=" << i;
   }
 
@@ -158,14 +158,14 @@ TEST(k2node_tests, can_insert_1) {
       struct k2qstate st;
       init_k2qstate(&st, treedepth, 255, cut_depth);
 
-      ulong side = 1 << treedepth;
+      unsigned long side = 1 << treedepth;
 
       int already_exists;
-      for (ulong col = 0; col < side; col++) {
-        for (ulong row = 0; row < side; row++) {
+      for (unsigned long col = 0; col < side; col++) {
+        for (unsigned long row = 0; row < side; row++) {
           k2node_insert_point(root_node, col, row, &st, &already_exists);
-          for (ulong col_check = 0; col_check < col; col_check++) {
-            for (ulong row_check = 0; row_check < row; row_check++) {
+          for (unsigned long col_check = 0; col_check < col; col_check++) {
+            for (unsigned long row_check = 0; row_check < row; row_check++) {
               int has_the_point;
               k2node_has_point(root_node, col_check, row_check, &st,
                                &has_the_point);
@@ -175,7 +175,7 @@ TEST(k2node_tests, can_insert_1) {
                   << col_check << ", " << row_check << ")";
             }
           }
-          for (ulong row_check = 0; row_check <= row; row_check++) {
+          for (unsigned long row_check = 0; row_check <= row; row_check++) {
             int has_the_point;
             k2node_has_point(root_node, col, row_check, &st, &has_the_point);
             ASSERT_TRUE(has_the_point)
@@ -184,8 +184,10 @@ TEST(k2node_tests, can_insert_1) {
                 << row_check << ")";
           }
 
-          for (ulong col_check = col + 1; col_check < side; col_check++) {
-            for (ulong row_check = row + 1; row_check < side; row_check++) {
+          for (unsigned long col_check = col + 1; col_check < side;
+               col_check++) {
+            for (unsigned long row_check = row + 1; row_check < side;
+                 row_check++) {
               int has_the_point;
               k2node_has_point(root_node, col_check, row_check, &st,
                                &has_the_point);
@@ -195,7 +197,8 @@ TEST(k2node_tests, can_insert_1) {
                   << col_check << ", " << row_check << ")";
             }
           }
-          for (ulong row_check = row + 1; row_check < side; row_check++) {
+          for (unsigned long row_check = row + 1; row_check < side;
+               row_check++) {
             int has_the_point;
             k2node_has_point(root_node, col, row_check, &st, &has_the_point);
             if ((bool)has_the_point) {

@@ -44,12 +44,13 @@ struct k2_data {
 };
 
 static k2_data create_k2_line(TREE_DEPTH_T tree_depth, TREE_DEPTH_T cut_depth,
-                              coord_t coord_type, ulong position) {
+                              coord_t coord_type, unsigned long position) {
   k2_data result;
   result.root = create_k2node();
   init_k2qstate(&result.st, tree_depth, 255, cut_depth);
   int already_exists;
-  for (ulong i = 0; i < static_cast<ulong>(1 << tree_depth); i++) {
+  for (unsigned long i = 0; i < static_cast<unsigned long>(1 << tree_depth);
+       i++) {
     if (coord_type == COLUMN_COORD) {
       k2node_insert_point(result.root, position, i, &result.st,
                           &already_exists);
@@ -71,7 +72,7 @@ TEST(sip_tests, can_retrieve_single_elements_bands_1) {
   const TREE_DEPTH_T cut_depth = 5;
 
   for (int coord_type = 0; coord_type <= 1; coord_type++) {
-    for (ulong line_position = 0; line_position < (1 << tree_depth);
+    for (unsigned long line_position = 0; line_position < (1 << tree_depth);
          line_position++) {
 
       coord_t line_coord_type = (coord_t)coord_type;
@@ -80,7 +81,7 @@ TEST(sip_tests, can_retrieve_single_elements_bands_1) {
       auto data =
           create_k2_line(tree_depth, cut_depth, line_coord_type, line_position);
 
-      for (ulong i = 0; i < (1 << tree_depth); i++) {
+      for (unsigned long i = 0; i < (1 << tree_depth); i++) {
 
         struct sip_ipoint sip_point;
         sip_point.coord = i;
@@ -94,11 +95,12 @@ TEST(sip_tests, can_retrieve_single_elements_bands_1) {
         ksi.join_coords = &sip_point;
         ksi.sts = &st_p;
 
-        std::set<ulong> coords;
+        std::set<unsigned long> coords;
         k2node_sip_join(
             ksi,
-            [](ulong coord, void *report_state) {
-              auto &data = *reinterpret_cast<std::set<ulong> *>(report_state);
+            [](unsigned long coord, void *report_state) {
+              auto &data =
+                  *reinterpret_cast<std::set<unsigned long> *>(report_state);
               data.insert(coord);
             },
             &coords);
@@ -124,9 +126,9 @@ TEST(sip_tests, can_retrieve_band_with_single_sip) {
 
   int already_exists;
 
-  ulong col_choice = 1 << 30;
+  unsigned long col_choice = 1 << 30;
 
-  for (ulong row = col_choice; row < col_choice + 1000; row++) {
+  for (unsigned long row = col_choice; row < col_choice + 1000; row++) {
     k2node_insert_point(root_node, col_choice, row, &st, &already_exists);
   }
 
@@ -143,11 +145,11 @@ TEST(sip_tests, can_retrieve_band_with_single_sip) {
   ksi.join_coords = &sip_point;
   ksi.sts = &st_p;
 
-  std::set<ulong> coords;
+  std::set<unsigned long> coords;
   k2node_sip_join(
       ksi,
-      [](ulong coord, void *report_state) {
-        auto &data = *reinterpret_cast<std::set<ulong> *>(report_state);
+      [](unsigned long coord, void *report_state) {
+        auto &data = *reinterpret_cast<std::set<unsigned long> *>(report_state);
         data.insert(coord);
       },
       &coords);
@@ -198,11 +200,11 @@ TEST(sip_tests, test_join_two) {
   ksi.join_coords[1].coord_type = COLUMN_COORD;
   ksi.sts = sts;
 
-  std::set<ulong> coords;
+  std::set<unsigned long> coords;
   k2node_sip_join(
       ksi,
-      [](ulong coord, void *report_state) {
-        auto &data = *reinterpret_cast<std::set<ulong> *>(report_state);
+      [](unsigned long coord, void *report_state) {
+        auto &data = *reinterpret_cast<std::set<unsigned long> *>(report_state);
         data.insert(coord);
       },
       &coords);
@@ -246,9 +248,9 @@ TEST(sip_tests, test_join_four) {
   k2node_insert_point(nodes[2], 5, 7, sts[2], &already_exists);
   k2node_insert_point(nodes[2], 13, 7, sts[2], &already_exists);
 
-  ulong side = 1UL << treedepth;
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  unsigned long side = 1UL << treedepth;
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       k2node_insert_point(nodes[3], col, row, sts[3], &already_exists);
     }
   }
@@ -269,11 +271,11 @@ TEST(sip_tests, test_join_four) {
   ksi.join_coords[3].coord_type = COLUMN_COORD;
   ksi.sts = sts;
 
-  std::set<ulong> coords;
+  std::set<unsigned long> coords;
   k2node_sip_join(
       ksi,
-      [](ulong coord, void *report_state) {
-        auto &data = *reinterpret_cast<std::set<ulong> *>(report_state);
+      [](unsigned long coord, void *report_state) {
+        auto &data = *reinterpret_cast<std::set<unsigned long> *>(report_state);
         data.insert(coord);
       },
       &coords);
@@ -305,10 +307,10 @@ TEST(sip_tests, test_join_two_exhaustive) {
     init_k2qstate(sts[i], treedepth, MAX_NODES_IN_BLOCK, cut_depth);
   }
 
-  ulong side = 1UL << treedepth;
+  unsigned long side = 1UL << treedepth;
   int already_exists;
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       k2node_insert_point(nodes[0], col, row, sts[0], &already_exists);
       k2node_insert_point(nodes[1], col, row, sts[1], &already_exists);
     }
@@ -325,11 +327,12 @@ TEST(sip_tests, test_join_two_exhaustive) {
   ksi.join_coords[1].coord_type = COLUMN_COORD;
   ksi.sts = sts;
 
-  std::vector<ulong> coords;
+  std::vector<unsigned long> coords;
   k2node_sip_join(
       ksi,
-      [](ulong coord, void *report_state) {
-        auto &data = *reinterpret_cast<std::vector<ulong> *>(report_state);
+      [](unsigned long coord, void *report_state) {
+        auto &data =
+            *reinterpret_cast<std::vector<unsigned long> *>(report_state);
         data.push_back(coord);
       },
       &coords);

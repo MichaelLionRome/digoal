@@ -43,16 +43,16 @@ TEST(k2node_delete_test, simple_test_1) {
   TREE_DEPTH_T cutdepth = 10;
   init_k2qstate(&st, treedepth, 256, cutdepth);
 
-  const ulong insert_size = 16;
+  const unsigned long insert_size = 16;
 
   int already_exists;
-  for (ulong i = 0; i < insert_size; i++)
-    for (ulong j = 0; j < insert_size; j++) {
+  for (unsigned long i = 0; i < insert_size; i++)
+    for (unsigned long j = 0; j < insert_size; j++) {
       k2node_insert_point(root_node, i, j, &st, &already_exists);
     }
 
-  for (ulong i = 0; i < insert_size; i++)
-    for (ulong j = 0; j < insert_size; j++) {
+  for (unsigned long i = 0; i < insert_size; i++)
+    for (unsigned long j = 0; j < insert_size; j++) {
       int err = k2node_delete_point(root_node, i, j, &st, &already_exists);
       if (err) {
         std::cout << "error deleting point :  " << err << std::endl;
@@ -61,8 +61,8 @@ TEST(k2node_delete_test, simple_test_1) {
     }
 
   int does_exist;
-  for (ulong i = 0; i < insert_size; i++)
-    for (ulong j = 0; j < insert_size; j++) {
+  for (unsigned long i = 0; i < insert_size; i++)
+    for (unsigned long j = 0; j < insert_size; j++) {
       k2node_has_point(root_node, i, j, &st, &does_exist);
       ASSERT_FALSE(does_exist);
     }
@@ -80,20 +80,20 @@ TEST(k2node_delete_test, only_delete_existing_points_test) {
   TREE_DEPTH_T cutdepth = 10;
   init_k2qstate(&st, treedepth, 256, cutdepth);
 
-  const ulong insert_size = 16;
+  const unsigned long insert_size = 16;
 
   int already_exists;
-  for (ulong i = 0; i < insert_size; i++)
-    for (ulong j = 0; j < insert_size; j++) {
+  for (unsigned long i = 0; i < insert_size; i++)
+    for (unsigned long j = 0; j < insert_size; j++) {
       k2node_insert_point(root_node, i, j, &st, &already_exists);
       ASSERT_FALSE(already_exists);
     }
   int already_not_exists;
 
-  for (ulong i = 0; i < insert_size; i++)
-    for (ulong j = 0; j < insert_size; j++) {
+  for (unsigned long i = 0; i < insert_size; i++)
+    for (unsigned long j = 0; j < insert_size; j++) {
 
-      for (ulong k = 0; k < 10; k++) {
+      for (unsigned long k = 0; k < 10; k++) {
         int err =
             k2node_delete_point(root_node, i, j, &st, &already_not_exists);
         if (err) {
@@ -110,8 +110,8 @@ TEST(k2node_delete_test, only_delete_existing_points_test) {
     }
 
   int does_exist;
-  for (ulong i = 0; i < insert_size; i++)
-    for (ulong j = 0; j < insert_size; j++) {
+  for (unsigned long i = 0; i < insert_size; i++)
+    for (unsigned long j = 0; j < insert_size; j++) {
       k2node_has_point(root_node, i, j, &st, &does_exist);
       ASSERT_FALSE(does_exist);
     }

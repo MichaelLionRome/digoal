@@ -29,15 +29,15 @@ SOFTWARE.
 int main(void) {
   for (int i = 0; i < 10; i++) {
     uint32_t treedepth = 5;
-    ulong side = 1u << treedepth;
+    unsigned long side = 1u << treedepth;
     struct block *root_block = create_block();
 
     struct queries_state qs;
     init_queries_state(&qs, treedepth, MAX_NODES_IN_BLOCK, root_block);
 
     int point_exists;
-    for (ulong col = 0; col < side; col++) {
-      for (ulong row = 0; row < side; row++) {
+    for (unsigned long col = 0; col < side; col++) {
+      for (unsigned long row = 0; row < side; row++) {
         // printf("inserting col=%lu, row=%lu\n", col, row);
         insert_point(root_block, col, row, &qs, &point_exists);
       }

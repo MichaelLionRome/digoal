@@ -44,7 +44,7 @@ TEST(block_test, problematic_input_seq_1_test) {
   struct queries_state qs {};
   init_queries_state(&qs, tree_depth, 256, root_block);
 
-  std::vector<std::pair<ulong, ulong>> pairs = {
+  std::vector<std::pair<unsigned long, unsigned long>> pairs = {
 
       {2435942, 1822678}, {2462421, 1920115}, {2366760, 1595921},
       {2117488, 1141805}, {2113889, 1131953}, {2385134, 1624246},
@@ -93,7 +93,7 @@ TEST(block_test, test1) {
 
 TEST(block_test, test2) {
   uint32_t treedepth = 3;
-  ulong side = 1 << treedepth;
+  unsigned long side = 1 << treedepth;
   BlockWrapper b(treedepth);
   b.insert(0, 0);
   b.insert(0, 1);
@@ -101,8 +101,8 @@ TEST(block_test, test2) {
   ASSERT_TRUE(b.has(0, 0)) << "Block does not have point 0, 0";
   ASSERT_TRUE(b.has(0, 1)) << "Block does not have point 0, 1";
   ASSERT_TRUE(b.has(1, 0)) << "Block does not have point 1, 0";
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       if ((col == 0 && row == 0) || (col == 0 && row == 1) ||
           (col == 1 && row == 0)) {
         continue;
@@ -198,11 +198,11 @@ const string to_compare[] = {
 
 TEST(block_test, fills_depth_3_test2) {
   uint32_t treedepth = 3;
-  ulong side = 1 << treedepth;
+  unsigned long side = 1 << treedepth;
   BlockWrapper b(treedepth);
 
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       int i = col * side + row % side;
       b.insert(col, row);
       ASSERT_EQ(to_compare[i], b.getStringRep())
@@ -214,33 +214,33 @@ TEST(block_test, fills_depth_3_test2) {
 
 TEST(block_test, fills_depth_3) {
   uint32_t treedepth = 3;
-  ulong side = 1 << treedepth;
+  unsigned long side = 1 << treedepth;
   BlockWrapper b(treedepth, 8);
 
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
 
       b.insert(col, row);
 
-      for (ulong col_check = 0; col_check < col; col_check++) {
-        for (ulong row_check = 0; row_check < row; row_check++) {
+      for (unsigned long col_check = 0; col_check < col; col_check++) {
+        for (unsigned long row_check = 0; row_check < row; row_check++) {
           ASSERT_TRUE(b.has(col_check, row_check))
               << "at (" << col << ", " << row << ") Must have point "
               << col_check << ", " << row_check;
         }
       }
-      for (ulong row_check = 0; row_check <= row; row_check++) {
+      for (unsigned long row_check = 0; row_check <= row; row_check++) {
         ASSERT_TRUE(b.has(col, row_check))
             << "at (" << col << ", " << row << ") Must have point " << col
             << ", " << row_check;
       }
-      for (ulong row_check = row + 1; row_check < side; row_check++) {
+      for (unsigned long row_check = row + 1; row_check < side; row_check++) {
         ASSERT_FALSE(b.has(col, row_check))
             << "at (" << col << ", " << row << ") Must not have point " << col
             << ", " << row_check;
       }
-      for (ulong col_check = col + 1; col_check < side; col_check++) {
-        for (ulong row_check = 0; row_check < side; row_check++) {
+      for (unsigned long col_check = col + 1; col_check < side; col_check++) {
+        for (unsigned long row_check = 0; row_check < side; row_check++) {
           ASSERT_FALSE(b.has(col_check, row_check))
               << "at (" << col << ", " << row << ") Must not have point "
               << col_check << ", " << row_check;
@@ -248,8 +248,8 @@ TEST(block_test, fills_depth_3) {
       }
     }
   }
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       ASSERT_TRUE(b.has(col, row)) << "No point " << col << ", " << row;
     }
   }
@@ -1063,11 +1063,11 @@ string comp_d6[] = {
 
 TEST(block_test, fills_till_depth_4_match) {
   uint32_t treedepth = 4;
-  ulong side = 1 << treedepth;
+  unsigned long side = 1 << treedepth;
   BlockWrapper b(treedepth);
 
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       int i = col * side + row % side;
       b.insert(col, row);
       ASSERT_EQ(comp_d6[i], b.getStringRep())
@@ -1079,12 +1079,12 @@ TEST(block_test, fills_till_depth_4_match) {
 
 TEST(block_test, diagonal_test_depth4_1) {
   uint32_t treedepth = 4;
-  ulong side = 1 << treedepth;
+  unsigned long side = 1 << treedepth;
   BlockWrapper b(treedepth, 16);
-  for (ulong i = 0; i < side; i++) {
+  for (unsigned long i = 0; i < side; i++) {
     b.insert(i, i);
-    for (ulong col = 0; col < side; col++) {
-      for (ulong row = 0; row < side; row++) {
+    for (unsigned long col = 0; col < side; col++) {
+      for (unsigned long row = 0; row < side; row++) {
         if ((col == row && col > i) || col != row) {
           ASSERT_FALSE(b.has(col, row));
         } else {
@@ -1098,31 +1098,31 @@ TEST(block_test, diagonal_test_depth4_1) {
 
 TEST(block_test, fills_till_depth_6_fail_known_1) {
   uint32_t treedepth = 4;
-  ulong side = 1 << treedepth;
+  unsigned long side = 1 << treedepth;
   BlockWrapper b(treedepth, 8);
 
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       b.insert(col, row);
-      for (ulong col_check = 0; col_check < col; col_check++) {
-        for (ulong row_check = 0; row_check < row; row_check++) {
+      for (unsigned long col_check = 0; col_check < col; col_check++) {
+        for (unsigned long row_check = 0; row_check < row; row_check++) {
           ASSERT_TRUE(b.has(col_check, row_check))
               << "(depth = " << treedepth << ") at (" << col << ", " << row
               << ") Must have point " << col_check << ", " << row_check;
         }
       }
-      for (ulong row_check = 0; row_check <= row; row_check++) {
+      for (unsigned long row_check = 0; row_check <= row; row_check++) {
         ASSERT_TRUE(b.has(col, row_check))
             << "(depth = " << treedepth << ") at (" << col << ", " << row
             << ") Must have point " << col << ", " << row_check;
       }
-      for (ulong row_check = row + 1; row_check < side; row_check++) {
+      for (unsigned long row_check = row + 1; row_check < side; row_check++) {
         ASSERT_FALSE(b.has(col, row_check))
             << "(depth = " << treedepth << ") at (" << col << ", " << row
             << ") Must not have point " << col << ", " << row_check;
       }
-      for (ulong col_check = col + 1; col_check < side; col_check++) {
-        for (ulong row_check = 0; row_check < side; row_check++) {
+      for (unsigned long col_check = col + 1; col_check < side; col_check++) {
+        for (unsigned long row_check = 0; row_check < side; row_check++) {
           ASSERT_FALSE(b.has(col_check, row_check))
               << "(depth = " << treedepth << ") at (" << col << ", " << row
               << ") Must not have point " << col_check << ", " << row_check;
@@ -1136,33 +1136,33 @@ TEST(block_test, fills_till_depth_6_fail_known_1) {
 TEST(block_test, fills_till_depth_6) {
   // return; // Takes too long
   for (uint32_t treedepth = 3; treedepth <= 6; treedepth++) {
-    ulong side = 1u << treedepth;
+    unsigned long side = 1u << treedepth;
     BlockWrapper b(treedepth, 16);
 
-    for (ulong col = 0; col < side; col++) {
-      for (ulong row = 0; row < side; row++) {
+    for (unsigned long col = 0; col < side; col++) {
+      for (unsigned long row = 0; row < side; row++) {
 
         b.insert(col, row);
 
-        for (ulong col_check = 0; col_check < col; col_check++) {
-          for (ulong row_check = 0; row_check < row; row_check++) {
+        for (unsigned long col_check = 0; col_check < col; col_check++) {
+          for (unsigned long row_check = 0; row_check < row; row_check++) {
             ASSERT_TRUE(b.has(col_check, row_check))
                 << "(depth = " << treedepth << ") at (" << col << ", " << row
                 << ") Must have point " << col_check << ", " << row_check;
           }
         }
-        for (ulong row_check = 0; row_check <= row; row_check++) {
+        for (unsigned long row_check = 0; row_check <= row; row_check++) {
           ASSERT_TRUE(b.has(col, row_check))
               << "(depth = " << treedepth << ") at (" << col << ", " << row
               << ") Must have point " << col << ", " << row_check;
         }
-        for (ulong row_check = row + 1; row_check < side; row_check++) {
+        for (unsigned long row_check = row + 1; row_check < side; row_check++) {
           ASSERT_FALSE(b.has(col, row_check))
               << "(depth = " << treedepth << ") at (" << col << ", " << row
               << ") Must not have point " << col << ", " << row_check;
         }
-        for (ulong col_check = col + 1; col_check < side; col_check++) {
-          for (ulong row_check = 0; row_check < side; row_check++) {
+        for (unsigned long col_check = col + 1; col_check < side; col_check++) {
+          for (unsigned long row_check = 0; row_check < side; row_check++) {
             ASSERT_FALSE(b.has(col_check, row_check))
                 << "(depth = " << treedepth << ") at (" << col << ", " << row
                 << ") Must not have point " << col_check << ", " << row_check;
@@ -1170,8 +1170,8 @@ TEST(block_test, fills_till_depth_6) {
         }
       }
     }
-    for (ulong col = 0; col < side; col++) {
-      for (ulong row = 0; row < side; row++) {
+    for (unsigned long col = 0; col < side; col++) {
+      for (unsigned long row = 0; row < side; row++) {
         ASSERT_TRUE(b.has(col, row))
             << "(depth = " << treedepth << ") No point " << col << ", " << row;
       }
@@ -1183,16 +1183,16 @@ TEST(block_test, fills_till_depth_6) {
 TEST(block_test, very_deep_1) {
   // return; // Takes too long
   uint32_t treedepth = 10;
-  ulong side = 1u << treedepth;
+  unsigned long side = 1u << treedepth;
   BlockWrapper b(treedepth, 16);
 
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       b.insert(col, row);
     }
   }
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       ASSERT_TRUE(b.has(col, row))
           << "(depth = " << treedepth << ") No point " << col << ", " << row;
     }
@@ -1203,13 +1203,13 @@ TEST(block_test, very_deep_1) {
 TEST(block_test, very_deep_diagonal) {
   // return; // Takes too long
   uint32_t treedepth = 20;
-  ulong side = 1u << treedepth;
+  unsigned long side = 1u << treedepth;
   BlockWrapper b(treedepth, 64);
 
-  for (ulong i = 0; i < side; i++) {
+  for (unsigned long i = 0; i < side; i++) {
     b.insert(i, i);
   }
-  for (ulong i = 0; i < side; i++) {
+  for (unsigned long i = 0; i < side; i++) {
     ASSERT_TRUE(b.has(i, i))
         << "(depth = " << treedepth << ") No point " << i << ", " << i;
   }
@@ -1218,10 +1218,10 @@ TEST(block_test, very_deep_diagonal) {
 TEST(block_test, very_very_deep_1) {
   uint32_t treedepth = 30;
   BlockWrapper b(treedepth, 64);
-  for (ulong i = 0; i < 10000; i++) {
+  for (unsigned long i = 0; i < 10000; i++) {
     b.insert(i, i);
   }
-  for (ulong i = 0; i < 10000; i++) {
+  for (unsigned long i = 0; i < 10000; i++) {
     ASSERT_TRUE(b.has(i, i))
         << "(depth = " << treedepth << ") No point " << i << ", " << i;
   }
@@ -1233,24 +1233,24 @@ TEST(block_test, random_test_1) {
   for (uint32_t treedepth = 3; treedepth <= 5; treedepth++) {
     for (int seed = 0; seed < 10; seed++) {
       srand(seed);
-      ulong side = 1u << treedepth;
-      ulong matrix_size = side * side;
+      unsigned long side = 1u << treedepth;
+      unsigned long matrix_size = side * side;
       BlockWrapper b(treedepth, 16);
 
-      std::vector<ulong> indexes(matrix_size, 0);
+      std::vector<unsigned long> indexes(matrix_size, 0);
 
-      for (ulong i = 0; i < matrix_size; i++)
+      for (unsigned long i = 0; i < matrix_size; i++)
         indexes[i] = i;
 
       random_shuffle(indexes.begin(), indexes.end());
 
-      for (ulong i = 0; i < matrix_size; i++) {
-        ulong col = i / side;
-        ulong row = i % side;
+      for (unsigned long i = 0; i < matrix_size; i++) {
+        unsigned long col = i / side;
+        unsigned long row = i % side;
         b.insert(col, row);
-        for (ulong j = 0; j < matrix_size; j++) {
-          ulong col_check = j / side;
-          ulong row_check = j % side;
+        for (unsigned long j = 0; j < matrix_size; j++) {
+          unsigned long col_check = j / side;
+          unsigned long row_check = j % side;
           if (j <= i) {
             ASSERT_TRUE(b.has(col_check, row_check))
                 << "(depth = " << treedepth << ") after inserting " << col
@@ -1272,25 +1272,25 @@ TEST(block_test, random_test_2) {
   for (uint32_t treedepth = 3; treedepth <= 6; treedepth++) {
     for (int seed = 0; seed < 100; seed++) {
       srand(seed);
-      ulong side = 1u << treedepth;
-      ulong matrix_size = side * side;
+      unsigned long side = 1u << treedepth;
+      unsigned long matrix_size = side * side;
       BlockWrapper b(treedepth, 16);
 
-      std::vector<ulong> indexes(matrix_size, 0);
+      std::vector<unsigned long> indexes(matrix_size, 0);
 
-      for (ulong i = 0; i < matrix_size; i++)
+      for (unsigned long i = 0; i < matrix_size; i++)
         indexes[i] = i;
 
       random_shuffle(indexes.begin(), indexes.end());
 
-      for (ulong i = 0; i < matrix_size; i++) {
-        ulong col = indexes[i];
-        ulong row = (indexes[i] + matrix_size * 7) % matrix_size;
+      for (unsigned long i = 0; i < matrix_size; i++) {
+        unsigned long col = indexes[i];
+        unsigned long row = (indexes[i] + matrix_size * 7) % matrix_size;
         b.insert(col, row);
       }
-      for (ulong i = 0; i < matrix_size; i++) {
-        ulong col = indexes[i];
-        ulong row = (indexes[i] + matrix_size * 7) % matrix_size;
+      for (unsigned long i = 0; i < matrix_size; i++) {
+        unsigned long col = indexes[i];
+        unsigned long row = (indexes[i] + matrix_size * 7) % matrix_size;
         ASSERT_TRUE(b.has(col, row)) << "(depth = " << treedepth << ")"
                                      << "doesn't have " << col << ", " << row
                                      << ". At seed = " << seed << ", i = " << i;

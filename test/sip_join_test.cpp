@@ -63,9 +63,9 @@ TEST(sip_tests, test_join_four) {
   insert_point(blocks[1], 4, 13, qss[1], &already_exists);
   insert_point(blocks[0], 13, 2, qss[0], &already_exists);
 
-  ulong side = 1UL << treedepth;
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  unsigned long side = 1UL << treedepth;
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       insert_point(blocks[3], col, row, qss[3], &already_exists);
     }
   }
@@ -85,11 +85,11 @@ TEST(sip_tests, test_join_four) {
   sji.join_coords[3].coord_type = COLUMN_COORD;
   sji.qss = qss;
 
-  std::set<ulong> coords;
+  std::set<unsigned long> coords;
   sip_join(
       sji,
-      [](ulong coord, void *report_state) {
-        auto &data = *reinterpret_cast<std::set<ulong> *>(report_state);
+      [](unsigned long coord, void *report_state) {
+        auto &data = *reinterpret_cast<std::set<unsigned long> *>(report_state);
         data.insert(coord);
       },
       &coords);
@@ -120,10 +120,10 @@ TEST(sip_tests, test_join_two_exhaustive) {
     init_queries_state(qss[i], treedepth, MAX_NODES_IN_BLOCK, blocks[i]);
   }
 
-  ulong side = 1UL << treedepth;
+  unsigned long side = 1UL << treedepth;
   int already_exists;
-  for (ulong col = 0; col < side; col++) {
-    for (ulong row = 0; row < side; row++) {
+  for (unsigned long col = 0; col < side; col++) {
+    for (unsigned long row = 0; row < side; row++) {
       insert_point(blocks[0], col, row, qss[0], &already_exists);
       insert_point(blocks[1], col, row, qss[1], &already_exists);
     }
@@ -140,11 +140,12 @@ TEST(sip_tests, test_join_two_exhaustive) {
   sji.join_coords[1].coord_type = COLUMN_COORD;
   sji.qss = qss;
 
-  std::vector<ulong> coords;
+  std::vector<unsigned long> coords;
   sip_join(
       sji,
-      [](ulong coord, void *report_state) {
-        auto &data = *reinterpret_cast<std::vector<ulong> *>(report_state);
+      [](unsigned long coord, void *report_state) {
+        auto &data =
+            *reinterpret_cast<std::vector<unsigned long> *>(report_state);
         data.push_back(coord);
       },
       &coords);

@@ -51,12 +51,14 @@ struct k2node_sip_input {
   struct queries_state **_qss;
 };
 
-int k2node_has_point(struct k2node *k2node, ulong col, ulong row,
-                     struct k2qstate *st, int *result);
-int k2node_insert_point(struct k2node *input_node, ulong col, ulong row,
-                        struct k2qstate *st, int *already_exists);
-int k2node_delete_point(struct k2node *input_node, ulong col, ulong row,
-                        struct k2qstate *st, int *already_not_exists);
+int k2node_has_point(struct k2node *k2node, unsigned long col,
+                     unsigned long row, struct k2qstate *st, int *result);
+int k2node_insert_point(struct k2node *input_node, unsigned long col,
+                        unsigned long row, struct k2qstate *st,
+                        int *already_exists);
+int k2node_delete_point(struct k2node *input_node, unsigned long col,
+                        unsigned long row, struct k2qstate *st,
+                        int *already_not_exists);
 
 int k2node_naive_scan_points(struct k2node *input_node, struct k2qstate *st,
                              struct vector_pair2dl_t *result);
@@ -66,29 +68,29 @@ int k2node_scan_points_interactively(struct k2node *input_node,
                                      point_reporter_fun_t point_reporter,
                                      void *report_state);
 
-int k2node_report_column(struct k2node *input_node, ulong col,
+int k2node_report_column(struct k2node *input_node, unsigned long col,
                          struct k2qstate *st, struct vector_pair2dl_t *result);
-int k2node_report_row(struct k2node *input_node, ulong row, struct k2qstate *st,
-                      struct vector_pair2dl_t *result);
+int k2node_report_row(struct k2node *input_node, unsigned long row,
+                      struct k2qstate *st, struct vector_pair2dl_t *result);
 
-int k2node_report_column_interactively(struct k2node *input_node, ulong col,
-                                       struct k2qstate *st,
+int k2node_report_column_interactively(struct k2node *input_node,
+                                       unsigned long col, struct k2qstate *st,
                                        point_reporter_fun_t point_reporter,
                                        void *report_state);
-int k2node_report_row_interactively(struct k2node *input_node, ulong row,
-                                    struct k2qstate *st,
+int k2node_report_row_interactively(struct k2node *input_node,
+                                    unsigned long row, struct k2qstate *st,
                                     point_reporter_fun_t point_reporter,
                                     void *report_state);
 
 struct k2node *create_k2node(void);
-int free_rec_k2node(struct k2node *input_node, ulong current_depth,
-                    ulong cut_depth);
+int free_rec_k2node(struct k2node *input_node, unsigned long current_depth,
+                    unsigned long cut_depth);
 
 int init_k2qstate(struct k2qstate *st, TREE_DEPTH_T treedepth,
                   MAX_NODE_COUNT_T max_nodes_count, TREE_DEPTH_T cut_depth);
 int clean_k2qstate(struct k2qstate *st);
 struct k2tree_measurement k2node_measure_tree_size(struct k2node *input_node,
-                                                   ulong cut_depth);
+                                                   unsigned long cut_depth);
 
 int k2node_sip_join(struct k2node_sip_input input,
                     coord_reporter_fun_t coord_reporter, void *report_state);
@@ -100,7 +102,7 @@ int debug_validate_k2node_rec(struct k2node *input_node, struct k2qstate *st,
 typedef struct {
   struct k2node *input_node;
   uint32_t last_iteration;
-  ulong current_depth;
+  unsigned long current_depth;
 } k2node_lazy_naive_state;
 
 define_stack_of_type(k2node_lazy_naive_state)
@@ -112,8 +114,8 @@ define_stack_of_type(k2node_lazy_naive_state)
   int has_next;
   struct lazy_handler_naive_scan_t sub_handler;
   int at_leaf;
-  ulong base_col;
-  ulong base_row;
+  unsigned long base_col;
+  unsigned long base_row;
 
   struct k2node *tree_root;
 };
@@ -122,7 +124,7 @@ typedef struct {
   struct k2node *input_node;
   uint64_t current_coord;
   uint32_t last_iteration;
-  ulong current_depth;
+  unsigned long current_depth;
 } k2node_lazy_report_band_state_t;
 
 define_stack_of_type(k2node_lazy_report_band_state_t)
@@ -135,8 +137,8 @@ define_stack_of_type(k2node_lazy_report_band_state_t)
   int at_leaf;
   uint64_t next_result;
   int has_next;
-  ulong base_col;
-  ulong base_row;
+  unsigned long base_col;
+  unsigned long base_row;
   struct k2node *tree_root;
   uint64_t coord_report;
 };

@@ -157,11 +157,12 @@ int naive_scan_points_rec_interactively(struct block *input_block,
                                         struct child_result *cresult,
                                         TREE_DEPTH_T block_depth);
 
-int report_rec(ulong current_col, struct queries_state *qs,
+int report_rec(unsigned long current_col, struct queries_state *qs,
                struct vector_pair2dl_t *result, struct child_result *current_cr,
                int which_report);
 
-int report_rec_interactively(ulong current_col, struct queries_state *qs,
+int report_rec_interactively(unsigned long current_col,
+                             struct queries_state *qs,
                              point_reporter_fun_t point_reporter,
                              struct child_result *current_cr, int which_report,
                              void *report_state);
@@ -1014,7 +1015,7 @@ int naive_scan_points_rec_interactively(struct block *input_block,
  * values: REPORT_COLUMN, REPORT_ROW)
  * @return int Result code
  */
-int report_rec(ulong current_col, struct queries_state *qs,
+int report_rec(unsigned long current_col, struct queries_state *qs,
                struct vector_pair2dl_t *result, struct child_result *current_cr,
                int which_report) {
   struct block *current_block = current_cr->resulting_block;
@@ -1024,8 +1025,8 @@ int report_rec(ulong current_col, struct queries_state *qs,
   TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
   if (real_depth + 1 == tree_depth) {
     // report the coordinate, because we have reached a leaf
-    ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
-    ulong half_length = side_length >> 1;
+    unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
+    unsigned long half_length = side_length >> 1;
     for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
       if (!REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,
                                      child_pos)) {
@@ -1044,8 +1045,8 @@ int report_rec(ulong current_col, struct queries_state *qs,
     return SUCCESS_ECODE_K2T;
   }
 
-  ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
-  ulong half_length = side_length >> 1;
+  unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
+  unsigned long half_length = side_length >> 1;
 
   uint32_t current_node_index = current_cr->resulting_node_idx;
 
@@ -1094,7 +1095,8 @@ int report_rec(ulong current_col, struct queries_state *qs,
  * values: REPORT_COLUMN, REPORT_ROW)
  * @return int Result code
  */
-int report_rec_interactively(ulong current_col, struct queries_state *qs,
+int report_rec_interactively(unsigned long current_col,
+                             struct queries_state *qs,
                              point_reporter_fun_t point_reporter,
                              struct child_result *current_cr, int which_report,
                              void *report_state) {
@@ -1105,8 +1107,8 @@ int report_rec_interactively(ulong current_col, struct queries_state *qs,
   TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
   if (real_depth + 1 == tree_depth) {
     // report the coordinate, because we have reached a leaf
-    ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
-    ulong half_length = side_length >> 1;
+    unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
+    unsigned long half_length = side_length >> 1;
     for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
       if (!REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,
                                      child_pos)) {
@@ -1125,8 +1127,8 @@ int report_rec_interactively(ulong current_col, struct queries_state *qs,
     return SUCCESS_ECODE_K2T;
   }
 
-  ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
-  ulong half_length = side_length >> 1;
+  unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
+  unsigned long half_length = side_length >> 1;
 
   uint32_t current_node_index = current_cr->resulting_node_idx;
 
@@ -1164,7 +1166,7 @@ int report_rec_interactively(ulong current_col, struct queries_state *qs,
 
 /* PUBLIC FUNCTIONS */
 
-int has_point(struct block *input_block, ulong col, ulong row,
+int has_point(struct block *input_block, unsigned long col, unsigned long row,
               struct queries_state *qs, int *result) {
 
   convert_coordinates_to_morton_code(col, row, qs->treedepth, &qs->mc);
@@ -1177,8 +1179,9 @@ int has_point(struct block *input_block, ulong col, ulong row,
   return SUCCESS_ECODE_K2T;
 }
 
-int insert_point(struct block *input_block, ulong col, ulong row,
-                 struct queries_state *qs, int *already_exists) {
+int insert_point(struct block *input_block, unsigned long col,
+                 unsigned long row, struct queries_state *qs,
+                 int *already_exists) {
   convert_coordinates_to_morton_code(col, row, qs->treedepth, &qs->mc);
   struct insertion_location il;
   CHECK_ERR(find_insertion_location(input_block, qs, &il, 0));
@@ -1207,7 +1210,7 @@ int scan_points_interactively(struct block *input_block,
                                              report_state, &cresult, 0);
 }
 
-int report_column(struct block *input_block, ulong col,
+int report_column(struct block *input_block, unsigned long col,
                   struct queries_state *qs, struct vector_pair2dl_t *result) {
   struct child_result current_cr;
   clean_child_result(&current_cr);
@@ -1216,8 +1219,8 @@ int report_column(struct block *input_block, ulong col,
   return report_rec(col, qs, result, &current_cr, REPORT_COLUMN);
 }
 
-int report_row(struct block *input_block, ulong row, struct queries_state *qs,
-               struct vector_pair2dl_t *result) {
+int report_row(struct block *input_block, unsigned long row,
+               struct queries_state *qs, struct vector_pair2dl_t *result) {
   struct child_result current_cr;
   clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
@@ -1225,7 +1228,7 @@ int report_row(struct block *input_block, ulong row, struct queries_state *qs,
   return report_rec(row, qs, result, &current_cr, REPORT_ROW);
 }
 
-int report_column_interactively(struct block *input_block, ulong col,
+int report_column_interactively(struct block *input_block, unsigned long col,
                                 struct queries_state *qs,
                                 point_reporter_fun_t point_reporter,
                                 void *report_state) {
@@ -1237,7 +1240,7 @@ int report_column_interactively(struct block *input_block, ulong col,
                                   REPORT_COLUMN, report_state);
 }
 
-int report_row_interactively(struct block *input_block, ulong row,
+int report_row_interactively(struct block *input_block, unsigned long row,
                              struct queries_state *qs,
                              point_reporter_fun_t point_reporter,
                              void *report_state) {
@@ -1364,8 +1367,8 @@ static int sip_join_rec(struct sip_join_input input,
   TREE_DEPTH_T relative_depth =
       crs[current_depth * input.join_size].resulting_relative_depth;
   TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
-  ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
-  ulong half_length = side_length >> 1;
+  unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
+  unsigned long half_length = side_length >> 1;
 
   int valid_parts[2] = {TRUE, TRUE};
   int selected_children[2];
@@ -1661,8 +1664,8 @@ int report_band_next(struct lazy_handler_report_band_t *lazy_handler,
     TREE_DEPTH_T relative_depth = current_cr->resulting_relative_depth;
     TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
 
-    ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
-    ulong half_length = side_length >> 1;
+    unsigned long side_length = 1UL << ((unsigned long)tree_depth - real_depth);
+    unsigned long half_length = side_length >> 1;
 
     for (uint32_t child_pos = current_state.last_iteration; child_pos < 4;
          child_pos++) {
@@ -2148,8 +2151,9 @@ int delete_point_rec(struct block *input_block, struct deletion_state *ds,
                                     already_not_exists, has_children);
 }
 
-int delete_point(struct block *input_block, ulong col, ulong row,
-                 struct queries_state *qs, int *already_not_exists) {
+int delete_point(struct block *input_block, unsigned long col,
+                 unsigned long row, struct queries_state *qs,
+                 int *already_not_exists) {
   *already_not_exists = FALSE;
   struct deletion_state ds;
   ds.qs = qs;

@@ -105,7 +105,8 @@ TEST(usages, naive_scan_1) {
   }
 }
 
-bool has_pair(struct vector_pair2dl_t *v, long col, long row) {
+bool has_pair(struct vector_pair2dl_t *v, unsigned long col,
+              unsigned long row) {
   for (long i = 0; i < v->nof_items; i++) {
     struct pair2dl pair = v->data[i];
     if (col == pair.col && row == pair.row) {

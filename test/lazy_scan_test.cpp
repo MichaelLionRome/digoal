@@ -25,7 +25,7 @@ TEST(lazy_scan_test, test_full_scan_1) {
 
   std::vector<std::pair<unsigned long, unsigned long>> expected_results;
 
-  for (ulong i = 0; i < 10000; i++) {
+  for (unsigned long i = 0; i < 10000; i++) {
     b.insert(i, i);
     expected_results.emplace_back(i, i);
   }
@@ -58,7 +58,7 @@ TEST(lazy_scan_test, test_band_1) {
 
   std::vector<unsigned long> expected_results;
 
-  for (ulong i = 0; i < 10000; i++) {
+  for (unsigned long i = 0; i < 10000; i++) {
     b.insert(129, i);
     expected_results.push_back(i);
   }
@@ -146,7 +146,7 @@ TEST(lazy_scan_test, test_k2node_full_scan_1) {
   std::vector<std::pair<unsigned long, unsigned long>> expected_results;
 
   int already_exists;
-  for (ulong i = 0; i < 10000; i++) {
+  for (unsigned long i = 0; i < 10000; i++) {
     k2node_insert_point(root_node, i, i, &st, &already_exists);
     expected_results.emplace_back(i, i);
   }
@@ -190,7 +190,7 @@ TEST(lazy_scan_test, test_k2node_band_scan_1) {
   std::vector<unsigned long> expected_results;
 
   int already_exists;
-  for (ulong i = 0; i < 10000; i++) {
+  for (unsigned long i = 0; i < 10000; i++) {
     k2node_insert_point(root_node, i, row_const_value, &st, &already_exists);
     expected_results.push_back(i);
   }

@@ -48,7 +48,7 @@ TEST(insertion_out_of_bounds, test_1) {
     FAIL() << "NOT OPEN";
   }
 
-  ulong col, row;
+  unsigned long col, row;
   while (ifstream >> col >> row) {
     std::cout << col << ", " << row << std::endl;
     int already_exists;

@@ -39,9 +39,10 @@ void init_morton_code(struct morton_code *mc, uint32_t treedepth);
 void clean_morton_code(struct morton_code *mc);
 void add_element_morton_code(struct morton_code *mc, uint32_t position,
                              uint32_t code);
-uint32_t get_code_at_morton_code(struct morton_code *mc, uint32_t position);
-uint32_t leaf_child_morton_code(struct morton_code *mc);
-void convert_coordinates_to_morton_code(ulong col, ulong row,
+unsigned long get_code_at_morton_code(struct morton_code *mc,
+                                      unsigned long position);
+unsigned long leaf_child_morton_code(struct morton_code *mc);
+void convert_coordinates_to_morton_code(unsigned long col, unsigned long row,
                                         uint32_t treedepth,
                                         struct morton_code *result);
 
