@@ -1030,10 +1030,12 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
       continue;
     }
 
+    uint32_t tmp_fidx = *frontier_traversal_idx;
+
     struct child_result cr;
     int err = child(input_block, cresult->resulting_node_idx, child_pos,
                     cresult->resulting_relative_depth, &cr, qs, block_depth,
-                    frontier_traversal_idx);
+                    &tmp_fidx);
 
     if (err == DOES_NOT_EXIST_CHILD_ERR) {
       continue;
@@ -1042,7 +1044,7 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
     }
     add_element_morton_code(&qs->mc, real_depth, child_pos);
     naive_scan_points_rec(cr.resulting_block, qs, result, &cr, cr.block_depth,
-                          frontier_traversal_idx);
+                          &tmp_fidx);
   }
 
   return SUCCESS_ECODE_K2T;
