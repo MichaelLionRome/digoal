@@ -848,7 +848,6 @@ int split_block(struct block *input_block, struct queries_state *qs,
   }
 
   if (!found_loc) {
-    printf("shouldnt be possible no split locations\n");
     // exit(1);
     if (!found_fb) {
       printf("not found fb \n");
