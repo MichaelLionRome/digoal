@@ -23,8 +23,6 @@ SOFTWARE.
 */
 #include <string.h>
 
-#include "vectors.h"
-
 #include "block.h"
 #include "block_frontier.h"
 
@@ -47,15 +45,13 @@ void init_block_frontier(struct block *input_block) {
 
 void init_block_frontier_with_capacity(struct block *input_block,
                                        uint32_t capacity) {
-
-  input_block->preorders = (NODES_BV_T *)malloc(sizeof(NODES_BV_T) * capacity);
-  input_block->children_blocks =
-      (struct block *)malloc(sizeof(struct block) * capacity);
+  input_block->preorders = k2tree_alloc_preorders((int)capacity);
+  input_block->children_blocks = k2tree_alloc_blocks_array((int)capacity);
 }
 
 void free_block_frontier(struct block *input_block) {
-  free(input_block->preorders);
-  free(input_block->children_blocks);
+  k2tree_free_preorders(input_block->preorders);
+  k2tree_free_blocks_array(input_block->children_blocks);
 }
 
 int frontier_check(struct block *input_block, uint32_t node_idx,
@@ -138,10 +134,8 @@ int extract_sub_block_frontier(struct block *input_block,
   NODES_BV_T *new_parent_preorders = NULL;
   struct block *new_parent_cblocks = NULL;
   if (next_children > 0) {
-    new_parent_preorders =
-        (NODES_BV_T *)malloc(sizeof(NODES_BV_T) * next_children);
-    new_parent_cblocks =
-        (struct block *)malloc(sizeof(struct block) * next_children);
+    new_parent_preorders = k2tree_alloc_preorders((int)next_children);
+    new_parent_cblocks = k2tree_alloc_blocks_array((int)next_children);
     memcpy(new_parent_preorders, input_block->preorders,
            from_index_loc * sizeof(NODES_BV_T));
     memcpy(new_parent_cblocks, input_block->children_blocks,
@@ -169,10 +163,9 @@ int add_frontier_node(struct block *input_block,
       find_insertion_point(input_block, new_frontier_node_preorder);
 
   uint32_t children = (uint32_t)input_block->children;
-  NODES_BV_T *new_preorders =
-      (NODES_BV_T *)malloc(sizeof(NODES_BV_T) * (children + 1));
+  NODES_BV_T *new_preorders = k2tree_alloc_preorders((int)(children + 1));
   struct block *new_children_blocks =
-      (struct block *)malloc(sizeof(struct block) * (children + 1));
+      k2tree_alloc_blocks_array((int)(children + 1));
   if (children > 0) {
     memcpy(new_preorders, input_block->preorders,
            insertion_point * sizeof(NODES_BV_T));
