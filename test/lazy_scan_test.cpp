@@ -176,6 +176,48 @@ TEST(lazy_scan_test, test_k2node_full_scan_1) {
   clean_k2qstate(&st);
 }
 
+TEST(lazy_scan_test, test_k2node_full_scan_2) {
+  TREE_DEPTH_T treedepth = 32;
+  TREE_DEPTH_T cut_depth = 0;
+
+  struct k2node *root_node = create_k2node();
+
+  struct k2qstate st;
+  init_k2qstate(&st, treedepth, 256, cut_depth);
+
+  std::vector<std::pair<unsigned long, unsigned long>> expected_results;
+
+  int already_exists;
+  for (unsigned long i = 0; i < 1; i++) {
+    k2node_insert_point(root_node, i, i, &st, &already_exists);
+    expected_results.emplace_back(i, i);
+  }
+  // naive_scan_points_lazy_init(b.get_root(), b.get_qs(), &lh);
+  struct k2node_lazy_handler_naive_scan_t lh;
+  k2node_naive_scan_points_lazy_init(root_node, &st, &lh);
+
+  std::vector<std::pair<unsigned long, unsigned long>> results_lazy;
+  for (;;) {
+    int has_next;
+    k2node_naive_scan_points_lazy_has_next(&lh, &has_next);
+    if (!has_next)
+      break;
+
+    pair2dl_t result;
+    k2node_naive_scan_points_lazy_next(&lh, &result);
+    results_lazy.emplace_back(result.col, result.row);
+  }
+
+  std::sort(results_lazy.begin(), results_lazy.end());
+  ASSERT_GE(results_lazy.at(0).first, 0);
+  ASSERT_EQ(results_lazy.size(), expected_results.size());
+  ASSERT_EQ(results_lazy, expected_results);
+
+  k2node_naive_scan_points_lazy_clean(&lh);
+  free_rec_k2node(root_node, 0, st.cut_depth);
+  clean_k2qstate(&st);
+}
+
 TEST(lazy_scan_test, test_k2node_band_scan_1) {
   TREE_DEPTH_T treedepth = 32;
   TREE_DEPTH_T cut_depth = 10;

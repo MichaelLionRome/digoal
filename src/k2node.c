@@ -568,9 +568,9 @@ int k2node_naive_scan_points_lazy_init(
   lazy_handler->st = st;
   lazy_handler->has_next = FALSE;
   init_k2node_lazy_naive_state_stack(&lazy_handler->states_stack,
-                                     st->cut_depth * 4);
+                                     st->cut_depth * 4 + 10);
   init_lazy_naive_state_stack(&lazy_handler->sub_handler.states_stack,
-                              (st->k2tree_depth - st->cut_depth) * 4);
+                              (st->k2tree_depth - st->cut_depth) * 4 + 10);
   lazy_handler->sub_handler.qs = &st->qs;
   lazy_handler->sub_handler.has_next = FALSE;
   lazy_handler->at_leaf = FALSE;
@@ -713,9 +713,9 @@ int k2node_report_band_lazy_init(
   lazy_handler->st = st;
   lazy_handler->has_next = FALSE;
   init_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack,
-                                             st->cut_depth * 4);
+                                             st->cut_depth * 4 + 10);
   init_lazy_report_band_state_t_stack(&lazy_handler->sub_handler.stack,
-                                      (st->k2tree_depth - st->cut_depth) * 4);
+                                      (st->k2tree_depth - st->cut_depth) * 4 + 10);
 
   lazy_handler->sub_handler.qs = &st->qs;
   lazy_handler->sub_handler.has_next = FALSE;
