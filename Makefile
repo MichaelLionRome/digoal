@@ -2,7 +2,7 @@
 
 MODULES_DIRS := k2tree
 
-all: fetch_deps modules
+all: fetch_deps format modules
 
 re: clean all
 
