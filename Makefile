@@ -1,5 +1,3 @@
-
-
 MODULES_DIRS := k2tree
 
 all: fetch_deps format modules

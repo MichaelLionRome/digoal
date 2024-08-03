@@ -1,4 +1,4 @@
-MODULES_DIRS := block block-topology
+MODULES_DIRS := block-topology block
 
 all: modules
 

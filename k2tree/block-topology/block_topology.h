@@ -6,8 +6,11 @@
 #include "bitvector.h"
 
 struct block_topology {
-    struct bitvector *bv;
-    uint32_t nodes_count;
+  struct bitvector *bv;
+  uint32_t nodes_count;
 };
+
+int init_block_topology(struct block_topology *bt, struct bitvector *bv,
+                        uint32_t nodes_count);
 
 #endif /* _BLOCK_TOPOLOGY_H */
