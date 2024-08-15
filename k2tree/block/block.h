@@ -1,8 +1,9 @@
 #ifndef _BLOCK_H_
 #define _BLOCK_H_
 
-#include "block_topology.h"
 #include <stdint.h>
+
+#include "block_topology.h"
 
 struct block {
   struct block_topology *bt;

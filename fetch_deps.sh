@@ -18,6 +18,7 @@ cd lib
 
 if [[ -d "c-bitvector" ]]; then
     cd c-bitvector
+    git fetch
     git pull
 else
     if ! (git clone https://github.com/CristobalM/c-bitvector) then

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "bitvector.h"
+#include <bitvector.h>
 
 struct block_topology {
   struct bitvector *bv;

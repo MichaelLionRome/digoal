@@ -1,4 +1,12 @@
+CURRENT_PATH=$(shell pwd)
+BITVECTOR_INCLUDE=${CURRENT_PATH}/lib/c-bitvector/include
+
+INCLUDES=-I${BITVECTOR_INCLUDE}
+MAKE_FLAGS=INCLUDES="${INCLUDES}"
+
 MODULES_DIRS := k2tree
+
+
 
 all: fetch_deps format modules
 
@@ -9,12 +17,12 @@ fetch_deps:
 
 clean:
 	for dir in ${MODULES_DIRS}; do \
-		$(MAKE) clean -C $$dir;  \
+		$(MAKE) clean -C $$dir ${MAKE_FLAGS};  \
 	done
 
 modules:
 	for dir in ${MODULES_DIRS}; do \
-		$(MAKE) -C $$dir; \
+		$(MAKE) -C $$dir ${MAKE_FLAGS}; \
 	done
 
 
