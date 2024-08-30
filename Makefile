@@ -2,7 +2,12 @@ CURRENT_PATH=$(shell pwd)
 BITVECTOR_INCLUDE=${CURRENT_PATH}/lib/c-bitvector/include
 
 INCLUDES=-I${BITVECTOR_INCLUDE}
-MAKE_FLAGS=INCLUDES="${INCLUDES}"
+
+CFLAGS :=  -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
+    -Wold-style-definition -Werror  -Wl,--fatal-warnings
+
+
+MAKE_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${CFLAGS}"
 
 MODULES_DIRS := k2tree
 
