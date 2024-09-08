@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "block_topology.h"
+#include "block-topology/block_topology.h"
 
 struct block {
   struct block_topology *bt;
@@ -12,7 +12,8 @@ struct block {
   uint32_t tree_depth;
 };
 
-int has_point(struct block *input_block, uint32_t col, uint32_t row);
-int insert_point(struct block *input_block, uint32_t col, uint32_t row);
+int has_point(void /*struct block *input_block, uint32_t col, uint32_t row*/);
+int insert_point(
+    void /*struct block *input_block, uint32_t col, uint32_t row*/);
 
 #endif /* _BLOCK_H_ */
