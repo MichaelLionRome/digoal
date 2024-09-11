@@ -5,7 +5,7 @@ K2TREE_INCLUDES=${CURRENT_PATH}/k2tree
 INCLUDES=-I${BITVECTOR_INCLUDE} -I${K2TREE_INCLUDES}
 
 CFLAGS :=  -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
-    -Wold-style-definition -Werror  -Wl,--fatal-warnings
+    -Wold-style-definition -Werror
 
 
 MAKE_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${CFLAGS}"

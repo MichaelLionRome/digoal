@@ -1,5 +1,5 @@
-block.o:
-	gcc ${CFLAGS} -c block.c ${INCLUDES}
+block.o: block.c
+	$(CC) ${CFLAGS} -c block.c -o block.o ${INCLUDES}
 
 clean:
 	rm -f block.o
