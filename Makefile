@@ -1,8 +1,9 @@
 CURRENT_PATH=$(shell pwd)
 BITVECTOR_INCLUDE=${CURRENT_PATH}/lib/c-bitvector/include
+VECTOR_INCLUDE=${CURRENT_PATH}/lib/c-vector/include
 K2TREE_INCLUDES=${CURRENT_PATH}/k2tree
 
-INCLUDES=-I${BITVECTOR_INCLUDE} -I${K2TREE_INCLUDES}
+INCLUDES=-I${BITVECTOR_INCLUDE} -I${K2TREE_INCLUDES} -I${VECTOR_INCLUDE}
 
 CFLAGS :=  -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
     -Wold-style-definition -Werror -O3

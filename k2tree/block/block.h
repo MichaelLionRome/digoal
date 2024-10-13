@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "block-topology/block_topology.h"
+#include "definitions.h"
 
 struct block {
   struct block_topology *bt;

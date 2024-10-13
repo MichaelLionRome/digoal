@@ -1,31 +1,10 @@
-#include "block.h"
 #include <bitvector.h>
 
-#define CHECK_ERR(err)                                                         \
-  do {                                                                         \
-    if (err) {                                                                 \
-      return (err);                                                            \
-    }                                                                          \
-  } while (0)
-
-#ifndef SUCCESS_ECODE
-#define SUCCESS_ECODE 0;
-#endif
-#define DOES_NOT_EXIST_CHILD_ERR 1;
-
-#define NOT_IMPLEMENTED -100
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
+#include "block.h"
+#include "block-frontier/block_frontier.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
 
 struct child_result {
@@ -39,20 +18,6 @@ int child(struct block *input_block, uint32_t input_node_idx,
           uint32_t requested_child_position, uint32_t input_node_relative_depth,
           struct child_result *result);
 
-/**
-  Possible return codes:
-  SUCCESS_CODE: Whether child exists or not was determined
-**/
-static inline int child_exists(struct block *input_block,
-                               uint32_t input_node_idx,
-                               uint32_t requested_child_position, int *result) {
-  struct bitvector *bv = input_block->bt->bv;
-  int bit_on;
-  CHECK_ERR(
-      bit_read(bv, input_node_idx * 4 + requested_child_position, &bit_on));
-  *result = bit_on;
-  return SUCCESS_ECODE;
-}
 /**
   Posible return codes:
   SUCCESS_CODE: child was found and stored in output variables
@@ -73,12 +38,22 @@ int child(struct block *input_block, uint32_t input_node_idx,
   }
 
   int exists;
-  CHECK_ERR(child_exists(input_block, input_node_idx, requested_child_position,
-                         &exists));
+  CHECK_ERR(child_exists(input_block->bt, input_node_idx,
+                         requested_child_position, &exists));
   if (!exists)
     return DOES_NOT_EXIST_CHILD_ERR;
 
   int frontier_traversal_idx = 0;
+  int is_frontier;
+  CHECK_ERR(frontier_check(input_block->bf, input_node_idx, &frontier_traversal_idx, &is_frontier));
+
+  if(is_frontier){
+    struct block * child_block;
+    get_child_block(input_block->bf, frontier_traversal_idx, &child_block);
+    return child(child_block, 0, requested_child_position, 0, result);
+  }
+
+  
 
   return NOT_IMPLEMENTED;
 }
@@ -91,5 +66,4 @@ int insert_point(struct block *input_block, uint32_t col, uint32_t row) {
   return 0;
 }
 
-#pragma clang diagnostic pop
 #pragma clang diagnostic pop

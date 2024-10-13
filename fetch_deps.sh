@@ -16,6 +16,7 @@ set -o history -o histexpand
 mkdir -p lib
 cd lib
 
+# Begin c-bitvector
 if [[ -d "c-bitvector" ]]; then
     cd c-bitvector
     git fetch
@@ -30,3 +31,22 @@ fi
 
 make
 cd ..
+# End c-bitvector
+
+
+# Begin c-vector
+if [[ -d "c-vector" ]]; then
+    cd c-vector
+    git fetch
+    git pull
+else
+    if ! (git clone https://github.com/CristobalM/c-vector) then
+        echo "Couldn't retrieve c-vector repository.. exiting"
+        exit 1
+    fi
+    cd c-vector
+fi
+
+make
+cd ..
+# End c-vector
