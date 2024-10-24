@@ -5,7 +5,6 @@
 
 #include <vector.h>
 
-
 int init_block_frontier(struct block_frontier *bf) {
   init_vector(&(bf->frontier), sizeof(uint32_t));
   init_vector(&(bf->blocks), sizeof(struct block *));
@@ -37,12 +36,13 @@ int frontier_check(struct block_frontier *bf, uint32_t node_idx,
   return SUCCESS_ECODE;
 }
 
-int get_child_block(struct block_frontier *bf, uint32_t frontier_node_idx, struct block **child_block_result){
-    if(frontier_node_idx > bf->blocks.nof_items){
-        return FRONTIER_OUT_OF_BOUNDS;
-    }
+int get_child_block(struct block_frontier *bf, uint32_t frontier_node_idx,
+                    struct block **child_block_result) {
+  if (frontier_node_idx > bf->blocks.nof_items) {
+    return FRONTIER_OUT_OF_BOUNDS;
+  }
 
-    *child_block_result = read_block_element(&bf->blocks, frontier_node_idx);
-    
-    return SUCCESS_ECODE;
+  *child_block_result = read_block_element(&bf->blocks, frontier_node_idx);
+
+  return SUCCESS_ECODE;
 }

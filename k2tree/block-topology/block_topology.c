@@ -17,3 +17,8 @@ int child_exists(struct block_topology *bt, uint32_t input_node_idx,
 
   return SUCCESS_ECODE;
 }
+
+int read_node(struct block_topology *bt, uint32_t node_idx, uint32_t *result) {
+  CHECK_ERR(bits_read(bt->bv, 4 * node_idx, 4 * (node_idx + 1) - 1, result));
+  return SUCCESS_ECODE;
+}

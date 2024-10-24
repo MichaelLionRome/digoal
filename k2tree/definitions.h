@@ -1,10 +1,22 @@
 #ifndef _K2TREE_DEFINITIONS_H_
 #define _K2TREE_DEFINITIONS_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \
     if (err) {                                                                 \
       return (err);                                                            \
+    }                                                                          \
+  } while (0)
+
+#define SAFE_OP(op)                                                            \
+  do {                                                                         \
+    if ((op) != SUCCESS_ECODE) {                                               \
+      printf("There was an error while running %s. Error code: %d\n", (#op),   \
+             (op));                                                            \
+      exit(op);                                                                \
     }                                                                          \
   } while (0)
 
@@ -25,14 +37,10 @@
 
 #define FRONTIER_OUT_OF_BOUNDS 2
 
-
 #define DEFINE_READ_ELEMENT(typename, type)                                    \
   type read_##typename##_element(struct vector *v, int position) {             \
-    type out;                                                                  \
-    char *vread_result;                                                        \
-    get_element_at(v, position, &vread_result);                                \
-    memcpy(&out, vread_result, v->element_size);                               \
-    return out;                                                                \
+    type *data = (type *)v->data;                                              \
+    return *(data + position);                                                 \
   }
 
 DEFINE_READ_ELEMENT(uint, uint32_t)
