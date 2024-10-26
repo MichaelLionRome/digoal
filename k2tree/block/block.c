@@ -35,12 +35,12 @@ static inline uint32_t get_subtree_skipping_qty(struct block *b,
   return skip_table[4 * node_value + child_idx];
 }
 
-/* PROTOTYPES */
+/* INTERNAL FUNCTIONS PROTOTYPES */
 int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
-                      uint32_t subtrees_to_skip,
-                      uint32_t *frontier_traversal_idx,
-                      uint32_t input_node_relative_depth,
-                      struct sequential_scan_result *result);
+                          uint32_t subtrees_to_skip,
+                          uint32_t *frontier_traversal_idx,
+                          uint32_t input_node_relative_depth,
+                          struct sequential_scan_result *result);
 
 /**
   Posible return codes:
@@ -51,9 +51,9 @@ any data
 int child(struct block *input_block, uint32_t input_node_idx,
           uint32_t requested_child_position, uint32_t input_node_relative_depth,
           struct child_result *result);
-/* END PROTOTYPES */
+/* END INTERNAL FUNCTIONS  PROTOTYPES */
 
-
+/* INTERNAL FUNCTIONS IMPLEMENTATIONS */
 
 int child(struct block *input_block, uint32_t input_node_idx,
           uint32_t requested_child_position, uint32_t input_node_relative_depth,
@@ -89,8 +89,8 @@ int child(struct block *input_block, uint32_t input_node_idx,
       input_block, input_node_idx, requested_child_position);
   struct sequential_scan_result sc_result;
   SAFE_OP(sequential_scan_child(input_block, input_node_idx, subtrees_to_skip,
-                        &frontier_traversal_idx, input_node_relative_depth,
-                        &sc_result));
+                                &frontier_traversal_idx,
+                                input_node_relative_depth, &sc_result));
   // seq_scan_result_cleanup(sc_result);
 
   result->resulting_block = input_block;
@@ -99,6 +99,23 @@ int child(struct block *input_block, uint32_t input_node_idx,
 
   return SUCCESS_ECODE;
 }
+
+int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
+                          uint32_t subtrees_to_skip,
+                          uint32_t *frontier_traversal_idx,
+                          uint32_t input_node_relative_depth,
+                          struct sequential_scan_result *result) {
+  if (subtrees_to_skip == 0) {
+    result->child_preorder = input_node_idx;
+    result->node_relative_depth = input_node_relative_depth;
+    result->subtrees_count_map = NULL;
+    result->relative_depth_map = NULL;
+    return SUCCESS_ECODE;
+  }
+}
+/* END INTERNAL FUNCTIONS IMPLEMENTATIONS */
+
+/* EXTERNAL FUNCTIONS */
 
 int has_point(struct block *input_block, uint32_t col, uint32_t row) {
   return 0;
