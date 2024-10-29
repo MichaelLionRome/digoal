@@ -46,4 +46,6 @@
 DEFINE_READ_ELEMENT(uint, uint32_t)
 DEFINE_READ_ELEMENT(block, struct block *)
 
+#define POP_COUNT(u32_input) __builtin_popcount(u32_input)
+
 #endif

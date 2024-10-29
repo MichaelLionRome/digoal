@@ -19,4 +19,7 @@ int child_exists(struct block_topology *bt, uint32_t input_node_idx,
 
 int read_node(struct block_topology *bt, uint32_t node_idx, uint32_t *result);
 
+int count_children(struct block_topology *bt, uint32_t node_idx,
+                   uint32_t *result);
+
 #endif /* _BLOCK_TOPOLOGY_H */

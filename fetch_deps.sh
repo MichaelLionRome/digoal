@@ -50,3 +50,20 @@ fi
 make
 cd ..
 # End c-vector
+
+# Begin c-stack
+if [[ -d "c-stack" ]]; then
+    cd c-stack
+    git fetch
+    git pull
+else
+    if ! (git clone https://github.com/CristobalM/c-stack) then
+        echo "Couldn't retrieve c-stack repository.. exiting"
+        exit 1
+    fi
+    cd c-stack
+fi
+
+make
+cd ..
+# End c-stack

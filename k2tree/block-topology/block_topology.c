@@ -22,3 +22,17 @@ int read_node(struct block_topology *bt, uint32_t node_idx, uint32_t *result) {
   CHECK_ERR(bits_read(bt->bv, 4 * node_idx, 4 * (node_idx + 1) - 1, result));
   return SUCCESS_ECODE;
 }
+
+int count_children(struct block_topology *bt, uint32_t node_idx,
+                   uint32_t *result) {
+  if (node_idx >= bt->nodes_count) {
+    return 0;
+  }
+
+  uint32_t node;
+  CHECK_ERR(read_node(bt, node_idx, &node));
+
+  *result = POP_COUNT(node);
+
+  return SUCCESS_ECODE;
+}
