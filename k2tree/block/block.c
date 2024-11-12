@@ -1,5 +1,5 @@
 #include <bitvector.h>
-#include <circular_stack.h>
+#include <circular_queue.h>
 
 #include "block-frontier/block_frontier.h"
 #include "block.h"
@@ -60,8 +60,8 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
                           uint32_t *frontier_traversal_idx,
                           uint32_t input_node_relative_depth,
                           struct sequential_scan_result *result,
-                          struct circular_stack *not_yet_traversed,
-                          struct circular_stack *subtrees_count);
+                          struct circular_queue *not_yet_traversed,
+                          struct circular_queue *subtrees_count);
 
 /**
   Posible return codes:
@@ -71,8 +71,8 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
 int child(struct block *input_block, uint32_t input_node_idx,
           uint32_t requested_child_position, uint32_t input_node_relative_depth,
           struct child_result *result, struct sequential_scan_result *sc_result,
-          struct circular_stack *not_yet_traversed,
-          struct circular_stack *subtrees_count);
+          struct circular_queue *not_yet_traversed,
+          struct circular_queue *subtrees_count);
 /* END INTERNAL FUNCTIONS  PROTOTYPES */
 
 /* INTERNAL FUNCTIONS IMPLEMENTATIONS */
@@ -80,8 +80,8 @@ int child(struct block *input_block, uint32_t input_node_idx,
 int child(struct block *input_block, uint32_t input_node_idx,
           uint32_t requested_child_position, uint32_t input_node_relative_depth,
           struct child_result *result, struct sequential_scan_result *sc_result,
-          struct circular_stack *not_yet_traversed,
-          struct circular_stack *subtrees_count) {
+          struct circular_queue *not_yet_traversed,
+          struct circular_queue *subtrees_count) {
   uint32_t tree_depth = input_block->tree_depth;
   if (input_node_relative_depth + 1 == tree_depth) {
     /* Create leaf result */
@@ -128,8 +128,8 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
                           uint32_t *frontier_traversal_idx,
                           uint32_t input_node_relative_depth,
                           struct sequential_scan_result *result,
-                          struct circular_stack *not_yet_traversed,
-                          struct circular_stack *subtrees_count) {
+                          struct circular_queue *not_yet_traversed,
+                          struct circular_queue *subtrees_count) {
   if (subtrees_to_skip == 0) {
     result->child_preorder = input_node_idx;
     result->node_relative_depth = input_node_relative_depth;
@@ -138,20 +138,20 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
     return SUCCESS_ECODE;
   }
 
-  SAFE_OP(push_circular_stack(not_yet_traversed, (char *)&subtrees_to_skip));
+  SAFE_OP(push_circular_queue(not_yet_traversed, (char *)&subtrees_to_skip));
 
   struct node_subtree_info nsi;
   nsi.node_index = input_node_idx;
   nsi.node_relative_depth = input_node_relative_depth;
   nsi.subtree_size = 1;
-  SAFE_OP(push_circular_stack(subtrees_count, (char *)&nsi));
+  SAFE_OP(push_circular_queue(subtrees_count, (char *)&nsi));
 
   uint32_t current_node_index = input_node_idx;
   uint32_t depth = input_node_relative_depth;
   uint32_t real_depth = depth + input_block->block_depth;
 
   int is_empty;
-  SAFE_OP(empty_circular_stack(not_yet_traversed, &is_empty));
+  SAFE_OP(empty_circular_queue(not_yet_traversed, &is_empty));
   while (!is_empty) {
     current_node_index++;
 
@@ -162,7 +162,7 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
     int reaching_leaf = (real_depth == input_block->tree_depth - 1);
 
     uint32_t current_not_yet_traversed;
-    back_circular_stack(not_yet_traversed, (char *)&current_not_yet_traversed);
+    back_circular_queue(not_yet_traversed, (char *)&current_not_yet_traversed);
 
     if (!reaching_leaf && !is_frontier) {
       depth++;
@@ -172,7 +172,7 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
     nsi_w.node_index = input_node_idx;
     nsi_w.node_relative_depth = depth;
     nsi_w.subtree_size = 1;
-    SAFE_OP(push_circular_stack(subtrees_count, (char *)&nsi_w));
+    SAFE_OP(push_circular_queue(subtrees_count, (char *)&nsi_w));
 
     CHECK_ERR(frontier_check(input_block->bf, current_node_index,
                              &frontier_traversal_idx, &is_frontier));
@@ -184,44 +184,44 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
                    &current_children_count);
 
     if (current_children_count > 0 && !reaching_leaf && !is_frontier) {
-      SAFE_OP(push_circular_stack(not_yet_traversed,
+      SAFE_OP(push_circular_queue(not_yet_traversed,
                                   (char *)&current_children_count));
     } else {
       uint32_t next_nyt;
-      SAFE_OP(pop_back_circular_stack(not_yet_traversed, &next_nyt));
+      SAFE_OP(pop_back_circular_queue(not_yet_traversed, &next_nyt));
       next_nyt--;
 
       struct node_subtree_info nsi_rep;
 
-      int is_info_stack_empty;
-      SAFE_OP(empty_circular_stack(subtrees_count, &is_info_stack_empty));
-      if (!is_info_stack_empty) {
-        SAFE_OP(pop_back_circular_stack(subtrees_count, (char *)&nsi_rep));
+      int is_info_queue_empty;
+      SAFE_OP(empty_circular_queue(subtrees_count, &is_info_queue_empty));
+      if (!is_info_queue_empty) {
+        SAFE_OP(pop_back_circular_queue(subtrees_count, (char *)&nsi_rep));
         CHECK_ERR(mark_subtree_size(result, nsi_rep.node_index,
                                     nsi_rep.node_relative_depth,
                                     nsi_rep.subtree_size));
-        SAFE_OP(empty_circular_stack(subtrees_count, &is_info_stack_empty));
-        if (!is_info_stack_empty) {
+        SAFE_OP(empty_circular_queue(subtrees_count, &is_info_queue_empty));
+        if (!is_info_queue_empty) {
           struct node_subtree_info *nsi_rep_within;
-          back_reference_circular_stack(subtrees_count,
+          back_reference_circular_queue(subtrees_count,
                                         (char **)&nsi_rep_within);
           nsi_rep_within->subtree_size += nsi_rep.subtree_size;
         }
       }
-      SAFE_OP(empty_circular_stack(not_yet_traversed, &is_empty));
+      SAFE_OP(empty_circular_queue(not_yet_traversed, &is_empty));
       while (next_nyt == 0 && !is_empty) {
-        SAFE_OP(pop_back_circular_stack(not_yet_traversed, &next_nyt));
+        SAFE_OP(pop_back_circular_queue(not_yet_traversed, &next_nyt));
         next_nyt--;
 
-        if (!is_info_stack_empty) {
-          SAFE_OP(pop_back_circular_stack(subtrees_count, (char *)&nsi_rep));
+        if (!is_info_queue_empty) {
+          SAFE_OP(pop_back_circular_queue(subtrees_count, (char *)&nsi_rep));
           CHECK_ERR(mark_subtree_size(result, nsi_rep.node_index,
                                       nsi_rep.node_relative_depth,
                                       nsi_rep.subtree_size));
-          SAFE_OP(empty_circular_stack(subtrees_count, &is_info_stack_empty));
-          if (!is_info_stack_empty) {
+          SAFE_OP(empty_circular_queue(subtrees_count, &is_info_queue_empty));
+          if (!is_info_queue_empty) {
             struct node_subtree_info *nsi_rep_within;
-            SAFE_OP(back_reference_circular_stack(subtrees_count,
+            SAFE_OP(back_reference_circular_queue(subtrees_count,
                                                   (char **)&nsi_rep_within));
             nsi_rep_within->subtree_size += nsi_rep.subtree_size;
           }
@@ -231,30 +231,30 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
           depth--;
         }
         // Last op
-        SAFE_OP(empty_circular_stack(not_yet_traversed, &is_empty));
+        SAFE_OP(empty_circular_queue(not_yet_traversed, &is_empty));
       }
 
       if (next_nyt > 0) {
-        push_circular_stack(not_yet_traversed, (char *)&next_nyt);
+        push_circular_queue(not_yet_traversed, (char *)&next_nyt);
       }
     }
 
     // Last op
-    SAFE_OP(empty_circular_stack(not_yet_traversed, &is_empty));
+    SAFE_OP(empty_circular_queue(not_yet_traversed, &is_empty));
   }
-  int is_info_stack_empty;
-  SAFE_OP(empty_circular_stack(subtrees_count, &is_info_stack_empty));
-  if (!is_info_stack_empty) {
+  int is_info_queue_empty;
+  SAFE_OP(empty_circular_queue(subtrees_count, &is_info_queue_empty));
+  if (!is_info_queue_empty) {
     struct node_subtree_info nsi_out_w;
-    SAFE_OP(pop_back_circular_stack(subtrees_count, (char *)&nsi_out_w));
+    SAFE_OP(pop_back_circular_queue(subtrees_count, (char *)&nsi_out_w));
     CHECK_ERR(mark_subtree_size(result, nsi_out_w.node_index,
                                 nsi_out_w.node_relative_depth,
                                 nsi_out_w.subtree_size));
 
-    SAFE_OP(empty_circular_stack(subtrees_count, &is_info_stack_empty));
-    if (!is_info_stack_empty) {
+    SAFE_OP(empty_circular_queue(subtrees_count, &is_info_queue_empty));
+    if (!is_info_queue_empty) {
       struct node_subtree_info *nsi_rep_within;
-      SAFE_OP(back_reference_circular_stack(subtrees_count,
+      SAFE_OP(back_reference_circular_queue(subtrees_count,
                                             (char **)&nsi_rep_within));
       nsi_rep_within->subtree_size += nsi_out_w.subtree_size;
     }
