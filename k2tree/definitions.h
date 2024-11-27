@@ -48,4 +48,6 @@ DEFINE_READ_ELEMENT(block, struct block *)
 
 #define POP_COUNT(u32_input) __builtin_popcount(u32_input)
 
+typedef unsigned long ulong;
+
 #endif

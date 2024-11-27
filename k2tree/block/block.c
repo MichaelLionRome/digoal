@@ -1,9 +1,11 @@
 #include <bitvector.h>
 #include <circular_queue.h>
+#include <vector.h>
 
 #include "block-frontier/block_frontier.h"
 #include "block.h"
 #include "definitions.h"
+#include "morton-code/morton_code.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -27,6 +29,13 @@ struct node_subtree_info {
   uint32_t node_index;
   uint32_t node_relative_depth;
   uint32_t subtree_size;
+};
+
+struct point_search_result {
+  struct child_result last_child_result_reached;
+  uint32_t depth_reached;
+  int point_exists;
+  uint32_t treedepth;
 };
 
 uint32_t skip_table[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1,
@@ -73,6 +82,9 @@ int child(struct block *input_block, uint32_t input_node_idx,
           struct child_result *result, struct sequential_scan_result *sc_result,
           struct circular_queue *not_yet_traversed,
           struct circular_queue *subtrees_count);
+
+int find_point(struct block *input_block, struct morton_code *mc,
+               struct point_search_result *psr);
 /* END INTERNAL FUNCTIONS  PROTOTYPES */
 
 /* INTERNAL FUNCTIONS IMPLEMENTATIONS */
@@ -91,6 +103,9 @@ int child(struct block *input_block, uint32_t input_node_idx,
     result->is_leaf_result = TRUE;
     return SUCCESS_ECODE;
   }
+
+  reset_circular_queue(not_yet_traversed);
+  reset_circular_queue(subtrees_count);
 
   int exists;
   CHECK_ERR(child_exists(input_block->bt, input_node_idx,
@@ -112,7 +127,7 @@ int child(struct block *input_block, uint32_t input_node_idx,
 
   uint32_t subtrees_to_skip = get_subtree_skipping_qty(
       input_block, input_node_idx, requested_child_position);
-  SAFE_OP(sequential_scan_child(
+  CHECK_ERR(sequential_scan_child(
       input_block, input_node_idx, subtrees_to_skip, &frontier_traversal_idx,
       input_node_relative_depth, sc_result, not_yet_traversed, subtrees_count));
 
@@ -162,7 +177,8 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
     int reaching_leaf = (real_depth == input_block->tree_depth - 1);
 
     uint32_t current_not_yet_traversed;
-    back_circular_queue(not_yet_traversed, (char *)&current_not_yet_traversed);
+    SAFE_OP(back_circular_queue(not_yet_traversed,
+                                (char *)&current_not_yet_traversed));
 
     if (!reaching_leaf && !is_frontier) {
       depth++;
@@ -265,16 +281,75 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
 
   return SUCCESS_ECODE;
 }
+
+int init_sequential_scan_result(struct sequential_scan_result *scr,
+                                uint32_t tree_depth) {
+  SAFE_OP(init_vector_with_capacity(scr->subtrees_count_map, sizeof(uint32_t),
+                                    tree_depth));
+  SAFE_OP(init_vector_with_capacity(scr->relative_depth_map, sizeof(uint32_t),
+                                    tree_depth));
+  return SUCCESS_ECODE;
+}
+
+int clean_sequential_scan_result(struct sequential_scan_result *scr) {
+  SAFE_OP(free_vector(scr->subtrees_count_map));
+  SAFE_OP(free_vector(scr->relative_depth_map));
+  return SUCCESS_ECODE;
+}
+
+int find_point(struct block *input_block, struct morton_code *mc,
+               struct point_search_result *psr) {
+  struct child_result current_cr;
+  current_cr.resulting_node_idx = 0;
+  current_cr.resulting_block = input_block;
+  current_cr.resulting_relative_depth = 0;
+  current_cr.is_leaf_result = FALSE;
+
+  struct sequential_scan_result scr;
+  CHECK_ERR(init_sequential_scan_result(&scr, input_block->tree_depth));
+
+  struct circular_queue not_yet_traversed;
+  struct circular_queue subtrees_count;
+
+  init_circular_queue(&not_yet_traversed, input_block->tree_depth * 2,
+                      sizeof(uint32_t));
+  init_circular_queue(&subtrees_count, input_block->tree_depth * 2,
+                      sizeof(struct node_subtree_info));
+
+  for (uint32_t depth = 0; depth < input_block->tree_depth; depth++) {
+    struct child_result prev_cr = current_cr;
+    uint32_t current_mcode;
+    CHECK_ERR(get_code_at_morton_code(mc, depth, &current_mcode));
+    CHECK_ERR(child(input_block, current_cr.resulting_node_idx, current_mcode,
+                    depth - input_block->block_depth, &current_cr, &scr,
+                    &not_yet_traversed, &subtrees_count));
+  }
+
+  clean_circular_queue(&subtrees_count);
+  clean_circular_queue(&not_yet_traversed);
+  clean_sequential_scan_result(&scr);
+
+  return SUCCESS_ECODE;
+}
 /* END INTERNAL FUNCTIONS IMPLEMENTATIONS */
 
 /* EXTERNAL FUNCTIONS */
 
-int has_point(struct block *input_block, uint32_t col, uint32_t row) {
-  return 0;
+int has_point(struct block *input_block, ulong col, ulong row, int *result) {
+  struct morton_code mc;
+  CHECK_ERR(init_morton_code(&mc, input_block->tree_depth));
+
+  CHECK_ERR(convert_coordinates_to_morton_code(col, row,
+                                               input_block->tree_depth, &mc));
+
+  struct point_search_result psr;
+  CHECK_ERR(find_point(input_block, &mc, &psr));
+
+  *result = psr.point_exists;
+
+  return SUCCESS_ECODE;
 }
 
-int insert_point(struct block *input_block, uint32_t col, uint32_t row) {
-  return 0;
-}
+int insert_point(struct block *input_block, ulong col, ulong row) { return 0; }
 
 #pragma clang diagnostic pop

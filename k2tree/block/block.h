@@ -5,6 +5,7 @@
 
 #include "block-topology/block_topology.h"
 
+typedef unsigned long ulong;
 struct block {
   struct block_topology *bt;
   struct block_frontier *bf;
@@ -12,7 +13,7 @@ struct block {
   uint32_t tree_depth;
 };
 
-int has_point(struct block *input_block, uint32_t col, uint32_t row);
-int insert_point(struct block *input_block, uint32_t col, uint32_t row);
+int has_point(struct block *input_block, ulong col, ulong row, int *result);
+int insert_point(struct block *input_block, ulong col, ulong row);
 
 #endif /* _BLOCK_H_ */
