@@ -16,6 +16,7 @@ struct child_result {
   uint32_t resulting_node_idx;
   uint32_t resulting_relative_depth;
   int is_leaf_result;
+  int exists;
 };
 
 struct sequential_scan_result {
@@ -306,30 +307,67 @@ int find_point(struct block *input_block, struct morton_code *mc,
   current_cr.is_leaf_result = FALSE;
 
   struct sequential_scan_result scr;
-  CHECK_ERR(init_sequential_scan_result(&scr, input_block->tree_depth));
+  SAFE_OP(init_sequential_scan_result(&scr, input_block->tree_depth));
 
   struct circular_queue not_yet_traversed;
   struct circular_queue subtrees_count;
 
-  init_circular_queue(&not_yet_traversed, input_block->tree_depth * 2,
-                      sizeof(uint32_t));
-  init_circular_queue(&subtrees_count, input_block->tree_depth * 2,
-                      sizeof(struct node_subtree_info));
+  SAFE_OP(init_circular_queue(&not_yet_traversed, input_block->tree_depth * 2,
+                      sizeof(uint32_t)));
+  SAFE_OP(init_circular_queue(&subtrees_count, input_block->tree_depth * 2,
+                      sizeof(struct node_subtree_info)));
 
-  for (uint32_t depth = 0; depth < input_block->tree_depth; depth++) {
+  uint32_t depth, relative_depth;
+  for (depth = input_block->block_depth; depth < input_block->tree_depth; depth++) {
+    relative_depth = depth - input_block->block_depth;
     struct child_result prev_cr = current_cr;
     uint32_t current_mcode;
-    CHECK_ERR(get_code_at_morton_code(mc, depth, &current_mcode));
-    CHECK_ERR(child(input_block, current_cr.resulting_node_idx, current_mcode,
-                    depth - input_block->block_depth, &current_cr, &scr,
+    SAFE_OP(get_code_at_morton_code(mc, depth, &current_mcode));
+    SAFE_OP(child(input_block, current_cr.resulting_node_idx, current_mcode,
+                    relative_depth, &current_cr, &scr,
                     &not_yet_traversed, &subtrees_count));
+
+    psr->treedepth = input_block->tree_depth;
+
+    if(current_cr.is_leaf_result){
+      int leaf_code;
+      SAFE_OP(leaf_child_morton_code(mc, &leaf_code));
+
+      int does_child_exists;
+      SAFE_OP(child_exists(input_block->bt, current_cr.resulting_node_idx, leaf_code, &does_child_exists));
+      if(does_child_exists){
+        psr->last_child_result_reached = current_cr;
+        psr->depth_reached = relative_depth+1;
+        psr->point_exists = TRUE;
+      }
+      else{
+        psr->last_child_result_reached = prev_cr;
+        psr->depth_reached = relative_depth;
+        psr->point_exists = FALSE;
+      }
+      goto _find_point_success_cleanup;
+    }
+
+    if(!current_cr.exists){
+      psr->last_child_result_reached = prev_cr;
+      psr->depth_reached = relative_depth;
+      psr->point_exists = FALSE;
+      goto _find_point_success_cleanup;
+    }
   }
 
-  clean_circular_queue(&subtrees_count);
-  clean_circular_queue(&not_yet_traversed);
-  clean_sequential_scan_result(&scr);
+  // If the loop ends, then we have found a point
+  psr->last_child_result_reached = current_cr;
+  psr->depth_reached = relative_depth;
+  psr->point_exists = TRUE;
 
-  return SUCCESS_ECODE;
+  _find_point_success_cleanup:
+
+    SAFE_OP(clean_circular_queue(&subtrees_count));
+    SAFE_OP(clean_circular_queue(&not_yet_traversed));
+    SAFE_OP(clean_sequential_scan_result(&scr));
+
+    return SUCCESS_ECODE;
 }
 /* END INTERNAL FUNCTIONS IMPLEMENTATIONS */
 
