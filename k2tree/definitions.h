@@ -4,6 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef SUCCESS_ECODE
+#define SUCCESS_ECODE 0;
+#endif
+
+#define DOES_NOT_EXIST_CHILD_ERR 1;
+#define NOT_IMPLEMENTED -100
+#define FRONTIER_OUT_OF_BOUNDS 2
+#define FRONTIER_NODE_WITHIN_FIND_INSERTION_LOC 3
+
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \
     if (err) {                                                                 \
@@ -20,13 +29,6 @@
     }                                                                          \
   } while (0)
 
-#ifndef SUCCESS_ECODE
-#define SUCCESS_ECODE 0;
-#endif
-#define DOES_NOT_EXIST_CHILD_ERR 1;
-
-#define NOT_IMPLEMENTED -100
-
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -34,8 +36,6 @@
 #ifndef FALSE
 #define FALSE 0
 #endif
-
-#define FRONTIER_OUT_OF_BOUNDS 2
 
 #define DEFINE_READ_ELEMENT(typename, type)                                    \
   type read_##typename##_element(struct vector *v, int position) {             \
