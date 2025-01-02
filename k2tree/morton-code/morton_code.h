@@ -1,11 +1,10 @@
 #ifndef _MORTON_CODE_H
 #define _MORTON_CODE_H
 
+#include <bitvector.h>
 #include <stdint.h>
 
-#include <bitvector.h>
-
-typedef unsigned long ulong;
+#include "definitions.h"
 
 struct morton_code {
   struct bitvector container;

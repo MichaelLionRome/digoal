@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector.h>
 
 #ifndef SUCCESS_ECODE
 #define SUCCESS_ECODE 0;
@@ -20,7 +21,7 @@
     }                                                                          \
   } while (0)
 
-#define SAFE_OP(op)                                                            \
+#define _SAFE_OP_K2(op)                                                        \
   do {                                                                         \
     if ((op) != SUCCESS_ECODE) {                                               \
       printf("There was an error while running %s. Error code: %d\n", (#op),   \
@@ -38,6 +39,7 @@
 #endif
 
 #define DEFINE_READ_ELEMENT(typename, type)                                    \
+  type read_##typename##_element(struct vector *v, int position);              \
   type read_##typename##_element(struct vector *v, int position) {             \
     type *data = (type *)v->data;                                              \
     return *(data + position);                                                 \

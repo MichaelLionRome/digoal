@@ -4,7 +4,7 @@
 
 int init_morton_code(struct morton_code *mc, uint32_t treedepth) {
   mc->treedepth = treedepth;
-  SAFE_OP(init_bitvector(&mc->container, 2 * treedepth));
+  _SAFE_OP_K2(init_bitvector(&mc->container, 2 * treedepth));
   return SUCCESS_ECODE;
 }
 
@@ -15,13 +15,14 @@ int clean_morton_code(struct morton_code *mc) {
 
 int add_element_morton_code(struct morton_code *mc, uint32_t position,
                             uint32_t code) {
-  SAFE_OP(bits_write(&mc->container, 2 * position, 2 * position + 1, code));
+  _SAFE_OP_K2(bits_write(&mc->container, 2 * position, 2 * position + 1, code));
   return SUCCESS_ECODE;
 }
 
 int get_code_at_morton_code(struct morton_code *mc, uint32_t position,
                             uint32_t *result) {
-  SAFE_OP(bits_read(&mc->container, 2 * position, 2 * position + 1, result));
+  _SAFE_OP_K2(
+      bits_read(&mc->container, 2 * position, 2 * position + 1, result));
   return SUCCESS_ECODE;
 }
 
@@ -52,7 +53,7 @@ int convert_coordinates_to_morton_code(ulong col, ulong row, uint32_t treedepth,
     row %= half_level;
     current_level = half_level;
 
-    SAFE_OP(add_element_morton_code(result, mc_position++, quadrant));
+    _SAFE_OP_K2(add_element_morton_code(result, mc_position++, quadrant));
   }
   return SUCCESS_ECODE;
 }

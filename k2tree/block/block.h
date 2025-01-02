@@ -4,8 +4,9 @@
 #include <stdint.h>
 
 #include "block-topology/block_topology.h"
+#include "definitions.h"
+#include "queries_state.h"
 
-typedef unsigned long ulong;
 struct block {
   struct block_topology *bt;
   struct block_frontier *bf;
@@ -14,13 +15,8 @@ struct block {
 };
 
 int has_point(struct block *input_block, ulong col, ulong row,
-              struct morton_code *mc, struct sequential_scan_result *sc_result,
-              struct circular_queue *not_yet_traversed,
-              struct circular_queue *subtrees_count, int *result);
+              struct queries_state *qs, int *result);
 int insert_point(struct block *input_block, ulong col, ulong row,
-                 struct morton_code *mc,
-                 struct sequential_scan_result *sc_result,
-                 struct circular_queue *not_yet_traversed,
-                 struct circular_queue *subtrees_count);
+                 struct queries_state *qs);
 
 #endif /* _BLOCK_H_ */
