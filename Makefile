@@ -9,7 +9,6 @@ INCLUDES=-I${BITVECTOR_INCLUDE} -I${K2TREE_INCLUDES} -I${VECTOR_INCLUDE} -I${CIR
 CFLAGS :=  -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
     -Wold-style-definition -Werror -O3
 
-
 MAKE_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${CFLAGS}"
 
 MODULES_DIRS := k2tree
@@ -36,3 +35,7 @@ modules:
 
 format:
 	find . -path ./lib -prune -o -regex '.*\.\(c\|h\)' -exec clang-format -style=file -i {} \;
+
+test-all:
+	cd test && mkdir -p build && cd build && cmake .. && make && ./block_test
+

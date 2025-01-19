@@ -9,7 +9,7 @@
 #define SUCCESS_ECODE 0;
 #endif
 
-#define DOES_NOT_EXIST_CHILD_ERR 1;
+#define DOES_NOT_EXIST_CHILD_ERR 1
 #define NOT_IMPLEMENTED -100
 #define FRONTIER_OUT_OF_BOUNDS 2
 #define FRONTIER_NODE_WITHIN_FIND_INSERTION_LOC 3
@@ -45,9 +45,6 @@
     return *(data + position);                                                 \
   }
 
-DEFINE_READ_ELEMENT(uint, uint32_t)
-DEFINE_READ_ELEMENT(block, struct block *)
-
 #define POP_COUNT(u32_input) __builtin_popcount(u32_input)
 
 typedef unsigned long ulong;
@@ -59,4 +56,4 @@ typedef unsigned long ulong;
 #define STARTING_BLOCK_CAPACITY 64
 #endif
 
-#endif
+#endif /* _K2TREE_DEFINITIONS_H_ */

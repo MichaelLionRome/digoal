@@ -1,6 +1,7 @@
-#include "block_topology.h"
-
 #include <string.h>
+
+#include "block_topology.h"
+#include "definitions.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
@@ -29,6 +30,10 @@ int init_block_topology(struct block_topology *bt, struct bitvector *bv,
 int child_exists(struct block_topology *bt, uint32_t input_node_idx,
                  uint32_t requested_child_position, int *result) {
   struct bitvector *bv = bt->bv;
+  if (input_node_idx >= bv->size_in_bits / 4) {
+    *result = FALSE;
+    return SUCCESS_ECODE;
+  }
   int bit_on;
   _SAFE_OP_K2(
       bit_read(bv, input_node_idx * 4 + requested_child_position, &bit_on));
@@ -303,5 +308,19 @@ static inline int collapse_bits(struct block_topology *bt, uint32_t from,
 int collapse_nodes(struct block_topology *bt, uint32_t from, uint32_t to) {
   CHECK_ERR(collapse_bits(bt, 4 * from, 4 * (to + 1) - 1));
   bt->nodes_count -= (to - from + 1);
+  return SUCCESS_ECODE;
+}
+
+struct block_topology *create_block_topology(void) {
+  struct block_topology *new_bt = calloc(1, sizeof(struct block_topology));
+  struct bitvector *bv = calloc(1, sizeof(struct bitvector));
+  init_bitvector(bv, 0);
+  init_block_topology(new_bt, bv, 0);
+  return new_bt;
+}
+
+int free_block_topology(struct block_topology *bt) {
+  _SAFE_OP_K2(clean_bitvector(bt->bv));
+  free(bt->bv);
   return SUCCESS_ECODE;
 }

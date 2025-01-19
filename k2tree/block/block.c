@@ -9,9 +9,11 @@
 #include "definitions.h"
 #include "morton-code/morton_code.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wunused-variable"
+#ifndef _READ_FUNS_VECTOR_
+#define _READ_FUNS_VECTOR_
+DEFINE_READ_ELEMENT(uint, uint32_t)
+DEFINE_READ_ELEMENT(block, struct block *)
+#endif
 
 struct child_result {
   struct block *resulting_block;
@@ -103,11 +105,6 @@ uint32_t get_previous_siblings_count(struct block *input_block,
                                      struct child_result *parent_node_result,
                                      uint32_t child_code);
 
-int init_sequential_scan_result(struct sequential_scan_result *scr,
-                                uint32_t tree_depth);
-
-int clean_sequential_scan_result(struct sequential_scan_result *scr);
-
 int make_room(struct block *input_block, struct insertion_location *il);
 int insert_point_mc(struct block *input_block, struct morton_code *mc,
                     struct insertion_location *il);
@@ -135,8 +132,11 @@ int child(struct block *input_block, uint32_t input_node_idx,
   int exists;
   CHECK_ERR(child_exists(input_block->bt, input_node_idx,
                          requested_child_position, &exists));
-  if (!exists)
+  if (!exists){
+    result->exists = FALSE;
     return DOES_NOT_EXIST_CHILD_ERR;
+  }
+    
 
   uint32_t frontier_traversal_idx = 0;
   int is_frontier;
@@ -158,6 +158,7 @@ int child(struct block *input_block, uint32_t input_node_idx,
   result->resulting_block = input_block;
   result->resulting_node_idx = qs->sc_result.child_preorder + 1;
   result->resulting_relative_depth = input_node_relative_depth + 1;
+  result->exists = TRUE;
 
   return SUCCESS_ECODE;
 }
@@ -185,8 +186,6 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
   if (subtrees_to_skip == 0) {
     result->child_preorder = input_node_idx;
     result->node_relative_depth = input_node_relative_depth;
-    result->subtrees_count_map = NULL;
-    result->relative_depth_map = NULL;
     return SUCCESS_ECODE;
   }
 
@@ -329,21 +328,6 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
   return SUCCESS_ECODE;
 }
 
-int init_sequential_scan_result(struct sequential_scan_result *scr,
-                                uint32_t tree_depth) {
-  _SAFE_OP_K2(init_vector_with_capacity(scr->subtrees_count_map,
-                                        sizeof(uint32_t), tree_depth));
-  _SAFE_OP_K2(init_vector_with_capacity(scr->relative_depth_map,
-                                        sizeof(uint32_t), tree_depth));
-  return SUCCESS_ECODE;
-}
-
-int clean_sequential_scan_result(struct sequential_scan_result *scr) {
-  _SAFE_OP_K2(free_vector(scr->subtrees_count_map));
-  _SAFE_OP_K2(free_vector(scr->relative_depth_map));
-  return SUCCESS_ECODE;
-}
-
 int find_point(struct block *input_block, struct queries_state *qs,
                struct point_search_result *psr) {
   struct child_result current_cr;
@@ -359,11 +343,23 @@ int find_point(struct block *input_block, struct queries_state *qs,
     relative_depth = depth - input_block->block_depth;
     struct child_result prev_cr = current_cr;
     uint32_t current_mcode;
-    _SAFE_OP_K2(get_code_at_morton_code(&qs->mc, depth, &current_mcode));
-    _SAFE_OP_K2(child(input_block, current_cr.resulting_node_idx, current_mcode,
-                      relative_depth, &current_cr, qs));
+    CHECK_ERR(get_code_at_morton_code(&qs->mc, depth, &current_mcode));
+    int child_err_code = child(input_block, current_cr.resulting_node_idx, current_mcode,
+                      relative_depth, &current_cr, qs);
+
+    if(child_err_code != 0 && child_err_code != DOES_NOT_EXIST_CHILD_ERR){
+      return child_err_code;
+    }
+
 
     psr->treedepth = input_block->tree_depth;
+
+    if (!current_cr.exists) {
+      psr->last_child_result_reached = prev_cr;
+      psr->depth_reached = relative_depth;
+      psr->point_exists = FALSE;
+      return SUCCESS_ECODE;
+    }
 
     if (current_cr.is_leaf_result) {
       uint32_t leaf_code;
@@ -384,12 +380,7 @@ int find_point(struct block *input_block, struct queries_state *qs,
       return SUCCESS_ECODE;
     }
 
-    if (!current_cr.exists) {
-      psr->last_child_result_reached = prev_cr;
-      psr->depth_reached = relative_depth;
-      psr->point_exists = FALSE;
-      return SUCCESS_ECODE;
-    }
+
   }
 
   // If the loop ends, then we have found a point
@@ -520,6 +511,7 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
 
   created_block->bt = bt;
   created_block->bf = bf;
+  created_block->block_depth = relative_depth;
 
   *new_block = created_block;
 
@@ -641,4 +633,20 @@ int insert_point(struct block *input_block, ulong col, ulong row,
   return insert_point(input_block, col, row, qs);
 }
 
-#pragma clang diagnostic pop
+struct block *create_block(uint32_t tree_depth) {
+  struct block *new_block = calloc(1, sizeof(struct block));
+  new_block->bt = create_block_topology();
+  new_block->bf = create_block_frontier();
+  new_block->block_depth = 0;
+  new_block->tree_depth = tree_depth;
+  return new_block;
+}
+
+int free_block(struct block *input_block) {
+  CHECK_ERR(free_block_topology(input_block->bt));
+  CHECK_ERR(free_block_frontier(input_block->bf));
+  free(input_block->bt);
+  free(input_block->bf);
+  free(input_block);
+  return SUCCESS_ECODE;
+}

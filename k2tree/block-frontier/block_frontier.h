@@ -3,13 +3,14 @@
 
 #include <vector.h>
 
-#include "block/block.h"
-#include "definitions.h"
+struct block;
 
 struct block_frontier {
   struct vector frontier;
   struct vector blocks;
 };
+
+struct block_frontier *create_block_frontier(void);
 
 int init_block_frontier(struct block_frontier *bf);
 int init_block_frontier_with_capacity(struct block_frontier *bf, int capacity);

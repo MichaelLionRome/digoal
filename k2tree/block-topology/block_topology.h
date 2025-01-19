@@ -4,12 +4,14 @@
 #include <bitvector.h>
 #include <stdint.h>
 
-#include "definitions.h"
-
 struct block_topology {
   struct bitvector *bv;
   uint32_t nodes_count;
 };
+
+struct block_topology *create_block_topology(void);
+
+int free_block_topology(struct block_topology *bt);
 
 int init_block_topology(struct block_topology *bt, struct bitvector *bv,
                         uint32_t nodes_count);

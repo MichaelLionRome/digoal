@@ -1,14 +1,16 @@
 #include <string.h>
 
+#include <vector.h>
+
 #include "block/block.h"
 #include "block_frontier.h"
 
 #include "definitions.h"
 
-#include <vector.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
+
 
 /* PRIVATE PROTOTYPES */
 uint32_t find_insertion_point(struct block_frontier *bf, uint32_t preorder);
@@ -123,4 +125,10 @@ int add_frontier_node(struct block_frontier *bf,
       &bf->frontier, (char *)&new_frontier_node_preorder, insertion_point));
   _SAFE_OP_K2(insert_element_at(&bf->blocks, (char *)&b, insertion_point));
   return SUCCESS_ECODE;
+}
+
+struct block_frontier *create_block_frontier(void) {
+  struct block_frontier *new_bf = calloc(1, sizeof(struct block_frontier));
+  init_block_frontier(new_bf);
+  return new_bf;
 }

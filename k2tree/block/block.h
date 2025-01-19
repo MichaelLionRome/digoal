@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 
+#include "block-frontier/block_frontier.h"
 #include "block-topology/block_topology.h"
-#include "definitions.h"
+
 #include "queries_state.h"
 
 struct block {
@@ -18,5 +19,8 @@ int has_point(struct block *input_block, ulong col, ulong row,
               struct queries_state *qs, int *result);
 int insert_point(struct block *input_block, ulong col, ulong row,
                  struct queries_state *qs);
+
+struct block *create_block(uint32_t tree_depth);
+int free_block(struct block *input_block);
 
 #endif /* _BLOCK_H_ */

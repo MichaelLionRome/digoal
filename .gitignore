@@ -1,3 +1,6 @@
 lib/
 build/
 .vscode/
+test/.idea/
+test/.build/
+test/cmake-build-debug/
