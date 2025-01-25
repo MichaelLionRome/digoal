@@ -7,10 +7,8 @@
 
 #include "definitions.h"
 
-
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
-
 
 /* PRIVATE PROTOTYPES */
 uint32_t find_insertion_point(struct block_frontier *bf, uint32_t preorder);

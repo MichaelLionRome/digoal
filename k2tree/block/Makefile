@@ -1,3 +1,7 @@
+
+all: block.o queries_state.o
+
+
 block.o: block.c
 	$(CC) ${CFLAGS} -c block.c -o block.o ${INCLUDES}
 
@@ -8,4 +12,3 @@ queries_state.o:
 clean:
 	rm -f block.o queries_state.o
 
-all: block.o

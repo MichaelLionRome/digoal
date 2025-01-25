@@ -9,12 +9,6 @@
 #include "definitions.h"
 #include "morton-code/morton_code.h"
 
-#ifndef _READ_FUNS_VECTOR_
-#define _READ_FUNS_VECTOR_
-DEFINE_READ_ELEMENT(uint, uint32_t)
-DEFINE_READ_ELEMENT(block, struct block *)
-#endif
-
 struct child_result {
   struct block *resulting_block;
   uint32_t resulting_node_idx;
@@ -132,11 +126,10 @@ int child(struct block *input_block, uint32_t input_node_idx,
   int exists;
   CHECK_ERR(child_exists(input_block->bt, input_node_idx,
                          requested_child_position, &exists));
-  if (!exists){
+  if (!exists) {
     result->exists = FALSE;
     return DOES_NOT_EXIST_CHILD_ERR;
   }
-    
 
   uint32_t frontier_traversal_idx = 0;
   int is_frontier;
@@ -344,13 +337,12 @@ int find_point(struct block *input_block, struct queries_state *qs,
     struct child_result prev_cr = current_cr;
     uint32_t current_mcode;
     CHECK_ERR(get_code_at_morton_code(&qs->mc, depth, &current_mcode));
-    int child_err_code = child(input_block, current_cr.resulting_node_idx, current_mcode,
-                      relative_depth, &current_cr, qs);
+    int child_err_code = child(input_block, current_cr.resulting_node_idx,
+                               current_mcode, relative_depth, &current_cr, qs);
 
-    if(child_err_code != 0 && child_err_code != DOES_NOT_EXIST_CHILD_ERR){
+    if (child_err_code != 0 && child_err_code != DOES_NOT_EXIST_CHILD_ERR) {
       return child_err_code;
     }
-
 
     psr->treedepth = input_block->tree_depth;
 
@@ -379,8 +371,6 @@ int find_point(struct block *input_block, struct queries_state *qs,
       }
       return SUCCESS_ECODE;
     }
-
-
   }
 
   // If the loop ends, then we have found a point

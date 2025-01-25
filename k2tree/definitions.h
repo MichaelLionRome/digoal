@@ -1,8 +1,10 @@
 #ifndef _K2TREE_DEFINITIONS_H_
 #define _K2TREE_DEFINITIONS_H_
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <vector.h>
 
 #ifndef SUCCESS_ECODE
@@ -38,8 +40,10 @@
 #define FALSE 0
 #endif
 
+#define DEFINE_READ_ELEMENT_PROTOTYPE(typename, type)                          \
+  type read_##typename##_element(struct vector *v, int position);
+
 #define DEFINE_READ_ELEMENT(typename, type)                                    \
-  type read_##typename##_element(struct vector *v, int position);              \
   type read_##typename##_element(struct vector *v, int position) {             \
     type *data = (type *)v->data;                                              \
     return *(data + position);                                                 \
@@ -55,5 +59,8 @@ typedef unsigned long ulong;
 #ifndef STARTING_BLOCK_CAPACITY
 #define STARTING_BLOCK_CAPACITY 64
 #endif
+
+DEFINE_READ_ELEMENT_PROTOTYPE(uint, uint32_t)
+DEFINE_READ_ELEMENT_PROTOTYPE(block, struct block *)
 
 #endif /* _K2TREE_DEFINITIONS_H_ */
