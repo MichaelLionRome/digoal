@@ -14,6 +14,11 @@ struct sequential_scan_result {
   struct vector *relative_depth_map;
 };
 
+struct node_subtree_info {
+  uint32_t node_index;
+  uint32_t node_relative_depth;
+  uint32_t subtree_size;
+};
 struct queries_state {
   struct morton_code mc;
   struct sequential_scan_result sc_result;

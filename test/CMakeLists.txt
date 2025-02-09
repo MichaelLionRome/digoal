@@ -14,7 +14,6 @@ set(CIRCULAR_QUEUE_PATH ${ROOT_PATH}/lib/c-queue)
 set(BITVECTOR_INCLUDE ${BITVECTOR_PATH}/include)
 set(VECTOR_INCLUDE ${VECTOR_PATH}/include)
 set(CIRCULAR_QUEUE_INCLUDE ${CIRCULAR_QUEUE_PATH}/include)
-
 set(K2TREE_INCLUDES ${ROOT_PATH}/k2tree)
 
 include_directories(../k2tree ../k2tree/block ../k2tree/block-frontier ../k2tree/block-topology ../k2tree/morton-code)
@@ -32,6 +31,7 @@ set(INCLUDES_ELEMENTS ${BlockPath}/block.h
  ${BlockFrontierPath}/block_frontier.h
  ${BlockTopologyPath}/block_topology.h
  ${MortonCodePath}/morton_code.h
+ ${K2TREE_INCLUDES}/definitions.h
  )
 
 set(SOURCES_ELEMENTS ${BlockPath}/block.c
@@ -39,6 +39,7 @@ set(SOURCES_ELEMENTS ${BlockPath}/block.c
  ${BlockFrontierPath}/block_frontier.c
  ${BlockTopologyPath}/block_topology.c
  ${MortonCodePath}/morton_code.c
+ ${K2TREE_INCLUDES}/definitions.c
  )
 
 add_library(K2TreeElements ${SOURCES_ELEMENTS})
@@ -86,5 +87,5 @@ endif()
 set(TEST_FILES
         block_test.cpp)
 
-add_executable(block_test block_test.cpp)
+add_executable(block_test block_test.cpp block_wrapper.hpp)
 target_link_libraries(block_test K2TreeElements gtest_main vector circular_queue bitvector)

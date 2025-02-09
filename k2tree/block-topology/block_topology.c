@@ -43,7 +43,8 @@ int child_exists(struct block_topology *bt, uint32_t input_node_idx,
 }
 
 int read_node(struct block_topology *bt, uint32_t node_idx, uint32_t *result) {
-  CHECK_ERR(bits_read(bt->bv, 4 * node_idx, 4 * (node_idx + 1) - 1, result));
+  CHECK_ERR(bits_read(bt->bv, 4 * node_idx, 4 * (node_idx + 1) - 1,
+                      (uint32_t *)result));
   return SUCCESS_ECODE;
 }
 
@@ -71,6 +72,7 @@ int resize_bv_to(struct bitvector **bv_ptr, uint32_t new_size) {
     return SUCCESS_ECODE;
   }
 
+  bv->size_in_bits = new_size;
   uint32_t new_container_size = CEIL_OF_DIV(new_size, uint_bits);
 
   if (new_container_size == bv->container_size) {
@@ -103,13 +105,16 @@ int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
   uint32_t original_size = bv->size_in_bits;
 
   if (to_location + shift_amount > original_size) {
-    CHECK_ERR(resize_bv_to(&bv, to_location + shift_amount));
+    CHECK_ERR(resize_bv_to(&bv, (uint32_t)to_location + shift_amount));
   }
 
-  uint32_t from = MAX(to_location - uint_bits, from_location);
-  uint32_t to = MIN(from + uint_bits - 1, to_location - 1);
+  uint32_t from =
+      (uint32_t)MAX((int)to_location - (int)uint_bits, (int)from_location);
+  uint32_t to =
+      (uint32_t)MIN((int)from + (int)uint_bits - 1, (int)to_location - 1);
 
-  uint32_t bits_to_shift = MAX((to_location - 1) - from_location + 1, 0);
+  uint32_t bits_to_shift =
+      (uint32_t)MAX(((int)to_location - 1) - (int)from_location + 1, 0);
   uint32_t blocks_to_shift_fully = bits_to_shift / uint_bits;
   uint32_t extra_bits_to_shift = bits_to_shift % uint_bits;
 
@@ -122,8 +127,14 @@ int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
         bits_write(bv, from + shift_amount, to + shift_amount, block_to_shift));
 
     prev_from = from;
-    from -= uint_bits;
-    to = prev_from - 1;
+    if (from > uint_bits)
+      from -= uint_bits;
+    else
+      from = 0;
+    if (prev_from > 0)
+      to = prev_from - 1;
+    else
+      to = 0;
   }
 
   // restore from
@@ -131,8 +142,14 @@ int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
 
   if (extra_bits_to_shift > 0) {
     if (blocks_to_shift_fully > 0) {
-      to = from - 1;
-      from = to - extra_bits_to_shift + 1;
+      if (from > 0)
+        to = from - 1;
+      else
+        to = 0;
+      if (to > extra_bits_to_shift + 1)
+        from = to - extra_bits_to_shift + 1;
+      else
+        from = 0;
     }
     if (from <= to) {
       uint32_t to_shift;
@@ -171,7 +188,7 @@ int shift_right_nodes_after(struct block_topology *bt, uint32_t node_index,
   }
 
   CHECK_ERR(shift_bv_right_from(bt->bv, 4 * (node_index + 1),
-                                4 * bt->nodes_count, nodes_to_insert));
+                                4 * bt->nodes_count, 4 * nodes_to_insert));
 
   if (node_index + 1 < bt->nodes_count) {
     bt->nodes_count += nodes_to_insert;
@@ -215,6 +232,9 @@ int insert_node_at(struct block_topology *bt, uint32_t node_index,
 
 int extract_sub_bitvector(struct block_topology *bt, uint32_t from, uint32_t to,
                           struct bitvector *result) {
+  if (from > to) {
+    return EXTRACT_SUB_BITVECTOR_FROM_LESS_THAN_TO;
+  }
   uint32_t new_size = to - from + 1;
   uint32_t blocks_to_copy = new_size / uint_bits;
   uint32_t extra_bits = new_size % uint_bits;
@@ -243,7 +263,11 @@ int extract_sub_bitvector(struct block_topology *bt, uint32_t from, uint32_t to,
 
 static inline int shift_left_from(struct bitvector *bv, uint32_t from,
                                   uint32_t shift_amount) {
+  if (shift_amount == 0)
+    return SUCCESS_ECODE;
   uint32_t to = bv->size_in_bits;
+  if (from > to)
+    return SHIFT_LEFT_FROM_OUT_OF_RANGE_FROM;
   uint32_t amount_to_shift = to - from + 1;
   uint32_t blocks_to_shift = amount_to_shift / uint_bits;
   uint32_t extra_bits_to_shift = amount_to_shift % uint_bits;
@@ -286,10 +310,15 @@ static inline int shift_left_from(struct bitvector *bv, uint32_t from,
 
 static inline int collapse_bits(struct block_topology *bt, uint32_t from,
                                 uint32_t to) {
+  if (from > to)
+    return COLLAPSE_BITS_FROM_GREATER_THAN_TO;
   struct bitvector *bv = bt->bv;
   uint32_t bits_diff = to - from;
   uint32_t blocks_to_collpase = bits_diff / uint_bits;
   uint32_t extra_bits = bits_diff % uint_bits;
+
+  if (bits_diff >= bv->size_in_bits)
+    return COLLAPSE_BITS_BITS_DIFF_GTE_THAN_BVSIZE;
 
   for (uint32_t i = 0; i < blocks_to_collpase; i++) {
     _SAFE_OP_K2(bits_write(bv, from + i * uint_bits,

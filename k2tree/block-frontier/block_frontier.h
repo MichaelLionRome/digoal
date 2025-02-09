@@ -13,7 +13,8 @@ struct block_frontier {
 struct block_frontier *create_block_frontier(void);
 
 int init_block_frontier(struct block_frontier *bf);
-int init_block_frontier_with_capacity(struct block_frontier *bf, int capacity);
+int init_block_frontier_with_capacity(struct block_frontier *bf,
+                                      uint32_t capacity);
 int free_block_frontier(struct block_frontier *bf);
 int frontier_check(struct block_frontier *bf, uint32_t node_idx,
                    uint32_t *frontier_traversal_idx, int *result);

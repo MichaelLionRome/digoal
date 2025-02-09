@@ -17,12 +17,6 @@ struct child_result {
   int exists;
 };
 
-struct node_subtree_info {
-  uint32_t node_index;
-  uint32_t node_relative_depth;
-  uint32_t subtree_size;
-};
-
 struct point_search_result {
   struct child_result last_child_result_reached;
   uint32_t depth_reached;
@@ -68,7 +62,7 @@ static inline int mark_subtree_size(struct sequential_scan_result *sc_result,
 
 static inline int block_has_enough_space(struct block *input_block,
                                          struct insertion_location *il) {
-  uint allocated_nodes = get_allocated_nodes(input_block->bt);
+  uint32_t allocated_nodes = get_allocated_nodes(input_block->bt);
   return il->remaining_depth <=
          (allocated_nodes - input_block->bt->nodes_count);
 }
@@ -95,9 +89,9 @@ int find_point(struct block *input_block, struct queries_state *qs,
 int find_insertion_location(struct block *input_block, struct queries_state *qs,
                             struct insertion_location *result);
 
-uint32_t get_previous_siblings_count(struct block *input_block,
-                                     struct child_result *parent_node_result,
-                                     uint32_t child_code);
+int get_previous_siblings_count(struct block *input_block,
+                                struct child_result *parent_node_result,
+                                uint32_t child_code);
 
 int make_room(struct block *input_block, struct insertion_location *il);
 int insert_point_mc(struct block *input_block, struct morton_code *mc,
@@ -434,9 +428,9 @@ int find_insertion_location(struct block *input_block, struct queries_state *qs,
   return SUCCESS_ECODE;
 }
 
-uint32_t get_previous_siblings_count(struct block *input_block,
-                                     struct child_result *parent_node_result,
-                                     uint32_t child_code) {
+int get_previous_siblings_count(struct block *input_block,
+                                struct child_result *parent_node_result,
+                                uint32_t child_code) {
   if (parent_node_result->resulting_node_idx >= input_block->bt->nodes_count) {
     return 0;
   }

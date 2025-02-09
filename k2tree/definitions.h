@@ -11,10 +11,14 @@
 #define SUCCESS_ECODE 0;
 #endif
 
-#define DOES_NOT_EXIST_CHILD_ERR 1
 #define NOT_IMPLEMENTED -100
+#define DOES_NOT_EXIST_CHILD_ERR 1
 #define FRONTIER_OUT_OF_BOUNDS 2
 #define FRONTIER_NODE_WITHIN_FIND_INSERTION_LOC 3
+#define EXTRACT_SUB_BITVECTOR_FROM_LESS_THAN_TO 4
+#define SHIFT_LEFT_FROM_OUT_OF_RANGE_FROM 5
+#define COLLAPSE_BITS_FROM_GREATER_THAN_TO 6
+#define COLLAPSE_BITS_BITS_DIFF_GTE_THAN_BVSIZE 7
 
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \
@@ -41,10 +45,10 @@
 #endif
 
 #define DEFINE_READ_ELEMENT_PROTOTYPE(typename, type)                          \
-  type read_##typename##_element(struct vector *v, int position);
+  type read_##typename##_element(struct vector *v, uint32_t position);
 
 #define DEFINE_READ_ELEMENT(typename, type)                                    \
-  type read_##typename##_element(struct vector *v, int position) {             \
+  type read_##typename##_element(struct vector *v, uint32_t position) {        \
     type *data = (type *)v->data;                                              \
     return *(data + position);                                                 \
   }

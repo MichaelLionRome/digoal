@@ -37,7 +37,7 @@ int convert_coordinates_to_morton_code(ulong col, ulong row, uint32_t treedepth,
   ulong half_level;
   uint32_t mc_position = 0;
   while ((half_level = current_level >> 1) > 0) {
-    int quadrant;
+    uint32_t quadrant;
 
     if (col >= half_level && row >= half_level) {
       quadrant = 3;

@@ -11,7 +11,7 @@
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
 /* PRIVATE PROTOTYPES */
-uint32_t find_insertion_point(struct block_frontier *bf, uint32_t preorder);
+int find_insertion_point(struct block_frontier *bf, uint32_t preorder);
 /* END PRIVATE PROTOTYPES */
 
 int init_block_frontier(struct block_frontier *bf) {
@@ -20,7 +20,8 @@ int init_block_frontier(struct block_frontier *bf) {
   return SUCCESS_ECODE;
 }
 
-int init_block_frontier_with_capacity(struct block_frontier *bf, int capacity) {
+int init_block_frontier_with_capacity(struct block_frontier *bf,
+                                      uint32_t capacity) {
   init_vector_with_capacity(&(bf->frontier), sizeof(uint32_t), capacity);
   init_vector_with_capacity(&(bf->blocks), sizeof(struct block *), capacity);
   return SUCCESS_ECODE;
@@ -63,7 +64,7 @@ int get_child_block(struct block_frontier *bf, uint32_t frontier_node_idx,
 
   return SUCCESS_ECODE;
 }
-uint32_t find_insertion_point(struct block_frontier *bf, uint32_t preorder) {
+int find_insertion_point(struct block_frontier *bf, uint32_t preorder) {
   if (bf->frontier.nof_items == 0) {
     return 0;
   }
@@ -71,7 +72,7 @@ uint32_t find_insertion_point(struct block_frontier *bf, uint32_t preorder) {
     return 0;
   }
 
-  for (int i = 0; i < bf->frontier.nof_items; i++) {
+  for (uint32_t i = 0; i < (uint32_t)bf->frontier.nof_items; i++) {
     if (read_uint_element(&bf->frontier, i) > preorder) {
       return i;
     }

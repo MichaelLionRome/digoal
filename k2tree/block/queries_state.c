@@ -10,6 +10,9 @@ int clean_sequential_scan_result(struct sequential_scan_result *scr);
 /* IMPLEMENTATION PUBLIC FUNCTIONS */
 int init_queries_state(struct queries_state *qs, uint32_t tree_depth) {
   CHECK_ERR(init_morton_code(&qs->mc, tree_depth));
+  init_circular_queue(&qs->not_yet_traversed, 2 * tree_depth, sizeof(uint32_t));
+  init_circular_queue(&qs->subtrees_count, 2 * tree_depth,
+                      sizeof(struct node_subtree_info));
   return init_sequential_scan_result(&qs->sc_result, tree_depth);
 }
 
