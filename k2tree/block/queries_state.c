@@ -2,8 +2,7 @@
 #include "definitions.h"
 
 /* PRIVATE PROTOTYPES */
-int init_sequential_scan_result(struct sequential_scan_result *scr,
-                                uint32_t tree_depth);
+int init_sequential_scan_result(struct sequential_scan_result *scr);
 int clean_sequential_scan_result(struct sequential_scan_result *scr);
 /* END PRIVATE PROTOTYPES */
 
@@ -13,7 +12,7 @@ int init_queries_state(struct queries_state *qs, uint32_t tree_depth) {
   init_circular_queue(&qs->not_yet_traversed, 2 * tree_depth, sizeof(uint32_t));
   init_circular_queue(&qs->subtrees_count, 2 * tree_depth,
                       sizeof(struct node_subtree_info));
-  return init_sequential_scan_result(&qs->sc_result, tree_depth);
+  return init_sequential_scan_result(&qs->sc_result);
 }
 
 int finish_queries_state(struct queries_state *qs) {
@@ -23,14 +22,13 @@ int finish_queries_state(struct queries_state *qs) {
 /* END IMPLEMENTATION PUBLIC FUNCTIONS */
 
 /* PRIVATE FUNCTIONS IMPLEMENTATION */
-int init_sequential_scan_result(struct sequential_scan_result *scr,
-                                uint32_t tree_depth) {
+int init_sequential_scan_result(struct sequential_scan_result *scr) {
   scr->subtrees_count_map = calloc(1, sizeof(struct vector));
   scr->relative_depth_map = calloc(1, sizeof(struct vector));
   _SAFE_OP_K2(init_vector_with_capacity(scr->subtrees_count_map,
-                                        sizeof(uint32_t), tree_depth));
+                                        sizeof(uint32_t), MAX_NODES_IN_BLOCK));
   _SAFE_OP_K2(init_vector_with_capacity(scr->relative_depth_map,
-                                        sizeof(uint32_t), tree_depth));
+                                        sizeof(uint32_t), MAX_NODES_IN_BLOCK));
   return SUCCESS_ECODE;
 }
 
