@@ -133,11 +133,6 @@ TEST(block_test, fills_depth_3_test2) {
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
       int i = col * side + row % side;
-      cout << "col = " << col << ", row = " << row << endl;
-      if (col == 6 && row == 0) {
-        cout << b.getStringRep() << endl;
-        int debug = 0;
-      }
       b.insert(col, row);
       ASSERT_EQ(to_compare[i], b.getStringRep()) << "failing at col=" << col << ", row=" << row;
 
@@ -153,12 +148,7 @@ TEST(block_test, fills_depth_3){
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
-      cout << "col = " << col << ", row = " << row << endl;
-      if(col == 2 && row == 2){
-        int debug = 0;
-      }
       b.insert(col, row);
-      cout << b.getStringRep() << endl;
       for(ulong col_check = 0; col_check < col; col_check++){
         for(ulong row_check = 0; row_check < row; row_check++){
           ASSERT_TRUE(b.has(col_check, row_check)) << "at (" << col << ", " << row <<  ") Must have point " << col_check << ", " << row_check;
@@ -181,5 +171,41 @@ TEST(block_test, fills_depth_3){
     for(int row = 0; row < side; row++){
       ASSERT_TRUE(b.has(col, row)) << "No point " << col << ", " << row;
     }
+  }
+}
+
+
+
+TEST(block_test, fills_till_depth_6){
+  for(uint32_t treedepth = 3; treedepth <= 6; treedepth++){
+  ulong side = 1 << treedepth;
+  BlockWrapper b(treedepth);
+
+  for(ulong col = 0; col < side; col++){
+    for(ulong row = 0; row < side; row++){
+      b.insert(col, row);
+      for(ulong col_check = 0; col_check < col; col_check++){
+        for(ulong row_check = 0; row_check < row; row_check++){
+          ASSERT_TRUE(b.has(col_check, row_check)) << "(depth = " << treedepth << ") at (" << col << ", " << row <<  ") Must have point " << col_check << ", " << row_check;
+        }
+      }
+      for(ulong row_check = 0; row_check <= row; row_check++){
+        ASSERT_TRUE(b.has(col, row_check)) << "(depth = " << treedepth << ") at (" << col << ", " << row <<  ") Must have point " << col << ", " << row_check;
+      }
+      for(ulong row_check = row+1; row_check < side; row_check++){
+        ASSERT_FALSE(b.has(col, row_check)) << "(depth = " << treedepth << ") at (" << col << ", " << row <<  ") Must not have point " << col << ", " << row_check;
+      }
+      for(ulong col_check = col+1; col_check < side; col_check++){
+        for(ulong row_check = 0; row_check < side; row_check++){
+          ASSERT_FALSE(b.has(col_check, row_check)) << "(depth = " << treedepth << ") at (" << col << ", " << row <<  ") Must not have point " << col_check << ", " << row_check;
+        }
+      }
+    }
+  }
+  for(int col = 0; col < side; col++){
+    for(int row = 0; row < side; row++){
+      ASSERT_TRUE(b.has(col, row)) << "(depth = " << treedepth << ") No point " << col << ", " << row;
+    }
+  }
   }
 }
