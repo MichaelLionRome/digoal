@@ -108,33 +108,25 @@ int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
     CHECK_ERR(resize_bv_to(&bv, (uint32_t)to_location + shift_amount));
   }
 
-  uint32_t from =
-      (uint32_t)MAX((int)to_location - (int)uint_bits, (int)from_location);
-  uint32_t to =
-      (uint32_t)MIN((int)from + (int)uint_bits - 1, (int)to_location - 1);
+  int from = MAX((int)to_location - (int)uint_bits, (int)from_location);
+  int to = (uint32_t)MIN((int)from + (int)uint_bits - 1, (int)to_location - 1);
 
-  uint32_t bits_to_shift =
-      (uint32_t)MAX(((int)to_location - 1) - (int)from_location + 1, 0);
-  uint32_t blocks_to_shift_fully = bits_to_shift / uint_bits;
-  uint32_t extra_bits_to_shift = bits_to_shift % uint_bits;
+  int bits_to_shift = MAX(((int)to_location - 1) - (int)from_location + 1, 0);
+  int blocks_to_shift_fully = bits_to_shift / (int)uint_bits;
+  int extra_bits_to_shift = bits_to_shift % uint_bits;
 
-  uint32_t prev_from = from;
+  int prev_from = from;
 
-  for (uint32_t i = 0; i < blocks_to_shift_fully; i++) {
+  for (int i = 0; i < blocks_to_shift_fully; i++) {
     uint32_t block_to_shift;
     _SAFE_OP_K2(bits_read(bv, from, to, &block_to_shift));
-    _SAFE_OP_K2(
-        bits_write(bv, from + shift_amount, to + shift_amount, block_to_shift));
+    _SAFE_OP_K2(bits_write(bv, (uint32_t)from + shift_amount,
+                           (uint32_t)to + shift_amount, block_to_shift));
 
     prev_from = from;
-    if (from > uint_bits)
-      from -= uint_bits;
-    else
-      from = 0;
-    if (prev_from > 0)
-      to = prev_from - 1;
-    else
-      to = 0;
+
+    from -= uint_bits;
+    to = prev_from - 1;
   }
 
   // restore from
@@ -142,14 +134,8 @@ int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
 
   if (extra_bits_to_shift > 0) {
     if (blocks_to_shift_fully > 0) {
-      if (from > 0)
-        to = from - 1;
-      else
-        to = 0;
-      if (to > extra_bits_to_shift + 1)
-        from = to - extra_bits_to_shift + 1;
-      else
-        from = 0;
+      to = from - 1;
+      from = to - extra_bits_to_shift + 1;
     }
     if (from <= to) {
       uint32_t to_shift;
@@ -160,12 +146,12 @@ int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
   }
 
   // clean up
-  uint32_t remaining = shift_amount;
+  int remaining = (int)shift_amount;
   for (uint32_t clean_from = from_location;
        clean_from < from_location + shift_amount; clean_from += uint_bits) {
-    uint32_t cleaning_bits = MIN(remaining, uint_bits);
-    _SAFE_OP_K2(
-        bits_write(bv, from_location, from_location + cleaning_bits - 1, 0));
+    int cleaning_bits = MIN(remaining, (int)uint_bits);
+    _SAFE_OP_K2(bits_write(bv, clean_from,
+                           clean_from + (uint32_t)cleaning_bits - 1, 0));
     remaining -= cleaning_bits;
   }
 
