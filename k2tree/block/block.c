@@ -607,7 +607,7 @@ int insert_point(struct block *input_block, ulong col, ulong row,
   // Check if can enlarge block to fit
   uint32_t next_amount_of_nodes =
       input_block->bt->nodes_count + il.remaining_depth;
-  if (next_amount_of_nodes <= MAX_NODES_IN_BLOCK) {
+  if (next_amount_of_nodes <= input_block->max_node_count) {
     uint32_t next_block_sz = 1 << (uint32_t)ceil(log2(next_amount_of_nodes));
     CHECK_ERR(enlarge_block_size_to(input_block->bt, next_block_sz));
     return insert_point(input_block, col, row, qs);
@@ -623,6 +623,7 @@ struct block *create_block(uint32_t tree_depth) {
   new_block->bf = create_block_frontier();
   new_block->block_depth = 0;
   new_block->tree_depth = tree_depth;
+  new_block->max_node_count = MAX_NODES_IN_BLOCK;
   return new_block;
 }
 
