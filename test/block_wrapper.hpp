@@ -38,7 +38,9 @@ public:
   }
 
   void insert(unsigned long col, unsigned long row){
-    insert_point(b, col, row, &qs);
+    int err_check = insert_point(b, col, row, &qs);
+    if(err_check)
+      throw runtime_error("CANT INSERT, ERROR CODE= " +  to_string(err_check));
   }
 
   bool has(unsigned long col, unsigned long row){
@@ -47,12 +49,15 @@ public:
     return result == 1;
   }
 
-  static void pass_to_ss_bin(uint32_t input, uint32_t bits_count, stringstream &ss, int sz=-1){
+  static void pass_to_ss_bin(uint32_t input, uint32_t bits_count, stringstream &ss, bool separate, int sz=-1){
     for (auto bit_pos = 0; bit_pos < bits_count; bit_pos++) {
       if(sz > - 1 && bit_pos >= sz) break;
       unsigned int current_mask = (1u << (bits_count - bit_pos - 1));
       unsigned int masked = input & current_mask;
       unsigned int shifted = masked >> (bits_count - bit_pos - 1);
+      if(separate && bit_pos % 4 == 0 && bit_pos > 0) {
+        ss << " ";
+      }
       ss << shifted;
     }
   }
@@ -63,33 +68,59 @@ public:
     return converted == other;
   }
 
-  string getStringRep(){
+  static string getStringRepBlock(struct block *a_block, bool separate){
     stringstream ss;
-    uint32_t *container = b->bt->bv->container;
-    uint32_t container_length = b->bt->bv->container_size;
+    uint32_t *container = a_block->bt->bv->container;
+    uint32_t container_length = a_block->bt->bv->container_size;
     uint32_t sizeTraversed = 0;
     uint32_t uint_bits = sizeof(uint32_t) * 8;
-    uint32_t bv_size = b->bt->bv->size_in_bits;
-    for(uint32_t blockIndex = 0; blockIndex < container_length; blockIndex++){
-      if(sizeTraversed + uint_bits > bv_size){
-        break;
-      }
+    uint32_t nodes_count = a_block->bt->nodes_count;
+    uint32_t used_bits = nodes_count * 4;
+    uint32_t blocks_count = used_bits/ uint_bits;
+    uint32_t extra_bits = used_bits % uint_bits;
+    for(uint32_t blockIndex = 0; blockIndex < blocks_count; blockIndex++){
       int currentBlock = container[blockIndex];
+      pass_to_ss_bin(currentBlock, uint_bits, ss, separate);
 
-      pass_to_ss_bin(currentBlock, uint_bits, ss);
-
-      sizeTraversed += uint_bits;
     }
 
-    if(sizeTraversed < bv_size){
-      uint32_t remainingLength = bv_size - sizeTraversed;
+    if(extra_bits > 0){
       uint32_t remainingBits;
-      bits_read(b->bt->bv, sizeTraversed, bv_size - 1, &remainingBits);
-      remainingBits <<= (uint_bits - remainingLength);
-      pass_to_ss_bin(remainingBits, uint_bits, ss, remainingLength);
+      bits_read(a_block->bt->bv, used_bits-extra_bits, used_bits - 1, &remainingBits);
+      remainingBits <<= (uint_bits - extra_bits);
+      pass_to_ss_bin(remainingBits, uint_bits, ss, separate, extra_bits);
     }
 
-    return ss.str().substr(0, b->bt->nodes_count * 4);
+    // return ss.str().substr(0, b->bt->nodes_count * 4);
+    return ss.str();
+  }
+
+  string getStringRep(bool separate = false){
+    return getStringRepBlock(b, separate);
+  }
+
+  string frontierStr(){
+    stringstream ss;
+    struct block_frontier *bf = b->bf;
+    for(int i = 0; i < bf->frontier.nof_items; i++){
+      uint32_t *fval_ptr;
+      int err_code = get_element_at(&bf->frontier, i, (char**)&fval_ptr);
+      if(err_code)
+        throw runtime_error("error reading frontier at i = " + to_string(i));
+      uint32_t fval = *fval_ptr;
+      ss << fval << ", ";
+    }
+    return ss.str();
+  }
+  void printSubBlocks(){
+    struct block_frontier *bf = b->bf;
+    struct block *sb;
+    for(int i = 0; i < bf->blocks.nof_items; i++){
+      int err_code = get_element_at(&bf->blocks, i, (char**)&sb);
+      if(err_code)
+        throw runtime_error("error reading frontier block at i = " + to_string(i));
+      cout << getStringRepBlock(sb, true) << endl;
+    }
   }
 };
 

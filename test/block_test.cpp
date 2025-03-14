@@ -141,14 +141,25 @@ TEST(block_test, fills_depth_3_test2) {
   }
 }
 
+
 TEST(block_test, fills_depth_3){
   uint32_t treedepth = 3;
   ulong side = 1 << treedepth;
-  BlockWrapper b(treedepth);
+  BlockWrapper b(treedepth, 8);
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
+      if(col == 2 && row == 1){
+        int debug = 0;
+      }
       b.insert(col, row);
+      cout << endl;
+      cout << "inserting: col=" << col << ", row=" << row << endl;
+      cout << b.getStringRep() << endl;
+      cout << "frontier" << endl;
+      cout << b.frontierStr() << endl;
+      cout << "subblocks" << endl;
+      b.printSubBlocks();
       for(ulong col_check = 0; col_check < col; col_check++){
         for(ulong row_check = 0; row_check < row; row_check++){
           ASSERT_TRUE(b.has(col_check, row_check)) << "at (" << col << ", " << row <<  ") Must have point " << col_check << ", " << row_check;
@@ -456,7 +467,7 @@ TEST(block_test, fills_till_depth_4_match) {
 TEST(block_test, diagonal_test_depth4_1){
   uint32_t treedepth = 4;
   ulong side = 1 << treedepth;
-  BlockWrapper b(treedepth);
+  BlockWrapper b(treedepth, 16);
   for(int i = 0; i < side; i++){
     b.insert(i, i);
     for(int col = 0; col < side; col++){
@@ -476,26 +487,21 @@ TEST(block_test, diagonal_test_depth4_1){
 TEST(block_test, fills_till_depth_6_fail_known_1) {
   uint32_t treedepth = 4;
   ulong side = 1 << treedepth;
-  BlockWrapper b(treedepth, 64);
+  BlockWrapper b(treedepth, 16);
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
-      if(col == 4 && row == 6){
+      if(col == 10 && row == 14){
         int debug = 0;
         cout << "before" << endl;
         cout << b.getStringRep() << endl;
       }
       b.insert(col, row);
-      if(col == 4 && row == 6){
+      if(col == 10 && row == 14){
         int debug = 0;
         cout << "after" << endl;
         cout << b.getStringRep() << endl;
       }
-      /*
-      if(!(col >= 22 && row >= 58)){
-        continue;
-      }
-       */
       for(ulong col_check = 0; col_check < col; col_check++){
         for(ulong row_check = 0; row_check < row; row_check++){
           ASSERT_TRUE(b.has(col_check, row_check)) << "(depth = " << treedepth << ") at (" << col << ", " << row <<  ") Must have point " << col_check << ", " << row_check;

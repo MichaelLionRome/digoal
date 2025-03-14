@@ -29,4 +29,9 @@ int extract_sub_block_frontier(struct block_frontier *bf,
 int add_frontier_node(struct block_frontier *bf,
                       uint32_t new_frontier_node_preorder, struct block *b);
 
+int fix_frontier_indexes(struct block_frontier *bf, uint32_t start, int delta);
+
+int collapse_frontier_nodes(struct block_frontier *bf, uint32_t from_preorder,
+                            uint32_t to_preorder);
+
 #endif /* _BLOCK_FRONTIER_H */

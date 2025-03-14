@@ -131,3 +131,61 @@ struct block_frontier *create_block_frontier(void) {
   init_block_frontier(new_bf);
   return new_bf;
 }
+
+/* TODO: (OPTIMIZATION) replace by binary search if needed */
+int fix_frontier_indexes(struct block_frontier *bf, uint32_t start, int delta) {
+  for (int i = 0; i < bf->frontier.nof_items; i++) {
+    uint32_t current_preorder = read_uint_element(&bf->frontier, i);
+    if (current_preorder >= start) {
+      if ((int)current_preorder < delta) {
+        return FIX_INDEXES_PREORDER_HIGHER_THAN_DELTA;
+      }
+      uint32_t new_val = current_preorder - (uint32_t)delta;
+      _SAFE_OP_K2(set_element_at(&bf->frontier, (char *)&new_val, i));
+    }
+  }
+  return SUCCESS_ECODE;
+}
+
+/* TODO: (OPTIMIZATION) replace by binary search if needed to find extreme
+ * points */
+int collapse_frontier_nodes(struct block_frontier *bf, uint32_t from_preorder,
+                            uint32_t to_preorder) {
+  /* nothing to do in this case */
+  if (bf->frontier.nof_items == 0) {
+    return SUCCESS_ECODE;
+  }
+
+  int left_extreme = -1;
+  int right_extreme = -1;
+  for (int i = 0; i < bf->frontier.nof_items; i++) {
+    uint32_t current_preorder = read_uint_element(&bf->frontier, i);
+    if (current_preorder >= from_preorder && left_extreme == -1) {
+      left_extreme = i;
+    }
+    if (current_preorder <= to_preorder) {
+      right_extreme = i;
+    }
+  }
+  /* nothing to do in this case */
+  if (left_extreme == -1 || right_extreme == -1) {
+    return SUCCESS_ECODE;
+  }
+
+  int delete_size = right_extreme - left_extreme + 1;
+  int new_size = bf->frontier.nof_items - delete_size;
+
+  memmove(&bf->frontier + left_extreme * bf->frontier.element_size,
+          &bf->frontier + (right_extreme + 1) * bf->frontier.element_size,
+          (bf->frontier.nof_items - right_extreme) * bf->frontier.element_size);
+
+  bf->frontier.nof_items = new_size;
+
+  memmove(&bf->blocks + left_extreme * bf->blocks.element_size,
+          &bf->blocks + (right_extreme + 1) * bf->blocks.element_size,
+          (bf->blocks.nof_items - right_extreme) * bf->blocks.element_size);
+
+  bf->blocks.nof_items = new_size;
+
+  return SUCCESS_ECODE;
+}

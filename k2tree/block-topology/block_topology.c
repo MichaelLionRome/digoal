@@ -17,6 +17,9 @@ uint32_t uint_bits = BITS_SIZE(uint32_t);
 int resize_bv_to(struct bitvector **bv_ptr, uint32_t new_size);
 int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
                         uint32_t to_location, uint32_t shift_amount);
+int shift_left_from(struct bitvector *bv, uint32_t from, uint32_t shift_amount);
+
+int collapse_bits(struct block_topology *bt, uint32_t from, uint32_t to);
 
 /* END PRIVATE PROTOTYPES */
 
@@ -241,14 +244,12 @@ int extract_sub_bitvector(struct block_topology *bt, uint32_t from, uint32_t to,
     last_bits = last_bits << (uint_bits - extra_bits);
     result->container[blocks_to_copy] = last_bits;
   }
-  /* shrink parent bitvector */
-  CHECK_ERR(collapse_nodes(bt, from, to));
 
   return SUCCESS_ECODE;
 }
 
-static inline int shift_left_from(struct bitvector *bv, uint32_t from,
-                                  uint32_t shift_amount) {
+int shift_left_from(struct bitvector *bv, uint32_t from,
+                    uint32_t shift_amount) {
   if (shift_amount == 0)
     return SUCCESS_ECODE;
   uint32_t to = bv->size_in_bits;
@@ -268,7 +269,18 @@ static inline int shift_left_from(struct bitvector *bv, uint32_t from,
     uint32_t write_end_pos = write_start_pos + uint_bits - 1;
     _SAFE_OP_K2(bits_write(bv, write_start_pos, write_end_pos, block_to_write));
     /* clean read block */
-    _SAFE_OP_K2(bits_write(bv, read_start_pos, read_end_pos, 0));
+    if (write_end_pos < read_end_pos) {
+      uint32_t bits_to_clean = read_end_pos - (write_end_pos + 1) + 1;
+      uint32_t blocks_to_clean = bits_to_clean / uint_bits;
+      for (uint32_t j = 0; j < blocks_to_clean; j++) {
+        uint32_t from_clean = write_end_pos + 1 + j * uint_bits;
+        uint32_t to_clean = write_end_pos + 1 + (j + 1) * uint_bits - 1;
+        bits_write(bv, from_clean, to_clean, 0);
+      }
+      /* clean next block part */
+      bits_write(bv, write_end_pos + 1 + blocks_to_clean * uint_bits,
+                 read_end_pos, 0);
+    }
   }
 
   if (extra_bits_to_shift > 0) {
@@ -282,40 +294,43 @@ static inline int shift_left_from(struct bitvector *bv, uint32_t from,
     uint32_t write_end_pos = write_start_pos + extra_bits_to_shift - 1;
     _SAFE_OP_K2(bits_write(bv, write_start_pos, write_end_pos, last_part));
     /* clean read block */
-    if (read_start_pos < write_end_pos) {
-      if (write_end_pos < read_end_pos) {
-        _SAFE_OP_K2(bits_write(bv, write_end_pos + 1, read_end_pos, 0));
+    if (write_end_pos < read_end_pos) {
+      uint32_t bits_to_clean = read_end_pos - (write_end_pos + 1) + 1;
+      uint32_t blocks_to_clean = bits_to_clean / uint_bits;
+      for (uint32_t j = 0; j < blocks_to_clean; j++) {
+        uint32_t from_clean = write_end_pos + 1 + j * uint_bits;
+        uint32_t to_clean = write_end_pos + 1 + (j + 1) * uint_bits - 1;
+        bits_write(bv, from_clean, to_clean, 0);
       }
-    } else {
-      _SAFE_OP_K2(bits_write(bv, read_start_pos, read_end_pos, 0));
+      /* clean next block part */
+      bits_write(bv, write_end_pos + 1 + blocks_to_clean * uint_bits,
+                 read_end_pos, 0);
     }
   }
 
   return SUCCESS_ECODE;
 }
 
-static inline int collapse_bits(struct block_topology *bt, uint32_t from,
-                                uint32_t to) {
+int collapse_bits(struct block_topology *bt, uint32_t from, uint32_t to) {
   if (from > to)
     return COLLAPSE_BITS_FROM_GREATER_THAN_TO;
   struct bitvector *bv = bt->bv;
-  uint32_t bits_diff = to - from;
-  uint32_t blocks_to_collpase = bits_diff / uint_bits;
-  uint32_t extra_bits = bits_diff % uint_bits;
+  uint32_t bits_to_collapse = to - from + 1;
+  uint32_t blocks_to_collpase = bits_to_collapse / uint_bits;
+  uint32_t extra_bits = bits_to_collapse % uint_bits;
 
-  if (bits_diff >= bv->size_in_bits)
+  if (bits_to_collapse >= bv->size_in_bits)
     return COLLAPSE_BITS_BITS_DIFF_GTE_THAN_BVSIZE;
 
   for (uint32_t i = 0; i < blocks_to_collpase; i++) {
-    _SAFE_OP_K2(bits_write(bv, from + i * uint_bits,
-                           from + (i + 1) * uint_bits - 1, 0));
+    uint32_t from_part = from + i * uint_bits;
+    uint32_t to_part = from + (i + 1) * uint_bits - 1;
+    _SAFE_OP_K2(bits_write(bv, from_part, to_part, 0));
   }
-  _SAFE_OP_K2(bits_write(bv, to - extra_bits, to, 0));
+  _SAFE_OP_K2(bits_write(bv, to - extra_bits + 1, to, 0));
 
-  uint32_t delete_count = bits_diff + 1;
-
-  CHECK_ERR(shift_left_from(bv, to + 1, delete_count));
-  CHECK_ERR(resize_bv_to(&bt->bv, bv->size_in_bits - delete_count));
+  CHECK_ERR(shift_left_from(bv, to + 1, bits_to_collapse));
+  CHECK_ERR(resize_bv_to(&bt->bv, bv->size_in_bits - bits_to_collapse));
 
   return SUCCESS_ECODE;
 }
