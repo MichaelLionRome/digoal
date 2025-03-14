@@ -70,11 +70,13 @@ public:
 
   static string getStringRepBlock(struct block *a_block, bool separate){
     stringstream ss;
-    uint32_t *container = a_block->bt->bv->container;
-    uint32_t container_length = a_block->bt->bv->container_size;
+    struct block_topology *bt = a_block->bt;
+    struct bitvector *bv = bt->bv;
+    uint32_t *container = bv->container;
+    uint32_t container_length = bv->container_size;
     uint32_t sizeTraversed = 0;
     uint32_t uint_bits = sizeof(uint32_t) * 8;
-    uint32_t nodes_count = a_block->bt->nodes_count;
+    uint32_t nodes_count = bt->nodes_count;
     uint32_t used_bits = nodes_count * 4;
     uint32_t blocks_count = used_bits/ uint_bits;
     uint32_t extra_bits = used_bits % uint_bits;
@@ -114,12 +116,13 @@ public:
   }
   void printSubBlocks(){
     struct block_frontier *bf = b->bf;
-    struct block *sb;
+    struct block **sb;
     for(int i = 0; i < bf->blocks.nof_items; i++){
       int err_code = get_element_at(&bf->blocks, i, (char**)&sb);
       if(err_code)
         throw runtime_error("error reading frontier block at i = " + to_string(i));
-      cout << getStringRepBlock(sb, true) << endl;
+
+      cout << getStringRepBlock(*sb, true) << endl;
     }
   }
 };

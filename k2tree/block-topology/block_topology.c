@@ -252,7 +252,7 @@ int shift_left_from(struct bitvector *bv, uint32_t from,
                     uint32_t shift_amount) {
   if (shift_amount == 0)
     return SUCCESS_ECODE;
-  uint32_t to = bv->size_in_bits;
+  uint32_t to = bv->size_in_bits - 1;
   if (from > to)
     return SHIFT_LEFT_FROM_OUT_OF_RANGE_FROM;
   uint32_t amount_to_shift = to - from + 1;

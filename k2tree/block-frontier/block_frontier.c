@@ -15,21 +15,23 @@ int find_insertion_point(struct block_frontier *bf, uint32_t preorder);
 /* END PRIVATE PROTOTYPES */
 
 int init_block_frontier(struct block_frontier *bf) {
-  init_vector(&(bf->frontier), sizeof(uint32_t));
-  init_vector(&(bf->blocks), sizeof(struct block *));
+  _SAFE_OP_K2(init_vector(&(bf->frontier), sizeof(uint32_t)));
+  _SAFE_OP_K2(init_vector(&(bf->blocks), sizeof(struct block *)));
   return SUCCESS_ECODE;
 }
 
 int init_block_frontier_with_capacity(struct block_frontier *bf,
                                       uint32_t capacity) {
-  init_vector_with_capacity(&(bf->frontier), sizeof(uint32_t), capacity);
-  init_vector_with_capacity(&(bf->blocks), sizeof(struct block *), capacity);
+  _SAFE_OP_K2(
+      init_vector_with_capacity(&(bf->frontier), sizeof(uint32_t), capacity));
+  _SAFE_OP_K2(init_vector_with_capacity(&(bf->blocks), sizeof(struct block *),
+                                        capacity));
   return SUCCESS_ECODE;
 }
 
 int free_block_frontier(struct block_frontier *bf) {
-  free_vector(&(bf->frontier));
-  free_vector(&(bf->blocks));
+  _SAFE_OP_K2(free_vector(&(bf->frontier)));
+  _SAFE_OP_K2(free_vector(&(bf->blocks)));
   return SUCCESS_ECODE;
 }
 
@@ -86,7 +88,7 @@ int extract_sub_block_frontier(struct block_frontier *bf,
   uint32_t from_index_loc =
       find_insertion_point(bf, preorder_from); // inclusive
   if (from_index_loc == (uint32_t)bf->frontier.nof_items) {
-    _SAFE_OP_K2(init_block_frontier(to_fill_bf));
+    CHECK_ERR(init_block_frontier(to_fill_bf));
     return SUCCESS_ECODE;
   }
 
@@ -94,7 +96,7 @@ int extract_sub_block_frontier(struct block_frontier *bf,
   uint32_t sub_block_size = to_index_loc - from_index_loc;
   uint32_t terminal_block_size = bf->frontier.nof_items - to_index_loc;
 
-  _SAFE_OP_K2(
+  CHECK_ERR(
       init_block_frontier_with_capacity(to_fill_bf, MAX(8, sub_block_size)));
 
   memcpy(to_fill_bf->frontier.data,
@@ -109,9 +111,11 @@ int extract_sub_block_frontier(struct block_frontier *bf,
   memmove(bf->frontier.data + from_index_loc * bf->frontier.element_size,
           bf->frontier.data + to_index_loc * bf->frontier.element_size,
           terminal_block_size * bf->frontier.element_size);
+  bf->frontier.nof_items = from_index_loc + terminal_block_size;
   memmove(bf->blocks.data + from_index_loc * bf->blocks.element_size,
           bf->blocks.data + to_index_loc * bf->blocks.element_size,
           terminal_block_size * bf->blocks.element_size);
+  bf->blocks.nof_items = from_index_loc + terminal_block_size;
 
   return SUCCESS_ECODE;
 }

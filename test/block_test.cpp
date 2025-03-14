@@ -149,13 +149,13 @@ TEST(block_test, fills_depth_3){
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
-      if(col == 2 && row == 1){
+      if(col == 2 && row == 2){
         int debug = 0;
       }
-      b.insert(col, row);
       cout << endl;
       cout << "inserting: col=" << col << ", row=" << row << endl;
-      cout << b.getStringRep() << endl;
+      b.insert(col, row);
+      cout << b.getStringRep(true) << endl;
       cout << "frontier" << endl;
       cout << b.frontierStr() << endl;
       cout << "subblocks" << endl;

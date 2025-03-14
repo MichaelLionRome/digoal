@@ -125,15 +125,6 @@ int child(struct block *input_block, uint32_t input_node_idx,
     return SUCCESS_ECODE;
   }
 
-  int exists;
-  CHECK_ERR(child_exists(input_block->bt, input_node_idx,
-                         requested_child_position, &exists));
-  if (!exists) {
-    result->exists = FALSE;
-    result->resulting_block = input_block;
-    return DOES_NOT_EXIST_CHILD_ERR;
-  }
-
   uint32_t frontier_traversal_idx = 0;
   int is_frontier;
   CHECK_ERR(frontier_check(input_block->bf, input_node_idx,
@@ -144,7 +135,10 @@ int child(struct block *input_block, uint32_t input_node_idx,
     get_child_block(input_block->bf, frontier_traversal_idx, &child_block);
     int child_err_code =
         child(child_block, 0, requested_child_position, 0, result, qs);
-    CHECK_ERR(child_err_code);
+    if (child_err_code != SUCCESS_ECODE &&
+        child_err_code != DOES_NOT_EXIST_CHILD_ERR) {
+      return child_err_code;
+    }
 
     result->previous_block = input_block;
     result->previous_preorder = input_node_idx;
@@ -158,6 +152,15 @@ int child(struct block *input_block, uint32_t input_node_idx,
     result->check_frontier = !result->exists;
 
     return child_err_code;
+  }
+
+  int exists;
+  CHECK_ERR(child_exists(input_block->bt, input_node_idx,
+                         requested_child_position, &exists));
+  if (!exists) {
+    result->exists = FALSE;
+    result->resulting_block = input_block;
+    return DOES_NOT_EXIST_CHILD_ERR;
   }
 
   uint32_t subtrees_to_skip = get_subtree_skipping_qty(
@@ -534,7 +537,7 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
   CHECK_ERR(extract_sub_bitvector(input_block->bt, new_bv_start_pos,
                                   new_bv_end_pos, bv));
   /* shrink parent bitvector */
-  CHECK_ERR(collapse_nodes(input_block->bt, from, to));
+  CHECK_ERR(collapse_nodes(input_block->bt, from + 1, to));
   CHECK_ERR(init_block_topology(bt, bv, to - from + 1));
   /* initialize block frontier */
   struct block_frontier *bf = calloc(1, sizeof(struct block_frontier));
@@ -544,6 +547,8 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
   created_block->bt = bt;
   created_block->bf = bf;
   created_block->block_depth = relative_depth;
+  created_block->tree_depth = input_block->tree_depth;
+  created_block->max_node_count = input_block->max_node_count;
 
   *new_block = created_block;
 
@@ -657,9 +662,10 @@ int insert_point(struct block *input_block, ulong col, ulong row,
       col, row, input_block->tree_depth, &qs->mc));
   struct insertion_location il;
   CHECK_ERR(find_insertion_location(input_block, qs, &il));
+  struct block *insertion_block = il.parent_node.last_child_result_reached.resulting_block;
 
-  if (block_has_enough_space(input_block, &il)) {
-    CHECK_ERR(make_room(input_block, &il));
+  if (block_has_enough_space(insertion_block, &il)) {
+    CHECK_ERR(make_room(insertion_block, &il));
     struct child_result *lcresult = &il.parent_node.last_child_result_reached;
     int child_node_is_parent =
         il.insertion_index == lcresult->resulting_node_idx;
@@ -668,7 +674,7 @@ int insert_point(struct block *input_block, ulong col, ulong row,
       CHECK_ERR(get_code_at_morton_code(&qs->mc, il.parent_node.depth_reached,
                                         &node_code));
       CHECK_ERR(mark_child_in_node(
-          input_block->bt,
+          insertion_block->bt,
           il.parent_node.last_child_result_reached.resulting_node_idx,
           node_code));
 
@@ -684,9 +690,9 @@ int insert_point(struct block *input_block, ulong col, ulong row,
       uint32_t leaf_child;
       CHECK_ERR(leaf_child_morton_code(&qs->mc, &leaf_child));
       CHECK_ERR(
-          mark_child_in_node(input_block->bt, il.insertion_index, leaf_child));
+          mark_child_in_node(insertion_block->bt, il.insertion_index, leaf_child));
     } else {
-      CHECK_ERR(insert_point_mc(input_block, &qs->mc, &il));
+      CHECK_ERR(insert_point_mc(insertion_block, &qs->mc, &il));
     }
 
     return SUCCESS_ECODE;
@@ -694,14 +700,14 @@ int insert_point(struct block *input_block, ulong col, ulong row,
 
   // Check if can enlarge block to fit
   uint32_t next_amount_of_nodes =
-      input_block->bt->nodes_count + il.remaining_depth;
-  if (next_amount_of_nodes <= input_block->max_node_count) {
+      insertion_block->bt->nodes_count + il.remaining_depth;
+  if (next_amount_of_nodes <= insertion_block->max_node_count) {
     uint32_t next_block_sz = 1 << (uint32_t)ceil(log2(next_amount_of_nodes));
-    CHECK_ERR(enlarge_block_size_to(input_block->bt, next_block_sz));
+    CHECK_ERR(enlarge_block_size_to(insertion_block->bt, next_block_sz));
     return insert_point(input_block, col, row, qs);
   }
 
-  CHECK_ERR(split_block(input_block, qs));
+  CHECK_ERR(split_block(insertion_block, qs));
 
   return insert_point(input_block, col, row, qs);
 }
