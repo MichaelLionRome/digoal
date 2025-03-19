@@ -146,20 +146,21 @@ TEST(block_test, fills_depth_3){
   uint32_t treedepth = 3;
   ulong side = 1 << treedepth;
   BlockWrapper b(treedepth, 8);
+  cout << endl;
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
-      if(col == 2 && row == 2){
+      if(col == 4 && row == 0){
         int debug = 0;
       }
-      cout << endl;
-      cout << "inserting: col=" << col << ", row=" << row << endl;
+      //cout << "inserting: col=" << col << ", row=" << row << endl;
       b.insert(col, row);
+      /*
       cout << b.getStringRep(true) << endl;
       cout << "frontier" << endl;
       cout << b.frontierStr() << endl;
       cout << "subblocks" << endl;
-      b.printSubBlocks();
+      b.printSubBlocks();*/
       for(ulong col_check = 0; col_check < col; col_check++){
         for(ulong row_check = 0; row_check < row; row_check++){
           ASSERT_TRUE(b.has(col_check, row_check)) << "at (" << col << ", " << row <<  ") Must have point " << col_check << ", " << row_check;
