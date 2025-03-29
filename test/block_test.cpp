@@ -488,21 +488,11 @@ TEST(block_test, diagonal_test_depth4_1){
 TEST(block_test, fills_till_depth_6_fail_known_1) {
   uint32_t treedepth = 4;
   ulong side = 1 << treedepth;
-  BlockWrapper b(treedepth, 16);
+  BlockWrapper b(treedepth, 8);
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
-      if(col == 10 && row == 14){
-        int debug = 0;
-        cout << "before" << endl;
-        cout << b.getStringRep() << endl;
-      }
       b.insert(col, row);
-      if(col == 10 && row == 14){
-        int debug = 0;
-        cout << "after" << endl;
-        cout << b.getStringRep() << endl;
-      }
       for(ulong col_check = 0; col_check < col; col_check++){
         for(ulong row_check = 0; row_check < row; row_check++){
           ASSERT_TRUE(b.has(col_check, row_check)) << "(depth = " << treedepth << ") at (" << col << ", " << row <<  ") Must have point " << col_check << ", " << row_check;

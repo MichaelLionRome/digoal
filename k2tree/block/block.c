@@ -388,7 +388,7 @@ int find_point(struct block *input_block, struct queries_state *qs,
 
     if (!current_cr.exists) {
       psr->last_child_result_reached = prev_cr;
-      psr->depth_reached = relative_depth;
+      psr->depth_reached = depth;
       psr->point_exists = FALSE;
       return SUCCESS_ECODE;
     }
