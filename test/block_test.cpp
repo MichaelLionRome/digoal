@@ -515,21 +515,31 @@ TEST(block_test, fills_till_depth_6_fail_known_1) {
 
 TEST(block_test, fills_till_depth_6){
   for(uint32_t treedepth = 3; treedepth <= 6; treedepth++){
+    cout << "depth =" << treedepth << endl;
   ulong side = 1 << treedepth;
-  BlockWrapper b(treedepth);
+  BlockWrapper b(treedepth, 16);
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
-      if(treedepth == 6 && col == 22 && row == 58){
+      cout << "col = " << col << ", row = " << row << endl;
+      if(treedepth == 4 && col == 6 && row == 6){
         int debug = 0;
         cout << "before" << endl;
-        cout << b.getStringRep() << endl;
+        cout << b.getStringRep(true) << endl;
+        cout << "frontier" << endl;
+        cout << b.frontierStr() << endl;
+        cout << "subblocks" << endl;
+        b.printSubBlocks();
       }
       b.insert(col, row);
-      if(treedepth == 6 && col == 22 && row == 58){
+      if(treedepth == 4 && col == 6 && row == 6){
         int debug = 0;
         cout << "after" << endl;
         cout << b.getStringRep() << endl;
+        cout << "frontier" << endl;
+        cout << b.frontierStr() << endl;
+        cout << "subblocks" << endl;
+        b.printSubBlocks();
       }
 
       for(ulong col_check = 0; col_check < col; col_check++){

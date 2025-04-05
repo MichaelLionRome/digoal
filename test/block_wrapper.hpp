@@ -83,7 +83,7 @@ public:
     for(uint32_t blockIndex = 0; blockIndex < blocks_count; blockIndex++){
       int currentBlock = container[blockIndex];
       pass_to_ss_bin(currentBlock, uint_bits, ss, separate);
-
+      ss << " - ";
     }
 
     if(extra_bits > 0){

@@ -19,6 +19,9 @@ struct child_result {
   /* Variables to handle frontier issues */
   int check_frontier; /* True if descended into a frontier node and couldn't
                          find the requested node there */
+
+  int went_frontier; /* True if descended into a frontier node */
+
   struct block *previous_block;
   uint32_t previous_preorder;
   uint32_t previous_to_current_index;
@@ -108,6 +111,9 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
                    uint32_t relative_depth, struct block **new_block);
 int split_block(struct block *input_block, struct queries_state *qs);
 int reset_sequential_scan_child(struct queries_state *qs);
+
+int insert_point_at(struct block *insertion_block,
+                    struct insertion_location *il, struct queries_state *qs);
 /* END PRIVATE FUNCTIONS  PROTOTYPES */
 
 /* PRIVATE FUNCTIONS IMPLEMENTATIONS */
@@ -150,6 +156,7 @@ int child(struct block *input_block, uint32_t input_node_idx,
       result->is_leaf_result = TRUE;
     }
     result->check_frontier = !result->exists;
+    result->went_frontier = TRUE;
 
     return child_err_code;
   }
@@ -353,6 +360,7 @@ int find_point(struct block *input_block, struct queries_state *qs,
   current_cr.is_leaf_result = FALSE;
   current_cr.previous_block = NULL;
   current_cr.check_frontier = FALSE;
+  current_cr.went_frontier = FALSE;
 
   uint32_t depth = input_block->block_depth;
   uint32_t relative_depth = 0;
@@ -620,6 +628,8 @@ int split_block(struct block *input_block, struct queries_state *qs) {
       input_block, new_frontier_node_position, right_index,
       new_frontier_node_relative_depth + input_block->block_depth, &new_block));
 
+  new_block->root = input_block->root;
+
   CHECK_ERR(
       fix_frontier_indexes(new_block->bf, 0, new_frontier_node_position + 1));
 
@@ -657,42 +667,48 @@ int has_point(struct block *input_block, ulong col, ulong row,
 
 int insert_point(struct block *input_block, ulong col, ulong row,
                  struct queries_state *qs) {
-
   CHECK_ERR(convert_coordinates_to_morton_code(
       col, row, input_block->tree_depth, &qs->mc));
   struct insertion_location il;
   CHECK_ERR(find_insertion_location(input_block, qs, &il));
-  struct block *insertion_block = il.parent_node.last_child_result_reached.resulting_block;
+  struct block *insertion_block =
+      il.parent_node.last_child_result_reached.resulting_block;
+  return insert_point_at(insertion_block, &il, qs);
+}
 
-  if (block_has_enough_space(insertion_block, &il)) {
-    CHECK_ERR(make_room(insertion_block, &il));
-    struct child_result *lcresult = &il.parent_node.last_child_result_reached;
+int insert_point_at(struct block *insertion_block,
+                    struct insertion_location *il, struct queries_state *qs) {
+
+  if (block_has_enough_space(insertion_block, il)) {
+    CHECK_ERR(make_room(insertion_block, il));
+    struct child_result *lcresult =
+        &(il->parent_node).last_child_result_reached;
     int child_node_is_parent =
-        il.insertion_index == lcresult->resulting_node_idx;
+        il->insertion_index == lcresult->resulting_node_idx;
     if (!child_node_is_parent) {
       uint32_t node_code;
-      CHECK_ERR(get_code_at_morton_code(&qs->mc, il.parent_node.depth_reached,
+      CHECK_ERR(get_code_at_morton_code(&qs->mc, il->parent_node.depth_reached,
                                         &node_code));
       CHECK_ERR(mark_child_in_node(
           insertion_block->bt,
-          il.parent_node.last_child_result_reached.resulting_node_idx,
+          il->parent_node.last_child_result_reached.resulting_node_idx,
           node_code));
 
       struct block *previous_block = lcresult->previous_block;
-      if (lcresult->check_frontier) {
+      if (lcresult->went_frontier) {
         CHECK_ERR(mark_child_in_node(previous_block->bt,
                                      lcresult->previous_preorder,
                                      lcresult->previous_to_current_index));
       }
     }
 
-    if (il.remaining_depth == 0) {
+    if (il->remaining_depth == 0) {
       uint32_t leaf_child;
       CHECK_ERR(leaf_child_morton_code(&qs->mc, &leaf_child));
-      CHECK_ERR(
-          mark_child_in_node(insertion_block->bt, il.insertion_index, leaf_child));
+      CHECK_ERR(mark_child_in_node(insertion_block->bt, il->insertion_index,
+                                   leaf_child));
     } else {
-      CHECK_ERR(insert_point_mc(insertion_block, &qs->mc, &il));
+      CHECK_ERR(insert_point_mc(insertion_block, &qs->mc, il));
     }
 
     return SUCCESS_ECODE;
@@ -700,16 +716,21 @@ int insert_point(struct block *input_block, ulong col, ulong row,
 
   // Check if can enlarge block to fit
   uint32_t next_amount_of_nodes =
-      insertion_block->bt->nodes_count + il.remaining_depth;
+      insertion_block->bt->nodes_count + il->remaining_depth;
   if (next_amount_of_nodes <= insertion_block->max_node_count) {
     uint32_t next_block_sz = 1 << (uint32_t)ceil(log2(next_amount_of_nodes));
     CHECK_ERR(enlarge_block_size_to(insertion_block->bt, next_block_sz));
-    return insert_point(input_block, col, row, qs);
+    return insert_point_at(insertion_block, il, qs);
   }
 
   CHECK_ERR(split_block(insertion_block, qs));
 
-  return insert_point(input_block, col, row, qs);
+  struct insertion_location il_split;
+  CHECK_ERR(find_insertion_location(insertion_block->root, qs, &il_split));
+
+  return insert_point_at(
+      il_split.parent_node.last_child_result_reached.resulting_block, &il_split,
+      qs);
 }
 
 struct block *create_block(uint32_t tree_depth) {
@@ -719,6 +740,7 @@ struct block *create_block(uint32_t tree_depth) {
   new_block->block_depth = 0;
   new_block->tree_depth = tree_depth;
   new_block->max_node_count = MAX_NODES_IN_BLOCK;
+  new_block->root = new_block;
   return new_block;
 }
 

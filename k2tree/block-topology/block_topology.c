@@ -254,13 +254,12 @@ int shift_left_from(struct bitvector *bv, uint32_t from,
     return SUCCESS_ECODE;
   uint32_t to = bv->size_in_bits - 1;
   int amount_to_shift_int = (int)to - (int)from + 1;
-  if(amount_to_shift_int == 0){
+  if (amount_to_shift_int == 0) {
     return SUCCESS_ECODE;
-  }
-  else if(amount_to_shift_int < 0){
+  } else if (amount_to_shift_int < 0) {
     return SHIFT_LEFT_FROM_OUT_OF_RANGE_FROM;
   }
-  uint32_t amount_to_shift = (uint32_t) amount_to_shift_int;
+  uint32_t amount_to_shift = (uint32_t)amount_to_shift_int;
   uint32_t blocks_to_shift = amount_to_shift / uint_bits;
   uint32_t extra_bits_to_shift = amount_to_shift % uint_bits;
 
