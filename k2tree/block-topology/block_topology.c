@@ -230,8 +230,9 @@ int extract_sub_bitvector(struct block_topology *bt, uint32_t from, uint32_t to,
 
   for (uint32_t block_index = 0; block_index < blocks_to_copy; block_index++) {
     uint32_t block;
-    _SAFE_OP_K2(bits_read(bt->bv, from + block_index * uint_bits,
-                          from + (block_index + 1) * uint_bits - 1, &block));
+    uint32_t start = from + block_index * uint_bits;
+    uint32_t end = from + (block_index + 1) * uint_bits - 1;
+    _SAFE_OP_K2(bits_read(bt->bv, start, end, &block));
     result->container[block_index] = block;
   }
 

@@ -12,6 +12,7 @@ int init_queries_state(struct queries_state *qs, uint32_t tree_depth) {
   init_circular_queue(&qs->not_yet_traversed, 2 * tree_depth, sizeof(uint32_t));
   init_circular_queue(&qs->subtrees_count, 2 * tree_depth,
                       sizeof(struct node_subtree_info));
+  qs->find_split_data = FALSE;
   return init_sequential_scan_result(&qs->sc_result);
 }
 

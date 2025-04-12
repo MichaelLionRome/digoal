@@ -24,6 +24,7 @@ struct queries_state {
   struct sequential_scan_result sc_result;
   struct circular_queue not_yet_traversed;
   struct circular_queue subtrees_count;
+  int find_split_data;
 };
 
 int init_queries_state(struct queries_state *qs, uint32_t tree_depth);

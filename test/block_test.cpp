@@ -150,17 +150,17 @@ TEST(block_test, fills_depth_3){
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
-      if(col == 4 && row == 0){
+      if(col == 2 && row == 2 && false){
         int debug = 0;
+        cout << b.getStringRep(true) << endl;
+        cout << "frontier" << endl;
+        cout << b.frontierStr() << endl;
+        cout << "subblocks" << endl;
+        b.printSubBlocks();
       }
       //cout << "inserting: col=" << col << ", row=" << row << endl;
       b.insert(col, row);
-      /*
-      cout << b.getStringRep(true) << endl;
-      cout << "frontier" << endl;
-      cout << b.frontierStr() << endl;
-      cout << "subblocks" << endl;
-      b.printSubBlocks();*/
+
       for(ulong col_check = 0; col_check < col; col_check++){
         for(ulong row_check = 0; row_check < row; row_check++){
           ASSERT_TRUE(b.has(col_check, row_check)) << "at (" << col << ", " << row <<  ") Must have point " << col_check << ", " << row_check;
@@ -521,8 +521,8 @@ TEST(block_test, fills_till_depth_6){
 
   for(ulong col = 0; col < side; col++){
     for(ulong row = 0; row < side; row++){
-      cout << "col = " << col << ", row = " << row << endl;
-      if(treedepth == 4 && col == 6 && row == 6){
+      //cout << "col = " << col << ", row = " << row << endl;
+      if(treedepth == 4 && col == 6 && row == 6 && false){
         int debug = 0;
         cout << "before" << endl;
         cout << b.getStringRep(true) << endl;
@@ -532,7 +532,7 @@ TEST(block_test, fills_till_depth_6){
         b.printSubBlocks();
       }
       b.insert(col, row);
-      if(treedepth == 4 && col == 6 && row == 6){
+      if(treedepth == 4 && col == 6 && row == 6 && false){
         int debug = 0;
         cout << "after" << endl;
         cout << b.getStringRep() << endl;

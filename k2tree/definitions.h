@@ -20,6 +20,7 @@
 #define COLLAPSE_BITS_FROM_GREATER_THAN_TO 6
 #define COLLAPSE_BITS_BITS_DIFF_GTE_THAN_BVSIZE 7
 #define FIX_INDEXES_PREORDER_HIGHER_THAN_DELTA 8
+#define RESET_SIZE_HIGHER_THAN_CAPACITY 9
 
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \
