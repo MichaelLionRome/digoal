@@ -10,6 +10,8 @@ extern "C" {
 #include "block_wrapper.hpp"
 
 #include <iostream>
+#include <algorithm>
+#include <vector>
 
 using namespace std;
 
@@ -149,15 +151,7 @@ TEST(block_test, fills_depth_3) {
 
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
-      if (col == 2 && row == 2 && false) {
-        int debug = 0;
-        cout << b.getStringRep(true) << endl;
-        cout << "frontier" << endl;
-        cout << b.frontierStr() << endl;
-        cout << "subblocks" << endl;
-        b.printSubBlocks();
-      }
-      //cout << "inserting: col=" << col << ", row=" << row << endl;
+
       b.insert(col, row);
 
       for (ulong col_check = 0; col_check < col; col_check++) {
@@ -526,7 +520,7 @@ TEST(block_test, fills_till_depth_6_fail_known_1) {
 
 TEST(block_test, fills_till_depth_6) {
   for (uint32_t treedepth = 3; treedepth <= 6; treedepth++) {
-    ulong side = 1 << treedepth;
+    ulong side = 1u << treedepth;
     BlockWrapper b(treedepth, 16);
 
     for (ulong col = 0; col < side; col++) {
@@ -562,6 +556,123 @@ TEST(block_test, fills_till_depth_6) {
     for (int col = 0; col < side; col++) {
       for (int row = 0; row < side; row++) {
         ASSERT_TRUE(b.has(col, row)) << "(depth = " << treedepth << ") No point " << col << ", " << row;
+      }
+    }
+  }
+}
+
+TEST(block_test, very_deep_1) {
+  uint32_t treedepth = 10;
+  ulong side = 1u << treedepth;
+  BlockWrapper b(treedepth, 16);
+
+  for (ulong col = 0; col < side; col++) {
+    for (ulong row = 0; row < side; row++) {
+      b.insert(col, row);
+    }
+  }
+  for (ulong col = 0; col < side; col++) {
+    for (ulong row = 0; row < side; row++) {
+      ASSERT_TRUE(b.has(col, row)) << "(depth = " << treedepth << ") No point " << col << ", " << row;
+    }
+  }
+}
+
+TEST(block_test, very_deep_diagonal) {
+  uint32_t treedepth = 20;
+  ulong side = 1u << treedepth;
+  BlockWrapper b(treedepth, 64);
+
+  for (ulong i = 0; i < side; i++) {
+    b.insert(i, i);
+
+  }
+  for (ulong i = 0; i < side; i++) {
+    ASSERT_TRUE(b.has(i, i)) << "(depth = " << treedepth << ") No point " << i << ", " << i;
+  }
+}
+
+TEST(block_test, very_very_deep_1) {
+  uint32_t treedepth = 30;
+  ulong side = 1u << treedepth;
+  BlockWrapper b(treedepth, 64);
+  cout << side << endl;
+  for (ulong i = 0; i < 10000; i++) {
+    b.insert(i, i);
+  }
+  for (ulong i = 0; i < 10000; i++) {
+    ASSERT_TRUE(b.has(i, i)) << "(depth = " << treedepth << ") No point " << i << ", " << i;
+  }
+}
+
+TEST(block_test, random_test_1) {
+  for (uint32_t treedepth = 3; treedepth <= 5; treedepth++) {
+    for (int seed = 0; seed < 10; seed++) {
+      srand(seed);
+      ulong side = 1u << treedepth;
+      ulong matrix_size = side * side;
+      BlockWrapper b(treedepth, 16);
+
+      std::vector<ulong> indexes(matrix_size, 0);
+
+      for (ulong i = 0; i < matrix_size; i++) indexes[i] = i;
+
+      random_shuffle(indexes.begin(), indexes.end());
+
+      for (ulong i = 0; i < matrix_size; i++) {
+        ulong col = i / side;
+        ulong row = i % side;
+        b.insert(col, row);
+        for (ulong j = 0; j < matrix_size; j++) {
+          ulong col_check = j / side;
+          ulong row_check = j % side;
+          if (j <= i) {
+            ASSERT_TRUE(b.has(col_check, row_check))
+                                  << "(depth = " << treedepth << ") after inserting "
+                                  << col << ", " << row
+                                  << "doesn't have "
+                                  << col_check << ", " << row_check;
+          } else {
+            ASSERT_FALSE(b.has(col_check, row_check))
+                                  << "(depth = " << treedepth << ") after inserting "
+                                  << col << ", " << row
+                                  << "has "
+                                  << col_check << ", " << row_check;
+
+          }
+        }
+      }
+    }
+  }
+}
+
+
+TEST(block_test, random_test_2) {
+  for (uint32_t treedepth = 3; treedepth <= 6; treedepth++) {
+    for (int seed = 0; seed < 100; seed++) {
+      srand(seed);
+      ulong side = 1u << treedepth;
+      ulong matrix_size = side * side;
+      BlockWrapper b(treedepth, 16);
+
+      std::vector<ulong> indexes(matrix_size, 0);
+
+      for (ulong i = 0; i < matrix_size; i++) indexes[i] = i;
+
+      random_shuffle(indexes.begin(), indexes.end());
+
+      for (ulong i = 0; i < matrix_size; i++) {
+        ulong col = i / side;
+        ulong row = i % side;
+        b.insert(col, row);
+      }
+      for (ulong i = 0; i < matrix_size; i++) {
+        ulong col = i / side;
+        ulong row = i % side;
+        ASSERT_TRUE(b.has(col, row))
+                              << "(depth = " << treedepth << ")"
+                              << "doesn't have "
+                              << col << ", " << row;
       }
     }
   }
