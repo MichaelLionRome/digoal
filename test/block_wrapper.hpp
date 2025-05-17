@@ -33,7 +33,7 @@ public:
   }
 
   ~BlockWrapper(){
-    free_block(b);
+    free_rec_block(b);
     finish_queries_state(&qs);
   }
 

@@ -24,6 +24,7 @@ int insert_point(struct block *input_block, ulong col, ulong row,
                  struct queries_state *qs);
 
 struct block *create_block(uint32_t tree_depth);
+int free_rec_block(struct block *input_block);
 int free_block(struct block *input_block);
 
 #endif /* _BLOCK_H_ */

@@ -792,6 +792,20 @@ struct block *create_block(uint32_t tree_depth) {
   return new_block;
 }
 
+int free_rec_block(struct block *input_block){
+  struct vector *frontier_blocks = &input_block->bf->blocks;
+  if(frontier_blocks->nof_items == 0){
+    return free_block(input_block);
+  }
+
+  for(int i = 0; i < frontier_blocks->nof_items; i++){
+    struct block *current_block = read_block_element(frontier_blocks, i);
+    CHECK_ERR(free_rec_block(current_block));
+  }
+
+  return free_block(input_block);
+}
+
 int free_block(struct block *input_block) {
   CHECK_ERR(free_block_topology(input_block->bt));
   CHECK_ERR(free_block_frontier(input_block->bf));
