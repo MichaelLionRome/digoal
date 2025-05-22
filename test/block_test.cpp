@@ -147,7 +147,6 @@ TEST(block_test, fills_depth_3) {
   uint32_t treedepth = 3;
   ulong side = 1 << treedepth;
   BlockWrapper b(treedepth, 8);
-  cout << endl;
 
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
@@ -454,10 +453,6 @@ TEST(block_test, fills_till_depth_4_match) {
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
       int i = col * side + row % side;
-      if (col == 2 && row == 0) {
-        cout << b.getStringRep() << endl;
-        int debug = 0;
-      }
       b.insert(col, row);
       ASSERT_EQ(comp_d6[i], b.getStringRep()) << "failing at col=" << col << ", row=" << row;
     }
@@ -594,9 +589,7 @@ TEST(block_test, very_deep_diagonal) {
 
 TEST(block_test, very_very_deep_1) {
   uint32_t treedepth = 30;
-  ulong side = 1u << treedepth;
   BlockWrapper b(treedepth, 64);
-  cout << side << endl;
   for (ulong i = 0; i < 10000; i++) {
     b.insert(i, i);
   }
