@@ -15,6 +15,7 @@ extern "C" {
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 
 using namespace std;
@@ -32,9 +33,12 @@ public:
     b->max_node_count = max_node_count;
   }
 
-  ~BlockWrapper(){
-    free_rec_block(b);
-    finish_queries_state(&qs);
+  ~BlockWrapper() noexcept(false){
+    int err_check = free_rec_block(b);
+    if(err_check) throw runtime_error("free_rec_block: ERROR WHILE FREEING MEMORY, CODE = " + to_string(err_check));
+    err_check  = finish_queries_state(&qs);
+    if(err_check) throw runtime_error("finish_queries_state: ERROR WHILE FREEING MEMORY, CODE = " + to_string(err_check));
+    cout << "data was freed" << endl;
   }
 
   void insert(unsigned long col, unsigned long row){
@@ -121,6 +125,7 @@ public:
       int err_code = get_element_at(&bf->blocks, i, (char**)&sb);
       if(err_code)
         throw runtime_error("error reading frontier block at i = " + to_string(i));
+
 
       cout << getStringRepBlock(*sb, true) << endl;
     }

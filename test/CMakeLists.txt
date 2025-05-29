@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
+set(CMAKE_BUILD_TYPE Debug)
+
+
 set(ROOT_PATH ..)
 set(BITVECTOR_PATH ${ROOT_PATH}/lib/c-bitvector)
 set(VECTOR_PATH ${ROOT_PATH}/lib/c-vector)
@@ -88,4 +91,6 @@ set(TEST_FILES
         block_test.cpp)
 
 add_executable(block_test block_test.cpp block_wrapper.hpp)
+add_executable(block_leak_test block_leak_test.cpp block_wrapper.hpp)
 target_link_libraries(block_test K2TreeElements gtest_main vector circular_queue bitvector)
+target_link_libraries(block_leak_test K2TreeElements vector circular_queue bitvector)
