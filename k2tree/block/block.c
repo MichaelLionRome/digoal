@@ -565,11 +565,11 @@ int insert_point_mc(struct block *input_block, struct morton_code *mc,
 
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
                    uint32_t relative_depth, struct block **new_block) {
-  struct block *created_block = calloc(1, sizeof(struct block));
+  struct block *created_block = (struct block *) calloc(1, sizeof(struct block));
 
   /* initialize block topology */
-  struct block_topology *bt = calloc(1, sizeof(struct block_topology));
-  struct bitvector *bv = calloc(1, sizeof(struct bitvector));
+  struct block_topology *bt = (struct block_topology *) calloc(1, sizeof(struct block_topology));
+  struct bitvector *bv = (struct bitvector *) calloc(1, sizeof(struct bitvector));
   uint32_t new_bv_start_pos = 4 * from;
   uint32_t new_bv_end_pos = 4 * (to + 1) - 1;
   uint32_t new_bv_size = new_bv_end_pos - new_bv_start_pos + 1;
@@ -580,7 +580,7 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
   CHECK_ERR(collapse_nodes(input_block->bt, from + 1, to));
   CHECK_ERR(init_block_topology(bt, bv, to - from + 1));
   /* initialize block frontier */
-  struct block_frontier *bf = calloc(1, sizeof(struct block_frontier));
+  struct block_frontier *bf = (struct block_frontier *) calloc(1, sizeof(struct block_frontier));
   CHECK_ERR(extract_sub_block_frontier(input_block->bf, from, to, bf));
   // CHECK_ERR(init_block_frontier_with_capacity(bf, ));
 
@@ -782,7 +782,7 @@ int insert_point(struct block *input_block, ulong col, ulong row,
 }
 
 struct block *create_block(uint32_t tree_depth) {
-  struct block *new_block = calloc(1, sizeof(struct block));
+  struct block *new_block = (struct block *) calloc(1, sizeof(struct block));
   new_block->bt = create_block_topology();
   new_block->bf = create_block_frontier();
   new_block->block_depth = 0;
@@ -794,9 +794,6 @@ struct block *create_block(uint32_t tree_depth) {
 
 int free_rec_block(struct block *input_block) {
   struct vector *frontier_blocks = &input_block->bf->blocks;
-  if (frontier_blocks->nof_items == 0) {
-    return free_block(input_block);
-  }
 
   for (int i = 0; i < frontier_blocks->nof_items; i++) {
     struct block *current_block = read_block_element(frontier_blocks, i);
@@ -810,7 +807,9 @@ int free_block(struct block *input_block) {
   CHECK_ERR(free_block_topology(input_block->bt));
   CHECK_ERR(free_block_frontier(input_block->bf));
   free(input_block->bt);
+  input_block->bt = NULL;
   free(input_block->bf);
+  input_block->bf = NULL;
   free(input_block);
   return SUCCESS_ECODE;
 }
