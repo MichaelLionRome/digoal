@@ -38,7 +38,6 @@ public:
     if(err_check) throw runtime_error("free_rec_block: ERROR WHILE FREEING MEMORY, CODE = " + to_string(err_check));
     err_check  = finish_queries_state(&qs);
     if(err_check) throw runtime_error("finish_queries_state: ERROR WHILE FREEING MEMORY, CODE = " + to_string(err_check));
-    cout << "data was freed" << endl;
   }
 
   void insert(unsigned long col, unsigned long row){

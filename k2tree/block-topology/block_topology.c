@@ -332,7 +332,8 @@ int collapse_bits(struct block_topology *bt, uint32_t from, uint32_t to) {
     uint32_t to_part = from + (i + 1) * uint_bits - 1;
     _SAFE_OP_K2(bits_write(bv, from_part, to_part, 0));
   }
-  _SAFE_OP_K2(bits_write(bv, to - extra_bits + 1, to, 0));
+  if (extra_bits > 0)
+    _SAFE_OP_K2(bits_write(bv, to - extra_bits + 1, to, 0));
 
   CHECK_ERR(shift_left_from(bv, to + 1, bits_to_collapse));
   CHECK_ERR(resize_bv_to(&bt->bv, bv->size_in_bits - bits_to_collapse));

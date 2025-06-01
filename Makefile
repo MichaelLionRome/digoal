@@ -4,6 +4,10 @@ VECTOR_INCLUDE=${CURRENT_PATH}/lib/c-vector/include
 CIRCULAR_QUEUE_INCLUDE=${CURRENT_PATH}/lib/c-queue/include
 K2TREE_INCLUDES=${CURRENT_PATH}/k2tree
 
+BIN_DEPENDENCIES=-L${CURRENT_PATH}/bin -L${CURRENT_PATH}/lib/c-bitvector/bin -L${CURRENT_PATH}/lib/c-queue/bin -L${CURRENT_PATH}/lib/c-vector/bin 
+BIN_LINKS=-lk2tree -lbitvector -lcircular_queue -lvector -lm
+BIN=${BIN_DEPENDENCIES} ${BIN_LINKS}
+
 INCLUDES=-I${BITVECTOR_INCLUDE} -I${K2TREE_INCLUDES} -I${VECTOR_INCLUDE} -I${CIRCULAR_QUEUE_INCLUDE}
 
 CFLAGS :=  -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
@@ -12,11 +16,11 @@ CFLAGS :=  -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-protot
 DEBFLAGS := -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
     -Wold-style-definition -Werror -g
 
-MAKE_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${CFLAGS}"
+MAKE_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${CFLAGS}" BIN="${BIN}"
 
-DEBUG_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${DEBFLAGS}"
+DEBUG_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${DEBFLAGS}" BIN="${BIN}"
 
-MODULES_DIRS := k2tree
+MODULES_DIRS := k2tree example
 
 
 
@@ -31,6 +35,9 @@ clean:
 	for dir in ${MODULES_DIRS}; do \
 		$(MAKE) clean -C $$dir ${MAKE_FLAGS};  \
 	done
+
+clean-all: clean
+	rm -rf bin lib
 
 modules:
 	for dir in ${MODULES_DIRS}; do \
