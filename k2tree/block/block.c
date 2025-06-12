@@ -565,11 +565,13 @@ int insert_point_mc(struct block *input_block, struct morton_code *mc,
 
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
                    uint32_t relative_depth, struct block **new_block) {
-  struct block *created_block = (struct block *) calloc(1, sizeof(struct block));
+  struct block *created_block = (struct block *)calloc(1, sizeof(struct block));
 
   /* initialize block topology */
-  struct block_topology *bt = (struct block_topology *) calloc(1, sizeof(struct block_topology));
-  struct bitvector *bv = (struct bitvector *) calloc(1, sizeof(struct bitvector));
+  struct block_topology *bt =
+      (struct block_topology *)calloc(1, sizeof(struct block_topology));
+  struct bitvector *bv =
+      (struct bitvector *)calloc(1, sizeof(struct bitvector));
   uint32_t new_bv_start_pos = 4 * from;
   uint32_t new_bv_end_pos = 4 * (to + 1) - 1;
   uint32_t new_bv_size = new_bv_end_pos - new_bv_start_pos + 1;
@@ -580,7 +582,8 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
   CHECK_ERR(collapse_nodes(input_block->bt, from + 1, to));
   CHECK_ERR(init_block_topology(bt, bv, to - from + 1));
   /* initialize block frontier */
-  struct block_frontier *bf = (struct block_frontier *) calloc(1, sizeof(struct block_frontier));
+  struct block_frontier *bf =
+      (struct block_frontier *)calloc(1, sizeof(struct block_frontier));
   CHECK_ERR(extract_sub_block_frontier(input_block->bf, from, to, bf));
   // CHECK_ERR(init_block_frontier_with_capacity(bf, ));
 
@@ -782,7 +785,7 @@ int insert_point(struct block *input_block, ulong col, ulong row,
 }
 
 struct block *create_block(uint32_t tree_depth) {
-  struct block *new_block = (struct block *) calloc(1, sizeof(struct block));
+  struct block *new_block = (struct block *)calloc(1, sizeof(struct block));
   new_block->bt = create_block_topology();
   new_block->bf = create_block_frontier();
   new_block->block_depth = 0;

@@ -26,8 +26,8 @@ int finish_queries_state(struct queries_state *qs) {
 
 /* PRIVATE FUNCTIONS IMPLEMENTATION */
 int init_sequential_scan_result(struct sequential_scan_result *scr) {
-  scr->subtrees_count_map = (struct vector *) calloc(1, sizeof(struct vector));
-  scr->relative_depth_map = (struct vector *) calloc(1, sizeof(struct vector));
+  scr->subtrees_count_map = (struct vector *)calloc(1, sizeof(struct vector));
+  scr->relative_depth_map = (struct vector *)calloc(1, sizeof(struct vector));
   _SAFE_OP_K2(init_vector_with_capacity(scr->subtrees_count_map,
                                         sizeof(uint32_t), MAX_NODES_IN_BLOCK));
   _SAFE_OP_K2(init_vector_with_capacity(scr->relative_depth_map,

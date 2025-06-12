@@ -82,7 +82,8 @@ int resize_bv_to(struct bitvector **bv_ptr, uint32_t new_size) {
     return SUCCESS_ECODE;
   }
 
-  struct bitvector *new_bv = (struct bitvector *) calloc(1, sizeof(struct bitvector));
+  struct bitvector *new_bv =
+      (struct bitvector *)calloc(1, sizeof(struct bitvector));
   _SAFE_OP_K2(init_bitvector(new_bv, new_size));
 
   if (new_container_size > bv->container_size) {
@@ -349,8 +350,10 @@ int collapse_nodes(struct block_topology *bt, uint32_t from, uint32_t to) {
 }
 
 struct block_topology *create_block_topology(void) {
-  struct block_topology *new_bt = (struct block_topology *) calloc(1, sizeof(struct block_topology));
-  struct bitvector *bv = (struct bitvector *) calloc(1, sizeof(struct bitvector));
+  struct block_topology *new_bt =
+      (struct block_topology *)calloc(1, sizeof(struct block_topology));
+  struct bitvector *bv =
+      (struct bitvector *)calloc(1, sizeof(struct bitvector));
   init_bitvector(bv, 0);
   init_block_topology(new_bt, bv, 0);
   return new_bt;
