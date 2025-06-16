@@ -15,10 +15,15 @@ INCLUDES=-I${BITVECTOR_INCLUDE} -I${K2TREE_INCLUDES} -I${VECTOR_INCLUDE} -I${CIR
 CFLAGS :=  -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
     -Wold-style-definition -Werror -O3
 
+SHARED_CFLAGS := ${CFLAGS} -fPIC
+
 DEBFLAGS := -Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
     -Wold-style-definition -Werror -g
 
 MAKE_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${CFLAGS}" BIN="${BIN}"
+
+SHARED_MAKE_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${SHARED_CFLAGS}" BIN="${BIN}"
+
 
 DEBUG_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${DEBFLAGS}" BIN="${BIN}"
 
@@ -52,6 +57,10 @@ modules:
 		$(MAKE) -C $$dir ${MAKE_FLAGS}; \
 	done
 
+shared_modules:
+	for dir in ${MODULES_DIRS}; do \
+		$(MAKE) -C $$dir ${SHARED_MAKE_FLAGS}; \
+	done
 
 runnables:
 	for dir in ${RUNNABLE_DIRS}; do \
