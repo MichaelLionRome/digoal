@@ -21,6 +21,8 @@
 #define COLLAPSE_BITS_BITS_DIFF_GTE_THAN_BVSIZE 7
 #define FIX_INDEXES_PREORDER_HIGHER_THAN_DELTA 8
 #define RESET_SIZE_HIGHER_THAN_CAPACITY 9
+#define K2TREE_ERR_NULL_BITVECTOR 10
+#define K2TREE_ERR_NULL_BITVECTOR_CONTAINER 11
 
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \

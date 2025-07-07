@@ -35,6 +35,8 @@ set(INCLUDES_ELEMENTS ${BlockPath}/block.h
  ${BlockTopologyPath}/block_topology.h
  ${MortonCodePath}/morton_code.h
  ${K2TREE_INCLUDES}/definitions.h
+ ${K2TREE_INCLUDES}/memalloc.h
+ ${K2TREE_INCLUDES}/custom_bv_handling.h
  )
 
 set(SOURCES_ELEMENTS ${BlockPath}/block.c
@@ -43,6 +45,8 @@ set(SOURCES_ELEMENTS ${BlockPath}/block.c
  ${BlockTopologyPath}/block_topology.c
  ${MortonCodePath}/morton_code.c
  ${K2TREE_INCLUDES}/definitions.c
+ ${K2TREE_INCLUDES}/default_memalloc.c
+ ${K2TREE_INCLUDES}/custom_bv_handling.c
  )
 
 add_library(K2TreeElements ${SOURCES_ELEMENTS})

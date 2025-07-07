@@ -2,6 +2,9 @@
 
 #include "block_topology.h"
 #include "definitions.h"
+#include "memalloc.h"
+
+#include "custom_bv_handling.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
@@ -82,9 +85,8 @@ int resize_bv_to(struct bitvector **bv_ptr, uint32_t new_size) {
     return SUCCESS_ECODE;
   }
 
-  struct bitvector *new_bv =
-      (struct bitvector *)calloc(1, sizeof(struct bitvector));
-  _SAFE_OP_K2(init_bitvector(new_bv, new_size));
+  struct bitvector *new_bv = k2tree_alloc_bitvector();
+  CHECK_ERR(custom_init_bitvector(new_bv, new_size));
 
   if (new_container_size > bv->container_size) {
     memcpy(new_bv->container, bv->container,
@@ -95,7 +97,7 @@ int resize_bv_to(struct bitvector **bv_ptr, uint32_t new_size) {
   }
 
   _SAFE_OP_K2(clean_bitvector(bv));
-  free(bv);
+  k2tree_free_bitvector(bv);
   *bv_ptr = new_bv;
 
   return SUCCESS_ECODE;
@@ -350,18 +352,16 @@ int collapse_nodes(struct block_topology *bt, uint32_t from, uint32_t to) {
 }
 
 struct block_topology *create_block_topology(void) {
-  struct block_topology *new_bt =
-      (struct block_topology *)calloc(1, sizeof(struct block_topology));
-  struct bitvector *bv =
-      (struct bitvector *)calloc(1, sizeof(struct bitvector));
-  init_bitvector(bv, 0);
+  struct block_topology *new_bt = k2tree_alloc_block_topology();
+  struct bitvector *bv = k2tree_alloc_bitvector();
+  custom_init_bitvector(bv, 0);
   init_block_topology(new_bt, bv, 0);
   return new_bt;
 }
 
 int free_block_topology(struct block_topology *bt) {
   _SAFE_OP_K2(clean_bitvector(bt->bv));
-  free(bt->bv);
+  k2tree_free_bitvector(bt->bv);
   bt->bv = NULL;
   return SUCCESS_ECODE;
 }

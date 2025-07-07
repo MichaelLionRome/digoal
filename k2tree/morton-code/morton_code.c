@@ -2,14 +2,16 @@
 
 #include "definitions.h"
 
+#include "custom_bv_handling.h"
+
 int init_morton_code(struct morton_code *mc, uint32_t treedepth) {
   mc->treedepth = treedepth;
-  _SAFE_OP_K2(init_bitvector(&mc->container, 2 * treedepth));
+  CHECK_ERR(custom_init_bitvector(&mc->container, 2 * treedepth));
   return SUCCESS_ECODE;
 }
 
 int clean_morton_code(struct morton_code *mc) {
-  clean_bitvector(&mc->container);
+  custom_clean_bitvector(&mc->container);
   return SUCCESS_ECODE;
 }
 

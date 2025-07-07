@@ -32,9 +32,9 @@ RUNNABLE_DIRS := example
 
 COMPR_DIR=k2tree-dyn-compr
 
-all: fetch_deps format modules merge-libs runnables
+all: fetch_deps format modules merge-libs merge-libs-noalloc  runnables
 
-all-shared: fetch_deps shared-modules merge-libs-shared
+all-shared: fetch_deps shared-modules merge-libs-shared merge-libs-noalloc-shared
 
 re: clean all
 
@@ -50,9 +50,12 @@ clean:
 		$(MAKE) clean -C $$dir ${MAKE_FLAGS};  \
 	done
 
+	rm -rf _tmp_merge
+
 clean-all: clean
 	rm -rf bin lib ${COMPR_DIR} ${COMPR_DIR}.tar.gz
 	rm -rf test/build test/.idea test/cmake-build-debug
+	
 
 modules:
 	for dir in ${MODULES_DIRS}; do \
@@ -98,33 +101,13 @@ compr: clean-all
 	tar -zcvf ${COMPR_DIR}.tar.gz ${COMPR_DIR}/
 
 merge-libs:
-	mkdir -p _tmp_merge
-	# put all libs into _tmp_merge
-	cp bin/libk2tree.a _tmp_merge/
-	cp ${CURRENT_PATH}/lib/c-bitvector/bin/libbitvector.a _tmp_merge/
-	cp ${CURRENT_PATH}/lib/c-vector/bin/libvector.a _tmp_merge/
-	cp ${CURRENT_PATH}/lib/c-queue/bin/libcircular_queue.a _tmp_merge/
-	cd _tmp_merge && \
-	ar -x libk2tree.a && \
-	ar -x libbitvector.a && \
-	ar -x libvector.a && \
-	ar -x libcircular_queue.a && \
-	ar -qc libk2tree_merged.a *.o && \
-	cp libk2tree_merged.a ../bin/
-	rm -rf _tmp_merge
+	./mergelibs.sh 1 0
 
 merge-libs-shared:
-	mkdir -p _tmp_merge
-	# put all libs into _tmp_merge
-	cp bin/libk2tree.a _tmp_merge/
-	cp ${CURRENT_PATH}/lib/c-bitvector/bin/libbitvector_se.a _tmp_merge/
-	cp ${CURRENT_PATH}/lib/c-vector/bin/libvector.a _tmp_merge/
-	cp ${CURRENT_PATH}/lib/c-queue/bin/libcircular_queue.a _tmp_merge/
-	cd _tmp_merge && \
-	ar -x libk2tree.a && \
-	ar -x libbitvector_se.a && \
-	ar -x libvector.a && \
-	ar -x libcircular_queue.a && \
-	ar -qc libk2tree_merged.a *.o && \
-	cp libk2tree_merged.a ../bin/
-	rm -rf _tmp_merge
+	./mergelibs.sh 1 1
+
+merge-libs-noalloc:
+	./mergelibs.sh 0 0
+
+merge-libs-noalloc-shared:
+	./mergelibs.sh 0 1

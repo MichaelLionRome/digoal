@@ -7,6 +7,8 @@
 
 #include "definitions.h"
 
+#include "memalloc.h"
+
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
@@ -131,7 +133,7 @@ int add_frontier_node(struct block_frontier *bf,
 }
 
 struct block_frontier *create_block_frontier(void) {
-  struct block_frontier *new_bf = calloc(1, sizeof(struct block_frontier));
+  struct block_frontier *new_bf = k2tree_alloc_block_frontier();
   init_block_frontier(new_bf);
   return new_bf;
 }
