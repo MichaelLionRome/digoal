@@ -1,7 +1,5 @@
 #include "morton_code.h"
 
-#include "definitions.h"
-
 #include "custom_bv_handling.h"
 
 int init_morton_code(struct morton_code *mc, uint32_t treedepth) {
@@ -57,5 +55,37 @@ int convert_coordinates_to_morton_code(ulong col, ulong row, uint32_t treedepth,
 
     _SAFE_OP_K2(add_element_morton_code(result, mc_position++, quadrant));
   }
+  return SUCCESS_ECODE;
+}
+
+int convert_morton_code_to_coordinates(struct morton_code *input_mc,
+                                       struct pair2dl *result) {
+  long col = 0;
+  long row = 0;
+  for (unsigned int i = 0; i < input_mc->treedepth; i++) {
+    uint32_t current;
+    CHECK_ERR(get_code_at_morton_code(input_mc, i, &current));
+    uint32_t current_pow = input_mc->treedepth - 1 - i;
+    switch (current) {
+    case 3:
+      col += 1 << current_pow;
+      row += 1 << current_pow;
+      break;
+    case 2:
+      col += 1 << current_pow;
+      break;
+    case 1:
+      row += 1 << current_pow;
+      break;
+    case 0:
+      break;
+    default:
+      return INVALID_MC_VALUE;
+      break;
+    }
+  }
+  result->col = col;
+  result->row = row;
+
   return SUCCESS_ECODE;
 }

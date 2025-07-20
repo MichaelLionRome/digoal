@@ -122,6 +122,9 @@ int insert_point_at(struct block *insertion_block,
 
 int reset_vector_to_size(struct vector *v, int size);
 
+int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
+                          struct vector *result, struct child_result *cresult);
+
 /* END PRIVATE FUNCTIONS  PROTOTYPES */
 
 /* PRIVATE FUNCTIONS IMPLEMENTATIONS */
@@ -755,6 +758,40 @@ int reset_vector_to_size(struct vector *v, int size) {
   return SUCCESS_ECODE;
 }
 
+int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
+                          struct vector *result, struct child_result *cresult) {
+  uint32_t real_depth =
+      cresult->resulting_relative_depth + input_block->block_depth;
+
+  for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
+    if (real_depth == input_block->tree_depth - 1) {
+      int does_child_exist;
+      child_exists(input_block->bt, cresult->resulting_node_idx, child_pos,
+                   &does_child_exist);
+      if (does_child_exist) {
+        struct pair2dl pair;
+        add_element_morton_code(&qs->mc, real_depth, child_pos);
+        convert_morton_code_to_coordinates(&qs->mc, &pair);
+        insert_element(result, (char *)&pair);
+      }
+      continue;
+    }
+
+    struct child_result cr;
+    int err = child(input_block, cresult->resulting_node_idx, child_pos,
+                    cresult->resulting_relative_depth, &cr, qs);
+
+    if (err == DOES_NOT_EXIST_CHILD_ERR) {
+      continue;
+    } else if (err != 0) {
+      return err;
+    }
+    add_element_morton_code(&qs->mc, real_depth, child_pos);
+    naive_scan_points_rec(cr.resulting_block, qs, result, &cr);
+  }
+
+  return SUCCESS_ECODE;
+}
 /* END PRIVATE FUNCTIONS IMPLEMENTATIONS */
 
 /* PUBLIC FUNCTIONS */
@@ -782,6 +819,28 @@ int insert_point(struct block *input_block, ulong col, ulong row,
   struct block *insertion_block =
       il.parent_node.last_child_result_reached.resulting_block;
   return insert_point_at(insertion_block, &il, qs);
+}
+
+static inline int clean_child_result(struct child_result *cresult) {
+  cresult->resulting_block = NULL;
+  cresult->resulting_node_idx = 0;
+  cresult->resulting_relative_depth = 0;
+  cresult->is_leaf_result = FALSE;
+  cresult->exists = FALSE;
+  cresult->check_frontier = FALSE;
+  cresult->went_frontier = FALSE;
+  cresult->previous_block = NULL;
+  cresult->previous_preorder = 0;
+  cresult->previous_to_current_index = 0;
+  cresult->previous_depth = 0;
+  return SUCCESS_ECODE;
+}
+
+int naive_scan_points(struct block *input_block, struct queries_state *qs,
+                      struct vector *result) {
+  struct child_result cresult;
+  clean_child_result(&cresult);
+  return naive_scan_points_rec(input_block, qs, result, &cresult);
 }
 
 struct block *create_block(uint32_t tree_depth) {

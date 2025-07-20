@@ -96,5 +96,11 @@ set(TEST_FILES
 
 add_executable(block_test block_test.cpp block_wrapper.hpp)
 add_executable(block_leak_test block_leak_test.cpp block_wrapper.hpp)
+add_executable(morton_code_test morton_code_test.cpp)
+add_executable(block_usages_test block_usages_test.cpp)
+
+
 target_link_libraries(block_test K2TreeElements gtest_main vector circular_queue bitvector)
 target_link_libraries(block_leak_test K2TreeElements vector circular_queue bitvector)
+target_link_libraries(morton_code_test K2TreeElements vector circular_queue bitvector gtest_main)
+target_link_libraries(block_usages_test K2TreeElements vector circular_queue bitvector gtest_main)

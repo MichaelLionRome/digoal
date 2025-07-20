@@ -23,6 +23,7 @@
 #define RESET_SIZE_HIGHER_THAN_CAPACITY 9
 #define K2TREE_ERR_NULL_BITVECTOR 10
 #define K2TREE_ERR_NULL_BITVECTOR_CONTAINER 11
+#define INVALID_MC_VALUE 12
 
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \
@@ -70,5 +71,10 @@ typedef unsigned long ulong;
 
 DEFINE_READ_ELEMENT_PROTOTYPE(uint, uint32_t)
 DEFINE_READ_ELEMENT_PROTOTYPE(block, struct block *)
+
+struct pair2dl {
+  long col;
+  long row;
+};
 
 #endif /* _K2TREE_DEFINITIONS_H_ */

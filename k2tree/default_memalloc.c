@@ -6,6 +6,9 @@
 #include "block-topology/block_topology.h"
 #include "block/block.h"
 
+#include <bitvector.h>
+#include <vector.h>
+
 #include "definitions.h"
 
 struct block *k2tree_alloc_block(void) {

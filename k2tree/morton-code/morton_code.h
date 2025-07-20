@@ -21,4 +21,6 @@ int leaf_child_morton_code(struct morton_code *mc, uint32_t *result);
 int convert_coordinates_to_morton_code(ulong col, ulong row, uint32_t treedepth,
                                        struct morton_code *result);
 
+int convert_morton_code_to_coordinates(struct morton_code *input_mc,
+                                       struct pair2dl *result);
 #endif /* _MORTON_CODE_H */

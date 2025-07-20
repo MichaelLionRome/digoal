@@ -1,5 +1,5 @@
 #ifndef _MEMALLOC_H_
-#define _MEMEALLOC_H
+#define _MEMALLOC_H_
 
 #include <stdint.h>
 
