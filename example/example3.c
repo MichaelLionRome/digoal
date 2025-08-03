@@ -13,20 +13,24 @@ int main(void) {
   struct queries_state qs;
   init_queries_state(&qs, treedepth);
 
-  struct pair2dl array_pairs[] = {{0, 0},  {3, 3},   {15, 3},
-                                  {3, 15}, {30, 31}, {31, 8}};
+  struct vector input_pairs;
+  init_vector_with_capacity(&input_pairs, sizeof(struct pair2dl), 1000);
+  for (int i = 0; i < 1000; i++) {
+    struct pair2dl ins = {i, i};
+    insert_element(&input_pairs, (char *)&ins);
+  }
 
   // struct pair2dl array_pairs[] = {{0, 0}, {3, 3}};
-  int qty = sizeof(array_pairs) / sizeof(struct pair2dl);
+  int qty = input_pairs.nof_items;
   for (int i = 0; i < qty; i++) {
-    printf("inserting %lu, %lu\n", array_pairs[i].col, array_pairs[i].row);
-    insert_point(root_block, array_pairs[i].col, array_pairs[i].row, &qs);
+    struct pair2dl *current;
+    get_element_at(&input_pairs, i, (char **)&current);
+    printf("inserting %lu, %lu\n", current->col, current->row);
+    insert_point(root_block, current->col, current->row, &qs);
     int does_have_point;
-    has_point(root_block, array_pairs[i].col, array_pairs[i].row, &qs,
-              &does_have_point);
+    has_point(root_block, current->col, current->row, &qs, &does_have_point);
     if (!does_have_point) {
-      printf("doesn't have point (%lu, %lu)\n", array_pairs[i].col,
-             array_pairs[i].row);
+      printf("doesn't have point (%lu, %lu)\n", current->col, current->row);
       goto clean_up;
     }
   }
