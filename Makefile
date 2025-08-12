@@ -32,7 +32,9 @@ RUNNABLE_DIRS := example
 
 COMPR_DIR=k2tree-dyn-compr
 
-all: fetch_deps format modules merge-libs merge-libs-noalloc  runnables
+build: fetch_deps modules merge-libs merge-libs-noalloc  runnables
+
+all: format build
 
 all-shared: fetch_deps shared-modules merge-libs-shared merge-libs-noalloc-shared
 
