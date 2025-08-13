@@ -1,13 +1,13 @@
 #include <stdlib.h>
 
-#include "memalloc.h"
-
-#include "block-frontier/block_frontier.h"
-#include "block-topology/block_topology.h"
-#include "block/block.h"
-
 #include <bitvector.h>
 #include <vector.h>
+
+#include "memalloc.h"
+
+#include "block_frontier.h"
+#include "block_topology.h"
+#include "block.h"
 
 #include "definitions.h"
 

@@ -2,10 +2,8 @@ CURRENT_PATH=$(shell pwd)
 BITVECTOR_INCLUDE=${CURRENT_PATH}/lib/c-bitvector/include
 VECTOR_INCLUDE=${CURRENT_PATH}/lib/c-vector/include
 CIRCULAR_QUEUE_INCLUDE=${CURRENT_PATH}/lib/c-queue/include
-K2TREE_INCLUDES=${CURRENT_PATH}/k2tree
+K2TREE_INCLUDES=${CURRENT_PATH}/include
 
-#BIN_DEPENDENCIES=-L${CURRENT_PATH}/bin -L${CURRENT_PATH}/lib/c-bitvector/bin -L${CURRENT_PATH}/lib/c-queue/bin -L${CURRENT_PATH}/lib/c-vector/bin 
-#BIN_LINKS=-lk2tree -lbitvector -lcircular_queue -lvector -lm
 BIN_DEPENDENCIES=-L${CURRENT_PATH}/bin
 BIN_LINKS=-lk2tree_merged -lm
 BIN=${BIN_DEPENDENCIES} ${BIN_LINKS}
@@ -27,7 +25,7 @@ SHARED_MAKE_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${SHARED_CFLAGS}" BIN="${BIN}"
 
 DEBUG_FLAGS=INCLUDES="${INCLUDES}" CFLAGS="${DEBFLAGS}" BIN="${BIN}"
 
-MODULES_DIRS := k2tree
+MODULES_DIRS := src
 RUNNABLE_DIRS := example
 
 COMPR_DIR=k2tree-dyn-compr

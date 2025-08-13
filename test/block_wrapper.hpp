@@ -6,10 +6,10 @@
 #define K2TREEELEMENTSTEST_BLOCK_WRAPPER_HPP
 
 extern "C" {
-#include "block/block.h"
-#include "block-topology/block_topology.h"
-#include "block-frontier/block_frontier.h"
-#include "block/queries_state.h"
+#include <block.h>
+#include <block_topology.h>
+#include <block_frontier.h>
+#include <queries_state.h>
 }
 
 #include <stdexcept>

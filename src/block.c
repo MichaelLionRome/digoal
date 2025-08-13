@@ -5,10 +5,10 @@
 #include <circular_queue.h>
 #include <vector.h>
 
-#include "block-frontier/block_frontier.h"
+#include "block_frontier.h"
 #include "block.h"
 #include "definitions.h"
-#include "morton-code/morton_code.h"
+#include "morton_code.h"
 
 #include "custom_bv_handling.h"
 #include "memalloc.h"

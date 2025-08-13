@@ -1,5 +1,5 @@
-#include <block/block.h>
-#include <block/queries_state.h>
+#include <block.h>
+#include <queries_state.h>
 
 #include <stdio.h>
 

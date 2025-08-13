@@ -5,7 +5,7 @@
 #include <circular_queue.h>
 #include <vector.h>
 
-#include "morton-code/morton_code.h"
+#include "morton_code.h"
 
 struct sequential_scan_result {
   uint32_t child_preorder;

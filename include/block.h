@@ -5,8 +5,8 @@
 
 #include <vector.h>
 
-#include "block-frontier/block_frontier.h"
-#include "block-topology/block_topology.h"
+#include "block_frontier.h"
+#include "block_topology.h"
 
 #include "queries_state.h"
 

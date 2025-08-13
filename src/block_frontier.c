@@ -2,7 +2,7 @@
 
 #include <vector.h>
 
-#include "block/block.h"
+#include "block.h"
 #include "block_frontier.h"
 
 #include "definitions.h"

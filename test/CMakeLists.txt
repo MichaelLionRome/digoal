@@ -17,36 +17,31 @@ set(CIRCULAR_QUEUE_PATH ${ROOT_PATH}/lib/c-queue)
 set(BITVECTOR_INCLUDE ${BITVECTOR_PATH}/include)
 set(VECTOR_INCLUDE ${VECTOR_PATH}/include)
 set(CIRCULAR_QUEUE_INCLUDE ${CIRCULAR_QUEUE_PATH}/include)
-set(K2TREE_INCLUDES ${ROOT_PATH}/k2tree)
+set(K2TREE_INCLUDES ${ROOT_PATH}/include)
 
-include_directories(../k2tree ../k2tree/block ../k2tree/block-frontier ../k2tree/block-topology ../k2tree/morton-code)
 include_directories(${BITVECTOR_INCLUDE} ${VECTOR_INCLUDE} ${CIRCULAR_QUEUE_INCLUDE} ${K2TREE_INCLUDES})
 link_directories(${BITVECTOR_PATH}/bin ${VECTOR_PATH}/bin ${CIRCULAR_QUEUE_PATH}/bin)
 
-set(K2TreePath ../k2tree)
-set(BlockPath ${K2TreePath}/block)
-set(BlockFrontierPath ${K2TreePath}/block-frontier)
-set(BlockTopologyPath ${K2TreePath}/block-topology)
-set(MortonCodePath ${K2TreePath}/morton-code)
+set(K2TreePath ../src)
 
-set(INCLUDES_ELEMENTS ${BlockPath}/block.h 
- ${BlockPath}/queries_state.h
- ${BlockFrontierPath}/block_frontier.h
- ${BlockTopologyPath}/block_topology.h
- ${MortonCodePath}/morton_code.h
+set(INCLUDES_ELEMENTS ${K2TREE_INCLUDES}/block.h 
+ ${K2TREE_INCLUDES}/queries_state.h
+ ${K2TREE_INCLUDES}/block_frontier.h
+ ${K2TREE_INCLUDES}/block_topology.h
+ ${K2TREE_INCLUDES}/morton_code.h
  ${K2TREE_INCLUDES}/definitions.h
  ${K2TREE_INCLUDES}/memalloc.h
  ${K2TREE_INCLUDES}/custom_bv_handling.h
  )
 
-set(SOURCES_ELEMENTS ${BlockPath}/block.c
- ${BlockPath}/queries_state.c
- ${BlockFrontierPath}/block_frontier.c
- ${BlockTopologyPath}/block_topology.c
- ${MortonCodePath}/morton_code.c
- ${K2TREE_INCLUDES}/definitions.c
- ${K2TREE_INCLUDES}/default_memalloc.c
- ${K2TREE_INCLUDES}/custom_bv_handling.c
+set(SOURCES_ELEMENTS ${K2TreePath}/block.c
+ ${K2TreePath}/queries_state.c
+ ${K2TreePath}/block_frontier.c
+ ${K2TreePath}/block_topology.c
+ ${K2TreePath}/morton_code.c
+ ${K2TreePath}/definitions.c
+ ${K2TreePath}/default_memalloc.c
+ ${K2TreePath}/custom_bv_handling.c
  )
 
 add_library(K2TreeElements ${SOURCES_ELEMENTS})
