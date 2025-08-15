@@ -96,7 +96,7 @@ int resize_bv_to(struct bitvector **bv_ptr, uint32_t new_size) {
            new_container_size * sizeof(uint32_t));
   }
 
-  _SAFE_OP_K2(clean_bitvector(bv));
+  _SAFE_OP_K2(custom_clean_bitvector(bv));
   k2tree_free_bitvector(bv);
   *bv_ptr = new_bv;
 
@@ -360,7 +360,7 @@ struct block_topology *create_block_topology(void) {
 }
 
 int free_block_topology(struct block_topology *bt) {
-  _SAFE_OP_K2(clean_bitvector(bt->bv));
+  _SAFE_OP_K2(custom_clean_bitvector(bt->bv));
   k2tree_free_bitvector(bt->bv);
   bt->bv = NULL;
   return SUCCESS_ECODE;
