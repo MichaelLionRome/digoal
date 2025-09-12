@@ -24,6 +24,7 @@ int custom_init_bitvector(struct bitvector *input_bitvector,
       k2tree_alloc_u32array(input_bitvector->container_size);
   input_bitvector->container = container_alloc.data;
   input_bitvector->size_in_bits = size_in_bits_;
+  input_bitvector->alloc_tag = (uint32_t)container_alloc.size;
 
   return SUCCESS_ECODE;
 }
@@ -36,7 +37,7 @@ int custom_clean_bitvector(struct bitvector *input_bitvector) {
 
   struct u32array_alloc to_free;
   to_free.data = input_bitvector->container;
-  to_free.size = input_bitvector->container_size;
+  to_free.size = input_bitvector->alloc_tag;
   k2tree_free_u32array(to_free);
   input_bitvector->container = NULL;
 

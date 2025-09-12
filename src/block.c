@@ -5,8 +5,8 @@
 #include <circular_queue.h>
 #include <vector.h>
 
-#include "block_frontier.h"
 #include "block.h"
+#include "block_frontier.h"
 #include "definitions.h"
 #include "morton_code.h"
 
