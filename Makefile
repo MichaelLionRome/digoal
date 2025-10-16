@@ -32,7 +32,7 @@ COMPR_DIR=k2tree-dyn-compr
 
 build: fetch_deps modules merge-libs merge-libs-noalloc  runnables
 
-debug-build: fetch_deps debug merge-libs merge-libs-noalloc  runnables
+debug-build: fetch_deps debug merge-libs merge-libs-noalloc  runnables-debug
 
 all: format build
 

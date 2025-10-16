@@ -18,7 +18,7 @@ struct block {
   uint32_t max_node_count;
 
   struct block *root;
-  uint32_t block_index;
+  uint64_t block_index;
 };
 
 int has_point(struct block *input_block, ulong col, ulong row,
