@@ -16,7 +16,7 @@
 struct child_result {
   struct block *resulting_block;
   uint32_t resulting_node_idx;
-  uint32_t resulting_relative_depth;
+  TREE_DEPTH_T resulting_relative_depth;
   int is_leaf_result;
   int exists;
 
@@ -29,20 +29,20 @@ struct child_result {
   struct block *previous_block;
   uint32_t previous_preorder;
   uint32_t previous_to_current_index;
-  uint32_t previous_depth;
+  TREE_DEPTH_T previous_depth;
 };
 
 struct point_search_result {
   struct child_result last_child_result_reached;
-  uint32_t depth_reached;
+  TREE_DEPTH_T depth_reached;
   int point_exists;
-  uint32_t treedepth;
+  TREE_DEPTH_T treedepth;
 };
 
 struct insertion_location {
   uint32_t insertion_index;
   struct point_search_result parent_node;
-  uint32_t remaining_depth;
+  TREE_DEPTH_T remaining_depth;
 };
 
 struct split_location {
@@ -65,7 +65,7 @@ static inline uint32_t get_subtree_skipping_qty(struct block *b,
 
 static inline int mark_subtree_size(struct sequential_scan_result *sc_result,
                                     uint32_t node_index,
-                                    uint32_t node_relative_depth,
+                                    TREE_DEPTH_T node_relative_depth,
                                     uint32_t subtree_size) {
   _SAFE_OP_K2(set_element_at(sc_result->subtrees_count_map,
                              (char *)&subtree_size, node_index));
@@ -86,7 +86,7 @@ static inline int block_has_enough_space(struct block *input_block,
 int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
                           uint32_t subtrees_to_skip,
                           uint32_t *frontier_traversal_idx,
-                          uint32_t input_node_relative_depth,
+                          TREE_DEPTH_T input_node_relative_depth,
                           struct queries_state *qs);
 
 /**
@@ -95,7 +95,7 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
   DOES_NOT_EXIST_CHILD_ERR: child doesn't exist and output variables don't hold
 **/
 int child(struct block *input_block, uint32_t input_node_idx,
-          uint32_t requested_child_position, uint32_t input_node_relative_depth,
+          uint32_t requested_child_position, TREE_DEPTH_T input_node_relative_depth,
           struct child_result *result, struct queries_state *qs);
 
 int find_point(struct block *input_block, struct queries_state *qs,
@@ -112,7 +112,7 @@ int make_room(struct block *input_block, struct insertion_location *il);
 int insert_point_mc(struct block *input_block, struct morton_code *mc,
                     struct insertion_location *il);
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
-                   uint32_t relative_depth, struct block **new_block);
+                   TREE_DEPTH_T relative_depth, struct block **new_block);
 int split_block(struct block *input_block, struct queries_state *qs);
 int reset_sequential_scan_child(struct queries_state *qs,
                                 struct block *target_block);
@@ -130,9 +130,9 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
 /* PRIVATE FUNCTIONS IMPLEMENTATIONS */
 
 int child(struct block *input_block, uint32_t input_node_idx,
-          uint32_t requested_child_position, uint32_t input_node_relative_depth,
+          uint32_t requested_child_position, TREE_DEPTH_T input_node_relative_depth,
           struct child_result *result, struct queries_state *qs) {
-  uint32_t tree_depth = input_block->tree_depth;
+  TREE_DEPTH_T tree_depth = input_block->tree_depth;
   if (input_block->block_depth + input_node_relative_depth + 1 == tree_depth) {
     /* Create leaf result */
     result->resulting_block = input_block;
@@ -216,7 +216,7 @@ int reset_sequential_scan_child(struct queries_state *qs,
 int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
                           uint32_t subtrees_to_skip,
                           uint32_t *frontier_traversal_idx,
-                          uint32_t input_node_relative_depth,
+                          TREE_DEPTH_T input_node_relative_depth,
                           struct queries_state *qs) {
 
   reset_sequential_scan_child(qs, input_block);
@@ -241,8 +241,8 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
   }
 
   uint32_t current_node_index = input_node_idx;
-  uint32_t depth = input_node_relative_depth;
-  uint32_t real_depth = depth + input_block->block_depth;
+  TREE_DEPTH_T depth = input_node_relative_depth;
+  TREE_DEPTH_T real_depth = depth + input_block->block_depth;
 
   int is_empty;
   _SAFE_OP_K2(empty_circular_queue(&qs->not_yet_traversed, &is_empty));
@@ -570,7 +570,7 @@ int insert_point_mc(struct block *input_block, struct morton_code *mc,
 }
 
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
-                   uint32_t relative_depth, struct block **new_block) {
+                   TREE_DEPTH_T relative_depth, struct block **new_block) {
   struct block *created_block = k2tree_alloc_block();
 
   /* initialize block topology */
@@ -760,7 +760,7 @@ int reset_vector_to_size(struct vector *v, int size) {
 
 int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
                           struct vector *result, struct child_result *cresult) {
-  uint32_t real_depth =
+  TREE_DEPTH_T real_depth =
       cresult->resulting_relative_depth + input_block->block_depth;
 
   for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
@@ -843,7 +843,7 @@ int naive_scan_points(struct block *input_block, struct queries_state *qs,
   return naive_scan_points_rec(input_block, qs, result, &cresult);
 }
 
-struct block *create_block(uint32_t tree_depth) {
+struct block *create_block(TREE_DEPTH_T tree_depth) {
   struct block *new_block = k2tree_alloc_block();
   new_block->bt = create_block_topology();
   new_block->bf = create_block_frontier();

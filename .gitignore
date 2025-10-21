@@ -4,3 +4,4 @@ build/
 test/.idea/
 test/.build/
 test/cmake-build-debug/
+bin/

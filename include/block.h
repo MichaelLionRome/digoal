@@ -10,15 +10,19 @@
 
 #include "queries_state.h"
 
+typedef uint8_t TREE_DEPTH_T;
+typedef uint16_t MAX_NODE_COUNT_T;
+typedef uint32_t BLOCK_INDEX_T;
+
 struct block {
   struct block_topology *bt;
   struct block_frontier *bf;
-  uint32_t block_depth;
-  uint32_t tree_depth;
-  uint32_t max_node_count;
+  TREE_DEPTH_T block_depth;
+  TREE_DEPTH_T tree_depth;
+  MAX_NODE_COUNT_T max_node_count;
 
   struct block *root;
-  uint64_t block_index;
+  BLOCK_INDEX_T block_index;
 };
 
 int has_point(struct block *input_block, ulong col, ulong row,
@@ -29,7 +33,7 @@ int insert_point(struct block *input_block, ulong col, ulong row,
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
                       struct vector *result);
 
-struct block *create_block(uint32_t tree_depth);
+struct block *create_block(TREE_DEPTH_T tree_depth);
 int free_rec_block(struct block *input_block);
 int free_block(struct block *input_block);
 

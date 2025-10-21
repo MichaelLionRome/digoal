@@ -63,7 +63,7 @@
 typedef unsigned long ulong;
 
 #ifndef MAX_NODES_IN_BLOCK
-#define MAX_NODES_IN_BLOCK 512
+#define MAX_NODES_IN_BLOCK 1024
 #endif
 #ifndef STARTING_BLOCK_CAPACITY
 #define STARTING_BLOCK_CAPACITY 64

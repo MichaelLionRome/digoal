@@ -29,7 +29,7 @@ else
     cd c-bitvector
 fi
 
-make
+make build-very-light
 cd ..
 # End c-bitvector
 
