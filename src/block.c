@@ -13,6 +13,10 @@
 #include "custom_bv_handling.h"
 #include "memalloc.h"
 
+/* Definitions to simplify reporting */
+#define REPORT_COLUMN 0
+#define REPORT_ROW 1
+
 struct child_result {
   struct block *resulting_block;
   uint32_t resulting_node_idx;
@@ -95,8 +99,9 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
   DOES_NOT_EXIST_CHILD_ERR: child doesn't exist and output variables don't hold
 **/
 int child(struct block *input_block, uint32_t input_node_idx,
-          uint32_t requested_child_position, TREE_DEPTH_T input_node_relative_depth,
-          struct child_result *result, struct queries_state *qs);
+          uint32_t requested_child_position,
+          TREE_DEPTH_T input_node_relative_depth, struct child_result *result,
+          struct queries_state *qs);
 
 int find_point(struct block *input_block, struct queries_state *qs,
                struct point_search_result *psr);
@@ -125,13 +130,18 @@ int reset_vector_to_size(struct vector *v, int size);
 int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
                           struct vector *result, struct child_result *cresult);
 
+int report_rec(ulong current_col, struct queries_state *qs,
+               struct vector *result, struct child_result *current_cr,
+               int which_report);
+
 /* END PRIVATE FUNCTIONS  PROTOTYPES */
 
 /* PRIVATE FUNCTIONS IMPLEMENTATIONS */
 
 int child(struct block *input_block, uint32_t input_node_idx,
-          uint32_t requested_child_position, TREE_DEPTH_T input_node_relative_depth,
-          struct child_result *result, struct queries_state *qs) {
+          uint32_t requested_child_position,
+          TREE_DEPTH_T input_node_relative_depth, struct child_result *result,
+          struct queries_state *qs) {
   TREE_DEPTH_T tree_depth = input_block->tree_depth;
   if (input_block->block_depth + input_node_relative_depth + 1 == tree_depth) {
     /* Create leaf result */
@@ -792,6 +802,86 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
 
   return SUCCESS_ECODE;
 }
+
+/* definitions to simplify reporting */
+#define REPORT_FIRST_HALF(which_report, child_pos)                             \
+  (((which_report) == REPORT_COLUMN && (child_pos) < 2) ||                     \
+   ((which_report) == REPORT_ROW && (child_pos) % 2 == 0))
+
+#define REPORT_SECOND_HALF(which_report, child_pos)                            \
+  (((which_report) == REPORT_COLUMN && (child_pos) >= 2) ||                    \
+   ((which_report) == REPORT_ROW && (child_pos) % 2 == 1))
+
+#define REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,      \
+                                  child_pos)                                   \
+  (((current_col) < (half_length) &&                                           \
+    REPORT_FIRST_HALF(which_report, child_pos)) ||                             \
+   ((current_col) >= (half_length) &&                                          \
+    REPORT_SECOND_HALF(which_report, child_pos)))
+
+int report_rec(ulong current_col, struct queries_state *qs,
+               struct vector *result, struct child_result *current_cr,
+               int which_report) {
+  struct block *current_block = current_cr->resulting_block;
+  TREE_DEPTH_T tree_depth = current_block->tree_depth;
+  TREE_DEPTH_T relative_depth = current_cr->resulting_relative_depth;
+  TREE_DEPTH_T real_depth = relative_depth + current_block->block_depth;
+  if (real_depth + 1 == tree_depth) {
+    // report the coordinate, because we have reached a leaf
+    ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
+    ulong half_length = side_length >> 1;
+    for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
+      if (!REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,
+                                     child_pos)) {
+        continue;
+      }
+      int does_child_exist;
+      child_exists(current_block->bt, current_cr->resulting_node_idx, child_pos,
+                   &does_child_exist);
+      if (does_child_exist) {
+        struct pair2dl pair;
+        add_element_morton_code(&qs->mc, real_depth, child_pos);
+        convert_morton_code_to_coordinates(&qs->mc, &pair);
+        insert_element(result, (char *)&pair);
+      }
+    }
+    return SUCCESS_ECODE;
+  }
+
+  ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
+  ulong half_length = side_length >> 1;
+
+  uint32_t current_node_index = current_cr->resulting_node_idx;
+
+  // This for-loop is a trick to avoid a lot of code duplication.
+  // Essentially, when which_report = REPORT_COLUMN, look for the 0th and 1st
+  // child if current_col < half_length or for the 2nd and 3rd child if
+  // current_col >= half_length. For REPORT_ROW it's but instead of the left and
+  // right side of the k2tree matrix, use the top and bottom sides.
+  struct child_result next_cr;
+  for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
+    if (!REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,
+                                   child_pos)) {
+      continue;
+    }
+
+    // We need to restore next_cr because each time it will be polluted by child
+    next_cr = *current_cr;
+    CHECK_CHILD_ERR(child(current_block, current_node_index, child_pos,
+                          relative_depth, &next_cr, qs));
+    if (next_cr.exists) {
+      // We don't need to clean up the morton code because we are traversing in
+      // preorder-dfs and always writing in a random access fashion
+      CHECK_ERR(add_element_morton_code(&qs->mc, real_depth, child_pos));
+      // We take modulo here because the search space is reduced by half
+      CHECK_ERR(report_rec(current_col % half_length, qs, result, &next_cr,
+                           which_report));
+    }
+  }
+
+  return SUCCESS_ECODE;
+}
+
 /* END PRIVATE FUNCTIONS IMPLEMENTATIONS */
 
 /* PUBLIC FUNCTIONS */
@@ -841,6 +931,32 @@ int naive_scan_points(struct block *input_block, struct queries_state *qs,
   struct child_result cresult;
   clean_child_result(&cresult);
   return naive_scan_points_rec(input_block, qs, result, &cresult);
+}
+
+int report_column(struct block *input_block, ulong col,
+                  struct queries_state *qs, struct vector *result) {
+  struct child_result current_cr;
+  current_cr.resulting_node_idx = 0;
+  current_cr.resulting_block = input_block;
+  current_cr.resulting_relative_depth = 0;
+  current_cr.is_leaf_result = FALSE;
+  current_cr.previous_block = NULL;
+  current_cr.check_frontier = FALSE;
+  current_cr.went_frontier = FALSE;
+  return report_rec(col, qs, result, &current_cr, REPORT_COLUMN);
+}
+
+int report_row(struct block *input_block, ulong row, struct queries_state *qs,
+               struct vector *result) {
+  struct child_result current_cr;
+  current_cr.resulting_node_idx = 0;
+  current_cr.resulting_block = input_block;
+  current_cr.resulting_relative_depth = 0;
+  current_cr.is_leaf_result = FALSE;
+  current_cr.previous_block = NULL;
+  current_cr.check_frontier = FALSE;
+  current_cr.went_frontier = FALSE;
+  return report_rec(row, qs, result, &current_cr, REPORT_ROW);
 }
 
 struct block *create_block(TREE_DEPTH_T tree_depth) {

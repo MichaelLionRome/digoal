@@ -18,7 +18,8 @@ int init_block_topology(struct block_topology *bt, struct bitvector *bv,
                         NODES_COUNT_T nodes_count);
 int child_exists(struct block_topology *bt, NODES_COUNT_T input_node_idx,
                  uint32_t requested_child_position, int *result);
-int read_node(struct block_topology *bt, NODES_COUNT_T node_idx, uint32_t *result);
+int read_node(struct block_topology *bt, NODES_COUNT_T node_idx,
+              uint32_t *result);
 int count_children(struct block_topology *bt, NODES_COUNT_T node_idx,
                    uint32_t *result);
 int enlarge_block_size_to(struct block_topology *bt, uint32_t new_block_size);

@@ -33,6 +33,11 @@ int insert_point(struct block *input_block, ulong col, ulong row,
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
                       struct vector *result);
 
+int report_column(struct block *input_block, ulong col,
+                  struct queries_state *qs, struct vector *result);
+int report_row(struct block *input_block, ulong row, struct queries_state *qs,
+               struct vector *result);
+
 struct block *create_block(TREE_DEPTH_T tree_depth);
 int free_rec_block(struct block *input_block);
 int free_block(struct block *input_block);

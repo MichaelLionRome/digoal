@@ -93,6 +93,8 @@ test-build:
 
 test-all: test-build
 	./test/build/block_test
+	./test/build/block_leak_test
+	./test/build/block_usages_test
 
 memcheck:
 	valgrind --leak-check=full ./test/build/block_leak_test

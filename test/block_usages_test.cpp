@@ -86,3 +86,89 @@ TEST(usages, naive_scan_1){
     printf("No errors while freeing data\n");
   }
 }
+
+
+bool has_pair(struct vector * v, ulong col, ulong row){
+  for(int i = 0; i < v->nof_items; i++){
+    struct pair2dl *pair;
+    get_element_at(v, i, (char **)&pair);
+    if(col == pair->col && row == pair->row){
+      return true;
+    }
+  }
+  return false;
+}
+
+
+TEST(usages, report_column_test_1){
+  int err_code;
+  uint32_t treedepth = 5;
+  struct block *root_block = create_block(treedepth);
+
+  struct queries_state qs;
+  init_queries_state(&qs, treedepth);
+
+
+  std::vector<struct pair2dl> init_elements = {{0, 0},  {3, 3},   {15, 3},
+                                  {3, 15}, {30, 31}, {31, 8}, {3, 30}, {3, 2}, {3,29}};
+
+  int qty = init_elements.size();
+  for (int i = 0; i < qty; i++) {
+    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
+  }
+
+
+  struct vector result;
+  init_vector_with_capacity(&result, sizeof(struct pair2dl), 10);
+
+  err_code = report_column(root_block, 3, &qs, &result);
+  if (err_code) {
+    exit(err_code);
+  }
+
+  ASSERT_TRUE(has_pair(&result, 3, 3)) << "Cant find pair 3,3";
+  ASSERT_TRUE(has_pair(&result, 3, 15)) << "Cant find pair 3,15";
+  ASSERT_TRUE(has_pair(&result, 3, 30)) << "Cant find pair 3,30";
+  ASSERT_TRUE(has_pair(&result, 3, 2)) << "Cant find pair 3,2";
+  ASSERT_TRUE(has_pair(&result, 3, 29)) << "Cant find pair 3,29";
+
+  ASSERT_EQ(result.nof_items, 5) << "Does not have 5 elements";
+
+}
+
+
+
+TEST(usages, report_row_test_1){
+  int err_code;
+  uint32_t treedepth = 5;
+  struct block *root_block = create_block(treedepth);
+
+  struct queries_state qs;
+  init_queries_state(&qs, treedepth);
+
+
+  std::vector<struct pair2dl> init_elements = {{0, 0},  {3, 3},   {15, 3},
+                                               {3, 15}, {30, 31}, {31, 8}, {3, 30}, {3, 2}, {3,29}, {8, 15}, {9, 15}, {15, 15}};
+
+  int qty = init_elements.size();
+  for (int i = 0; i < qty; i++) {
+    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
+  }
+
+
+  struct vector result;
+  init_vector_with_capacity(&result, sizeof(struct pair2dl), 10);
+
+  err_code = report_row(root_block, 15, &qs, &result);
+  if (err_code) {
+    exit(err_code);
+  }
+
+  ASSERT_TRUE(has_pair(&result, 3, 15)) << "Cant find pair 3,15";
+  ASSERT_TRUE(has_pair(&result, 8, 15)) << "Cant find pair 8,15";
+  ASSERT_TRUE(has_pair(&result, 9, 15)) << "Cant find pair 9,15";
+  ASSERT_TRUE(has_pair(&result, 15, 15)) << "Cant find pair 15,15";
+
+  ASSERT_EQ(result.nof_items, 4) << "Does not have 4 elements";
+
+}

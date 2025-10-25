@@ -27,7 +27,14 @@
 
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \
-    if (err) {                                                                 \
+    if (err != SUCCESS_ECODE) {                                                \
+      return (err);                                                            \
+    }                                                                          \
+  } while (0)
+
+#define CHECK_CHILD_ERR(err)                                                   \
+  do {                                                                         \
+    if (err != SUCCESS_ECODE && err != DOES_NOT_EXIST_CHILD_ERR) {             \
       return (err);                                                            \
     }                                                                          \
   } while (0)
