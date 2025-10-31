@@ -113,11 +113,11 @@ int extract_sub_block_frontier(struct block_frontier *bf,
   memmove(bf->frontier.data + from_index_loc * bf->frontier.element_size,
           bf->frontier.data + to_index_loc * bf->frontier.element_size,
           terminal_block_size * bf->frontier.element_size);
-  bf->frontier.nof_items = from_index_loc + terminal_block_size - 1;
+  bf->frontier.nof_items = from_index_loc + terminal_block_size;
   memmove(bf->blocks.data + from_index_loc * bf->blocks.element_size,
           bf->blocks.data + to_index_loc * bf->blocks.element_size,
           terminal_block_size * bf->blocks.element_size);
-  bf->blocks.nof_items = from_index_loc + terminal_block_size - 1;
+  bf->blocks.nof_items = from_index_loc + terminal_block_size;
 
   return SUCCESS_ECODE;
 }
