@@ -1,7 +1,7 @@
 BIN_PATH=../bin
 
 
-all: example1.o example2.o example3.o example4.o
+all: example1.o example2.o example3.o example4.o example5.o
 
 example1.o: example1.c
 	$(CC) ${CFLAGS}  example1.c -o example1.o ${INCLUDES} ${BIN}
@@ -14,6 +14,9 @@ example3.o: example3.c
 
 example4.o: example4.c
 	$(CC) ${CFLAGS}  example4.c -o example4.o ${INCLUDES} ${BIN}
+
+example5.o: example5.c
+	$(CC) ${CFLAGS}  example5.c -o example5.o ${INCLUDES} ${BIN}
 
 clean:
 	rm -f example1.o example2.o example3.o example4.o

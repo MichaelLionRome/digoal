@@ -514,7 +514,7 @@ TEST(block_test, fills_till_depth_6_fail_known_1) {
 }
 
 TEST(block_test, fills_till_depth_6) {
-  return; // Takes too long
+  // return; // Takes too long
   for (uint32_t treedepth = 3; treedepth <= 6; treedepth++) {
     ulong side = 1u << treedepth;
     BlockWrapper b(treedepth, 16);
@@ -558,7 +558,7 @@ TEST(block_test, fills_till_depth_6) {
 }
 
 TEST(block_test, very_deep_1) {
-  return; // Takes too long
+  // return; // Takes too long
   uint32_t treedepth = 10;
   ulong side = 1u << treedepth;
   BlockWrapper b(treedepth, 16);
@@ -576,7 +576,7 @@ TEST(block_test, very_deep_1) {
 }
 
 TEST(block_test, very_deep_diagonal) {
-  return; // Takes too long
+  // return; // Takes too long
   uint32_t treedepth = 20;
   ulong side = 1u << treedepth;
   BlockWrapper b(treedepth, 64);
@@ -602,7 +602,7 @@ TEST(block_test, very_very_deep_1) {
 }
 
 TEST(block_test, random_test_1) {
-  return; // Takes too long
+  // return; // Takes too long
   for (uint32_t treedepth = 3; treedepth <= 5; treedepth++) {
     for (int seed = 0; seed < 10; seed++) {
       srand(seed);

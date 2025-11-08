@@ -69,9 +69,7 @@ int count_children(struct block_topology *bt, NODES_COUNT_T node_idx,
   return SUCCESS_ECODE;
 }
 
-/*
-  TODO: Benchmark and try to implement with preallocated memory
- */
+
 int resize_bv_to(struct bitvector **bv_ptr, uint32_t new_size) {
 
   struct bitvector *bv = *bv_ptr;
@@ -167,9 +165,7 @@ int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
 }
 
 int enlarge_block_size_to(struct block_topology *bt, uint32_t new_block_size) {
-  struct bitvector **bv_ptr = &bt->bv;
-  CHECK_ERR(resize_bv_to(bv_ptr, new_block_size * 4));
-  bt->bv = *bv_ptr; // Check if this step is needed
+  CHECK_ERR(resize_bv_to(&bt->bv, new_block_size * 4));
 
   return SUCCESS_ECODE;
 }
