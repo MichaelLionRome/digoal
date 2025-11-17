@@ -19,5 +19,5 @@ example5.o: example5.c
 	$(CC) ${CFLAGS}  example5.c -o example5.o ${INCLUDES} ${BIN}
 
 clean:
-	rm -f example1.o example2.o example3.o example4.o
+	rm -f example1.o example2.o example3.o example4.o example5.o
 

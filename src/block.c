@@ -537,11 +537,11 @@ int get_previous_siblings_count(struct block *input_block,
 }
 /**
  * @brief Makes room for a suffix-path to be inserted
- * 
- * 
- * @param input_block 
- * @param il 
- * @return int 
+ *
+ *
+ * @param input_block
+ * @param il
+ * @return int
  */
 int make_room(struct block *input_block, struct insertion_location *il) {
   uint32_t next_node_index = il->insertion_index;
@@ -564,12 +564,14 @@ int make_room(struct block *input_block, struct insertion_location *il) {
   return SUCCESS_ECODE;
 }
 /**
- * @brief Inserts a point from the given morton code 'mc' and insertion location 'il'
- * 
+ * @brief Inserts a point from the given morton code 'mc' and insertion location
+ * 'il'
+ *
  * Actually, this completes the path for the point encoded in 'mc' to exist,
  * assuming that a prefix-path exists until the location given in 'il'
- * 
- * @param input_block The block in which the full suffix-path of nodes will be inserted
+ *
+ * @param input_block The block in which the full suffix-path of nodes will be
+ * inserted
  * @param mc Morton code encoding fully the point the be inserted
  * @param il Specifies the exact location where the suffix-path should start
  * @return int Result code
@@ -598,13 +600,13 @@ int insert_point_mc(struct block *input_block, struct morton_code *mc,
 }
 /**
  * @brief Creates a new block that becomes child of the given one
- * 
+ *
  * @param input_block Block from where to extract the new sub-block
  * @param from Starting location in input_block of the new block
  * @param to End location in input_block of the new block (inclusive)
  * @param relative_depth Relative depth of the new block w/r to the tree
  * @param new_block Gives a pointer to the new block
- * @return int Result code 
+ * @return int Result code
  */
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
                    TREE_DEPTH_T relative_depth, struct block **new_block) {
@@ -639,14 +641,14 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
 }
 /**
  * @brief Splits the given block
- * 
+ *
  * The splitting criteria is hardcoded to select the leftmost node
  * which is not already a frontier node and has a subtree of size at least
  * 1/4 of the size of the block
- * 
+ *
  * @param input_block Block to split
  * @param qs Used to gather sizes of each subtree in a single scan
- * @return int 
+ * @return int
  */
 int split_block(struct block *input_block, struct queries_state *qs) {
   /* find split location */
@@ -738,20 +740,21 @@ int split_block(struct block *input_block, struct queries_state *qs) {
 
 /**
  * @brief Inserts a point encoded in qs->mc to the tree
- * 
- * It's intended used is private and should be used through insert_point function
- * 
+ *
+ * It's intended used is private and should be used through insert_point
+ * function
+ *
  * First checks if the block has enough space, if not, first check if the block
- * can be expanded to a size lesser than the maximum permitted, if that is the case
- * expand and then retry inserting (recursively)
- * 
- * If the next possible size is greater than the maximum permitted, splits the block
- * and retry (recursively)
- * 
+ * can be expanded to a size lesser than the maximum permitted, if that is the
+ * case expand and then retry inserting (recursively)
+ *
+ * If the next possible size is greater than the maximum permitted, splits the
+ * block and retry (recursively)
+ *
  * @param insertion_block  The block in which the point would be inserted
  * @param il Describes the location at where the point would be inserted
  * @param qs Describes the point to be inserted and auxilliary data
- * @return int 
+ * @return int
  */
 int insert_point_at(struct block *insertion_block,
                     struct insertion_location *il, struct queries_state *qs) {
@@ -830,9 +833,9 @@ int reset_vector_to_size(struct vector *v, int size) {
 
 /**
  * @brief Recursive function to scan for all the points in the tree
- * 
+ *
  * The scan is perfommed in a preorder dfs fashion
- * 
+ *
  * @param input_block Current block to scan recursively
  * @param qs queries state struct
  * @param result Vector storing the points in struct pair2dl each
@@ -892,14 +895,17 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
 
 /**
  * @brief Recursive function to scan for points in a row or column
- * 
- * 
- * 
+ *
+ *
+ *
  * @param current_col Column in the current search space
- * @param qs Used to store partial morton code and create coordinate from it when reaching a leaf
+ * @param qs Used to store partial morton code and create coordinate from it
+ * when reaching a leaf
  * @param result Used to store the results in struct pair2dl
- * @param current_cr Used to perform child() operation and store info about the current node
- * @param which_report Specifies if this is a column or row search (Possible values: REPORT_COLUMN, REPORT_ROW)
+ * @param current_cr Used to perform child() operation and store info about the
+ * current node
+ * @param which_report Specifies if this is a column or row search (Possible
+ * values: REPORT_COLUMN, REPORT_ROW)
  * @return int Result code
  */
 int report_rec(ulong current_col, struct queries_state *qs,

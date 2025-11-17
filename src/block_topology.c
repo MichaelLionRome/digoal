@@ -69,7 +69,6 @@ int count_children(struct block_topology *bt, NODES_COUNT_T node_idx,
   return SUCCESS_ECODE;
 }
 
-
 int resize_bv_to(struct bitvector **bv_ptr, uint32_t new_size) {
 
   struct bitvector *bv = *bv_ptr;
