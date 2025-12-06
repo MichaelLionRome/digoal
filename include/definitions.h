@@ -65,7 +65,9 @@
     return *(data + position);                                                 \
   }
 
+#ifndef POP_COUNT
 #define POP_COUNT(u32_input) __builtin_popcount(u32_input)
+#endif
 
 typedef unsigned long ulong;
 
