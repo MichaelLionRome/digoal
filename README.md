@@ -132,12 +132,38 @@ struct pair2dl {
 };
 ```
 
-a `struct vector` is a self increasing array, see: https://github.com/CristobalM/c-vector/blob/master/include/vector.h).
+A `struct vector` is a self increasing array, see: https://github.com/CristobalM/c-vector/blob/master/include/vector.h).
 
-* `input_block` the root block of the tree
-* `queries_state` struct holding state info
-* `result` 
+* `*input_block` the root block of the tree
+* `*queries_state` struct holding state info
+* `*result` Holds the resulting points, must receive an address to an initialized `struct vector`
 
-### 
+### report_column
 
+* `*input_block` the root block of the tree
+* `col` column to report
+* `*qs` struct holding state info
+* `*result` output of points in the column
+
+### report_row
+
+Analogous to `report_column`
+
+### create_block
+
+Initializes a block, for the user only use this with the root block, all other inner blocks will be initialized with
+inserts.
+
+* `tree_depth`: Depth of the tree, this is fixed so that coordinates of points can only be in the range `[0, 2^treedepth-1]`. If a bigger range is needed, a new tree must be created. Attempting to insert coordinates into a bigger range will throw an error code in the corresponding calling function.
+* TREE_DEPTH_T is of type `uint8_t`, a 8 bits unsigned int which allows depth of at most 255.
+
+
+### free_rec_block
+
+Will recursively deallocate a block and its children blocks starting at `input_block`
+
+
+### free_block
+
+Will deallocate a single specified block
 
