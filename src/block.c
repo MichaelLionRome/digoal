@@ -130,9 +130,20 @@ int reset_vector_to_size(struct vector *v, int size);
 int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
                           struct vector *result, struct child_result *cresult);
 
+int naive_scan_points_rec_interactively(struct block *input_block,
+                                        struct queries_state *qs,
+                                        point_reporter_fun_t point_reporter,
+                                        void *report_state,
+                                        struct child_result *cresult);
+
 int report_rec(ulong current_col, struct queries_state *qs,
                struct vector *result, struct child_result *current_cr,
                int which_report);
+
+int report_rec_interactively(ulong current_col, struct queries_state *qs,
+                             point_reporter_fun_t point_reporter,
+                             struct child_result *current_cr, int which_report,
+                             void *report_state);
 
 /* END PRIVATE FUNCTIONS  PROTOTYPES */
 
@@ -877,6 +888,57 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
   return SUCCESS_ECODE;
 }
 
+/**
+ * @brief Recursive function to scan for all the points in the tree
+ * interactively
+ *
+ * The scan is perfommed in a preorder dfs fashion
+ *
+ * @param input_block Current block to scan recursively
+ * @param qs queries state struct
+ * @param result Vector storing the points in struct pair2dl each
+ * @param cresult Stores info about the current node
+ * @return int Result code
+ */
+int naive_scan_points_rec_interactively(struct block *input_block,
+                                        struct queries_state *qs,
+                                        point_reporter_fun_t point_reporter,
+                                        void *report_state,
+                                        struct child_result *cresult) {
+  TREE_DEPTH_T real_depth =
+      cresult->resulting_relative_depth + input_block->block_depth;
+
+  for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
+    if (real_depth == input_block->tree_depth - 1) {
+      int does_child_exist;
+      child_exists(input_block->bt, cresult->resulting_node_idx, child_pos,
+                   &does_child_exist);
+      if (does_child_exist) {
+        struct pair2dl pair;
+        add_element_morton_code(&qs->mc, real_depth, child_pos);
+        convert_morton_code_to_coordinates(&qs->mc, &pair);
+        point_reporter(pair.col, pair.row, report_state);
+      }
+      continue;
+    }
+
+    struct child_result cr;
+    int err = child(input_block, cresult->resulting_node_idx, child_pos,
+                    cresult->resulting_relative_depth, &cr, qs);
+
+    if (err == DOES_NOT_EXIST_CHILD_ERR) {
+      continue;
+    } else if (err != 0) {
+      return err;
+    }
+    add_element_morton_code(&qs->mc, real_depth, child_pos);
+    naive_scan_points_rec_interactively(cr.resulting_block, qs, point_reporter,
+                                        report_state, &cr);
+  }
+
+  return SUCCESS_ECODE;
+}
+
 /* definitions to simplify reporting */
 #define REPORT_FIRST_HALF(which_report, child_pos)                             \
   (((which_report) == REPORT_COLUMN && (child_pos) < 2) ||                     \
@@ -896,7 +958,8 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
 /**
  * @brief Recursive function to scan for points in a row or column
  *
- *
+ * DEV NOTE: Might want to implement this using report_rec_interactively
+ * instead of duplicating code
  *
  * @param current_col Column in the current search space
  * @param qs Used to store partial morton code and create coordinate from it
@@ -971,6 +1034,87 @@ int report_rec(ulong current_col, struct queries_state *qs,
   return SUCCESS_ECODE;
 }
 
+/**
+ * @brief Recursive function to scan for points in a row or column interactively
+ *
+ *
+ *
+ * @param current_col Column in the current search space
+ * @param qs Used to store partial morton code and create coordinate from it
+ * when reaching a leaf
+ * @param point_reporter Function that receives a pair row, column reporting a
+ * point
+ * @param current_cr Used to perform child() operation and store info about the
+ * current node
+ * @param which_report Specifies if this is a column or row search (Possible
+ * values: REPORT_COLUMN, REPORT_ROW)
+ * @return int Result code
+ */
+int report_rec_interactively(ulong current_col, struct queries_state *qs,
+                             point_reporter_fun_t point_reporter,
+                             struct child_result *current_cr, int which_report,
+                             void *report_state) {
+  struct block *current_block = current_cr->resulting_block;
+  TREE_DEPTH_T tree_depth = current_block->tree_depth;
+  TREE_DEPTH_T relative_depth = current_cr->resulting_relative_depth;
+  TREE_DEPTH_T real_depth = relative_depth + current_block->block_depth;
+  if (real_depth + 1 == tree_depth) {
+    // report the coordinate, because we have reached a leaf
+    ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
+    ulong half_length = side_length >> 1;
+    for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
+      if (!REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,
+                                     child_pos)) {
+        continue;
+      }
+      int does_child_exist;
+      child_exists(current_block->bt, current_cr->resulting_node_idx, child_pos,
+                   &does_child_exist);
+      if (does_child_exist) {
+        struct pair2dl pair;
+        add_element_morton_code(&qs->mc, real_depth, child_pos);
+        convert_morton_code_to_coordinates(&qs->mc, &pair);
+        point_reporter(pair.col, pair.row, report_state);
+      }
+    }
+    return SUCCESS_ECODE;
+  }
+
+  ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
+  ulong half_length = side_length >> 1;
+
+  uint32_t current_node_index = current_cr->resulting_node_idx;
+
+  // This for-loop is a trick to avoid a lot of code duplication.
+  // Essentially, when which_report = REPORT_COLUMN, look for the 0th and 1st
+  // child if current_col < half_length or for the 2nd and 3rd child if
+  // current_col >= half_length. For REPORT_ROW it's but instead of the left and
+  // right side of the k2tree matrix, use the top and bottom sides.
+  struct child_result next_cr;
+  for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
+    if (!REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,
+                                   child_pos)) {
+      continue;
+    }
+
+    // We need to restore next_cr because each time it will be polluted by child
+    next_cr = *current_cr;
+    CHECK_CHILD_ERR(child(current_block, current_node_index, child_pos,
+                          relative_depth, &next_cr, qs));
+    if (next_cr.exists) {
+      // We don't need to clean up the morton code because we are traversing in
+      // preorder-dfs and always writing in a random access fashion
+      CHECK_ERR(add_element_morton_code(&qs->mc, real_depth, child_pos));
+      // We take modulo here because the search space is reduced by half
+      CHECK_ERR(report_rec_interactively(current_col % half_length, qs,
+                                         point_reporter, &next_cr, which_report,
+                                         report_state));
+    }
+  }
+
+  return SUCCESS_ECODE;
+}
+
 /* END PRIVATE FUNCTIONS IMPLEMENTATIONS */
 
 /* PUBLIC FUNCTIONS */
@@ -1022,30 +1166,52 @@ int naive_scan_points(struct block *input_block, struct queries_state *qs,
   return naive_scan_points_rec(input_block, qs, result, &cresult);
 }
 
+int scan_points_interactively(struct block *input_block,
+                              struct queries_state *qs,
+                              point_reporter_fun_t point_reporter,
+                              void *report_state) {
+  struct child_result cresult;
+  clean_child_result(&cresult);
+  return naive_scan_points_rec_interactively(input_block, qs, point_reporter,
+                                             report_state, &cresult);
+}
+
 int report_column(struct block *input_block, ulong col,
                   struct queries_state *qs, struct vector *result) {
   struct child_result current_cr;
-  current_cr.resulting_node_idx = 0;
+  clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
-  current_cr.resulting_relative_depth = 0;
-  current_cr.is_leaf_result = FALSE;
-  current_cr.previous_block = NULL;
-  current_cr.check_frontier = FALSE;
-  current_cr.went_frontier = FALSE;
   return report_rec(col, qs, result, &current_cr, REPORT_COLUMN);
 }
 
 int report_row(struct block *input_block, ulong row, struct queries_state *qs,
                struct vector *result) {
   struct child_result current_cr;
-  current_cr.resulting_node_idx = 0;
+  clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
-  current_cr.resulting_relative_depth = 0;
-  current_cr.is_leaf_result = FALSE;
-  current_cr.previous_block = NULL;
-  current_cr.check_frontier = FALSE;
-  current_cr.went_frontier = FALSE;
   return report_rec(row, qs, result, &current_cr, REPORT_ROW);
+}
+
+int report_column_interactively(struct block *input_block, ulong col,
+                                struct queries_state *qs,
+                                point_reporter_fun_t point_reporter,
+                                void *report_state) {
+  struct child_result current_cr;
+  clean_child_result(&current_cr);
+  current_cr.resulting_block = input_block;
+  return report_rec_interactively(col, qs, point_reporter, &current_cr,
+                                  REPORT_COLUMN, report_state);
+}
+
+int report_row_interactively(struct block *input_block, ulong row,
+                             struct queries_state *qs,
+                             point_reporter_fun_t point_reporter,
+                             void *report_state) {
+  struct child_result current_cr;
+  clean_child_result(&current_cr);
+  current_cr.resulting_block = input_block;
+  return report_rec_interactively(row, qs, point_reporter, &current_cr,
+                                  REPORT_ROW, report_state);
 }
 
 struct block *create_block(TREE_DEPTH_T tree_depth) {

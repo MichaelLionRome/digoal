@@ -94,6 +94,7 @@ add_executable(block_leak_test block_leak_test.cpp block_wrapper.hpp)
 add_executable(morton_code_test morton_code_test.cpp)
 add_executable(block_usages_test block_usages_test.cpp)
 add_executable(debug_insertion_out_of_bounds_1_test debug_insertion_out_of_bounds_1_test.cpp)
+add_executable(interactive_report_test interactive_report_test.cpp)
 
 
 target_link_libraries(block_test K2TreeElements gtest_main vector circular_queue bitvector)
@@ -101,3 +102,4 @@ target_link_libraries(block_leak_test K2TreeElements vector circular_queue bitve
 target_link_libraries(morton_code_test K2TreeElements vector circular_queue bitvector gtest_main)
 target_link_libraries(block_usages_test K2TreeElements vector circular_queue bitvector gtest_main)
 target_link_libraries(debug_insertion_out_of_bounds_1_test K2TreeElements vector circular_queue bitvector gtest_main)
+target_link_libraries(interactive_report_test K2TreeElements vector circular_queue bitvector gtest_main)

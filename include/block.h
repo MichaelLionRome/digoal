@@ -25,6 +25,8 @@ struct block {
   BLOCK_INDEX_T block_index;
 };
 
+typedef void (*point_reporter_fun_t)(ulong, ulong, void *);
+
 int has_point(struct block *input_block, ulong col, ulong row,
               struct queries_state *qs, int *result);
 int insert_point(struct block *input_block, ulong col, ulong row,
@@ -33,10 +35,24 @@ int insert_point(struct block *input_block, ulong col, ulong row,
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
                       struct vector *result);
 
+int scan_points_interactively(struct block *input_block,
+                              struct queries_state *qs,
+                              point_reporter_fun_t point_reporter,
+                              void *report_state);
+
 int report_column(struct block *input_block, ulong col,
                   struct queries_state *qs, struct vector *result);
 int report_row(struct block *input_block, ulong row, struct queries_state *qs,
                struct vector *result);
+
+int report_column_interactively(struct block *input_block, ulong col,
+                                struct queries_state *qs,
+                                point_reporter_fun_t point_reporter,
+                                void *report_state);
+int report_row_interactively(struct block *input_block, ulong row,
+                             struct queries_state *qs,
+                             point_reporter_fun_t point_reporter,
+                             void *report_state);
 
 struct block *create_block(TREE_DEPTH_T tree_depth);
 int free_rec_block(struct block *input_block);
