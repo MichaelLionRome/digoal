@@ -26,7 +26,7 @@ void print_vector(struct vector *v) {
   for (int i = 0; i < v->nof_items; i++) {
     struct pair2dl *pair;
     get_element_at(v, i, (char **)&pair);
-    std::cout << "(" << pair->col << ", " <<  pair->row << ")" << std::endl;
+    std::cout << "(" << pair->col << ", " << pair->row << ")" << std::endl;
   }
 }
 
@@ -40,7 +40,7 @@ void interactive_report_row(unsigned long column, unsigned long row,
   std::cout << "found pair (" << column << ", " << row << ")" << std::endl;
 }
 
-void interactive_print_all(unsigned long column, unsigned long row, void *){
+void interactive_print_all(unsigned long column, unsigned long row, void *) {
   std::cout << "(" << column << ", " << row << ")" << std::endl;
 }
 

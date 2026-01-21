@@ -4,17 +4,16 @@
 
 extern "C" {
 #include <block.h>
-#include <block_topology.h>
 #include <block_frontier.h>
+#include <block_topology.h>
 #include <queries_state.h>
 }
 
 #include "block_wrapper.hpp"
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include <vector>
-
 
 int main() {
   {
@@ -27,7 +26,8 @@ int main() {
 
     std::vector<ulong> indexes(matrix_size, 0);
 
-    for (ulong i = 0; i < matrix_size; i++) indexes[i] = i;
+    for (ulong i = 0; i < matrix_size; i++)
+      indexes[i] = i;
 
     random_shuffle(indexes.begin(), indexes.end());
 
@@ -37,7 +37,6 @@ int main() {
       b.insert(col, row);
     }
   }
-
 
   exit(0);
 }
