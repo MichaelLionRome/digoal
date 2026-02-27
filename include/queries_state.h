@@ -28,13 +28,17 @@ SOFTWARE.
 #include <circular_queue.h>
 #include <vector.h>
 
+#include "int_stack.h"
+#include "memalloc.h"
 #include "morton_code.h"
 
 struct sequential_scan_result {
   uint32_t child_preorder;
   uint32_t node_relative_depth;
-  struct vector *subtrees_count_map;
-  struct vector *relative_depth_map;
+  // struct vector *subtrees_count_map;
+  // struct vector *relative_depth_map;
+  struct u32array_alloc subtrees_count_map;
+  struct u32array_alloc relative_depth_map;
 };
 
 struct node_subtree_info {
@@ -42,12 +46,22 @@ struct node_subtree_info {
   uint32_t node_relative_depth;
   uint32_t subtree_size;
 };
+
+#ifdef DEBUG_STATS
+struct debug_stats {
+  unsigned long time_on_sequential_scan;
+};
+#endif
+
 struct queries_state {
   struct morton_code mc;
   struct sequential_scan_result sc_result;
-  struct circular_queue not_yet_traversed;
+  struct int_stack not_yet_traversed;
   struct circular_queue subtrees_count;
   int find_split_data;
+#ifdef DEBUG_STATS
+  struct debug_stats dstats;
+#endif
 };
 
 int init_queries_state(struct queries_state *qs, uint32_t tree_depth);

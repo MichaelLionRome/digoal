@@ -11,11 +11,17 @@ endif()
 
 # set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
 set(CMAKE_C_FLAGS "-Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition -Werror")
-set(CMAKE_C_FLAGS_DEBUG "-g")
+set(CMAKE_C_FLAGS_DEBUG "-g -DDEBUG_STATS")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -pedantic -Werror")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+option(WITH_DEBUG_STATS "Debug stats" OFF)
+
+if(WITH_DEBUG_STATS)
+add_definitions(-DDEBUG_STATS)
+endif()
 
 set(SOURCES_REQUIRED
 src/block.c
@@ -25,6 +31,7 @@ src/custom_bv_handling.c
 src/definitions.c
 src/morton_code.c
 src/queries_state.c
+src/int_stack.c
 )
 
 set(SOURCES_MEM_DEFAULT

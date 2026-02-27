@@ -61,7 +61,7 @@ SOFTWARE.
       return (err);                                                            \
     }                                                                          \
   } while (0)
-
+/*
 #define _SAFE_OP_K2(op)                                                        \
   do {                                                                         \
     if ((op) != SUCCESS_ECODE) {                                               \
@@ -70,6 +70,9 @@ SOFTWARE.
       exit(op);                                                                \
     }                                                                          \
   } while (0)
+*/
+
+#define _SAFE_OP_K2(op) op
 
 #ifndef TRUE
 #define TRUE 1

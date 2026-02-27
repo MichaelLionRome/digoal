@@ -35,28 +35,28 @@ SOFTWARE.
 #include "definitions.h"
 
 struct block *k2tree_alloc_block(void) {
-  return (struct block *)calloc(1, sizeof(struct block));
+  return (struct block *)malloc(sizeof(struct block));
 }
 
 struct block_topology *k2tree_alloc_block_topology(void) {
-  return (struct block_topology *)calloc(1, sizeof(struct block_topology));
+  return (struct block_topology *)malloc(sizeof(struct block_topology));
 }
 
 struct block_frontier *k2tree_alloc_block_frontier(void) {
-  return (struct block_frontier *)calloc(1, sizeof(struct block_frontier));
+  return (struct block_frontier *)malloc(sizeof(struct block_frontier));
 }
 
 struct bitvector *k2tree_alloc_bitvector(void) {
-  return (struct bitvector *)calloc(1, sizeof(struct bitvector));
+  return (struct bitvector *)malloc(sizeof(struct bitvector));
 }
 
 struct vector *k2tree_alloc_vector(void) {
-  return (struct vector *)calloc(1, sizeof(struct vector));
+  return (struct vector *)malloc(sizeof(struct vector));
 }
 
 struct u32array_alloc k2tree_alloc_u32array(int size) {
   struct u32array_alloc out;
-  out.data = (uint32_t *)calloc(size, sizeof(uint32_t));
+  out.data = (uint32_t *)malloc(size * sizeof(uint32_t));
   out.size = size;
   return out;
 }

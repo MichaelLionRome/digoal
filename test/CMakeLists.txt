@@ -32,6 +32,7 @@ set(INCLUDES_ELEMENTS ${K2TREE_INCLUDES}/block.h
  ${K2TREE_INCLUDES}/definitions.h
  ${K2TREE_INCLUDES}/memalloc.h
  ${K2TREE_INCLUDES}/custom_bv_handling.h
+ ${K2TREE_INCLUDES}/int_stack.h
  )
 
 set(SOURCES_ELEMENTS ${K2TreePath}/block.c
@@ -42,6 +43,7 @@ set(SOURCES_ELEMENTS ${K2TreePath}/block.c
  ${K2TreePath}/definitions.c
  ${K2TreePath}/default_memalloc.c
  ${K2TreePath}/custom_bv_handling.c
+ ${K2TreePath}/int_stack.c
  )
 
 add_library(K2TreeElements ${SOURCES_ELEMENTS})
