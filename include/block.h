@@ -24,12 +24,10 @@ SOFTWARE.
 #ifndef _BLOCK_H_
 #define _BLOCK_H_
 
-#include <stdint.h>
-
-#include <vector.h>
-
 #include "block_frontier.h"
 #include "block_topology.h"
+#include "vectors.h"
+#include <stdint.h>
 
 #include "queries_state.h"
 
@@ -48,6 +46,8 @@ struct block {
   BLOCK_INDEX_T block_index;
 };
 
+typedef struct block block_t;
+
 typedef void (*point_reporter_fun_t)(ulong, ulong, void *);
 
 int has_point(struct block *input_block, ulong col, ulong row,
@@ -56,7 +56,7 @@ int insert_point(struct block *input_block, ulong col, ulong row,
                  struct queries_state *qs);
 
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
-                      struct vector *result);
+                      struct vector_pair2dl_t *result);
 
 int scan_points_interactively(struct block *input_block,
                               struct queries_state *qs,
@@ -64,9 +64,9 @@ int scan_points_interactively(struct block *input_block,
                               void *report_state);
 
 int report_column(struct block *input_block, ulong col,
-                  struct queries_state *qs, struct vector *result);
+                  struct queries_state *qs, struct vector_pair2dl_t *result);
 int report_row(struct block *input_block, ulong row, struct queries_state *qs,
-               struct vector *result);
+               struct vector_pair2dl_t *result);
 
 int report_column_interactively(struct block *input_block, ulong col,
                                 struct queries_state *qs,

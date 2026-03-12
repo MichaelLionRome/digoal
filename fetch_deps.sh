@@ -47,7 +47,6 @@ else
     cd c-vector
 fi
 
-make
 cd ..
 # End c-vector
 

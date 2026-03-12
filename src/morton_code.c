@@ -28,25 +28,25 @@ SOFTWARE.
 int init_morton_code(struct morton_code *mc, uint32_t treedepth) {
   mc->treedepth = treedepth;
   CHECK_ERR(custom_init_bitvector(&mc->container, 2 * treedepth));
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }
 
 int clean_morton_code(struct morton_code *mc) {
   custom_clean_bitvector(&mc->container);
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }
 
 int add_element_morton_code(struct morton_code *mc, uint32_t position,
                             uint32_t code) {
   _SAFE_OP_K2(bits_write(&mc->container, 2 * position, 2 * position + 1, code));
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }
 
 int get_code_at_morton_code(struct morton_code *mc, uint32_t position,
                             uint32_t *result) {
   _SAFE_OP_K2(
       bits_read(&mc->container, 2 * position, 2 * position + 1, result));
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }
 
 int leaf_child_morton_code(struct morton_code *mc, uint32_t *result) {
@@ -78,7 +78,7 @@ int convert_coordinates_to_morton_code(ulong col, ulong row, uint32_t treedepth,
 
     _SAFE_OP_K2(add_element_morton_code(result, mc_position++, quadrant));
   }
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }
 
 int convert_morton_code_to_coordinates(struct morton_code *input_mc,
@@ -110,5 +110,5 @@ int convert_morton_code_to_coordinates(struct morton_code *input_mc,
   result->col = col;
   result->row = row;
 
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }

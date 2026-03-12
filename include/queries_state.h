@@ -26,7 +26,6 @@ SOFTWARE.
 
 #include <bitvector.h>
 #include <circular_queue.h>
-#include <vector.h>
 
 #include "int_stack.h"
 #include "memalloc.h"
@@ -35,8 +34,6 @@ SOFTWARE.
 struct sequential_scan_result {
   uint32_t child_preorder;
   uint32_t node_relative_depth;
-  // struct vector *subtrees_count_map;
-  // struct vector *relative_depth_map;
   struct u32array_alloc subtrees_count_map;
   struct u32array_alloc relative_depth_map;
 };

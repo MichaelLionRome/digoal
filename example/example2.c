@@ -54,8 +54,8 @@ int main(void) {
     }
   }
 
-  struct vector result;
-  init_vector_with_capacity(&result, sizeof(struct pair2dl), qty);
+  struct vector_pair2dl_t result;
+  vector_pair2dl_t__init_vector_with_capacity(&result, qty);
 
   err_code = naive_scan_points(root_block, &qs, &result);
   if (err_code) {
@@ -64,12 +64,11 @@ int main(void) {
 
   printf("scanned points:\n");
   for (int i = 0; i < result.nof_items; i++) {
-    struct pair2dl *current;
-    get_element_at(&result, i, (char **)&current);
-    printf("element %d = (%lu, %lu)\n", i, current->col, current->row);
+    struct pair2dl current = result.data[i];
+    printf("element %d = (%lu, %lu)\n", i, current.col, current.row);
   }
 
-  free_vector(&result);
+  vector_pair2dl_t__free_vector(&result);
 
 clean_up:
 

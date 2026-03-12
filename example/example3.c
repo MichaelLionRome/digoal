@@ -36,30 +36,30 @@ int main(void) {
   struct queries_state qs;
   init_queries_state(&qs, treedepth);
 
-  struct vector input_pairs;
-  init_vector_with_capacity(&input_pairs, sizeof(struct pair2dl), 1000);
+  struct vector_pair2dl_t input_pairs;
+  vector_pair2dl_t__init_vector_with_capacity(&input_pairs, 1000);
   for (int i = 0; i < 1000; i++) {
     struct pair2dl ins = {i, i};
-    insert_element(&input_pairs, (char *)&ins);
+    vector_pair2dl_t__insert_element(&input_pairs, ins);
   }
 
   // struct pair2dl array_pairs[] = {{0, 0}, {3, 3}};
   int qty = input_pairs.nof_items;
   for (int i = 0; i < qty; i++) {
-    struct pair2dl *current;
-    get_element_at(&input_pairs, i, (char **)&current);
-    printf("inserting %lu, %lu\n", current->col, current->row);
-    insert_point(root_block, current->col, current->row, &qs);
+    struct pair2dl current = input_pairs.data[i];
+
+    printf("inserting %lu, %lu\n", current.col, current.row);
+    insert_point(root_block, current.col, current.row, &qs);
     int does_have_point;
-    has_point(root_block, current->col, current->row, &qs, &does_have_point);
+    has_point(root_block, current.col, current.row, &qs, &does_have_point);
     if (!does_have_point) {
-      printf("doesn't have point (%lu, %lu)\n", current->col, current->row);
+      printf("doesn't have point (%lu, %lu)\n", current.col, current.row);
       goto clean_up;
     }
   }
 
-  struct vector result;
-  init_vector_with_capacity(&result, sizeof(struct pair2dl), qty);
+  struct vector_pair2dl_t result;
+  vector_pair2dl_t__init_vector_with_capacity(&result, qty);
 
   err_code = naive_scan_points(root_block, &qs, &result);
   if (err_code) {
@@ -68,12 +68,11 @@ int main(void) {
 
   printf("scanned points:\n");
   for (int i = 0; i < result.nof_items; i++) {
-    struct pair2dl *current;
-    get_element_at(&result, i, (char **)&current);
-    printf("element %d = (%lu, %lu)\n", i, current->col, current->row);
+    struct pair2dl current = result.data[i];
+    printf("element %d = (%lu, %lu)\n", i, current.col, current.row);
   }
 
-  free_vector(&result);
+  vector_pair2dl_t__free_vector(&result);
 
 clean_up:
 

@@ -210,8 +210,8 @@ TEST(block_test, fills_depth_3) {
       }
     }
   }
-  for (int col = 0; col < side; col++) {
-    for (int row = 0; row < side; row++) {
+  for (ulong col = 0; col < side; col++) {
+    for (ulong row = 0; row < side; row++) {
       ASSERT_TRUE(b.has(col, row)) << "No point " << col << ", " << row;
     }
   }
@@ -1041,10 +1041,10 @@ TEST(block_test, diagonal_test_depth4_1) {
   uint32_t treedepth = 4;
   ulong side = 1 << treedepth;
   BlockWrapper b(treedepth, 16);
-  for (int i = 0; i < side; i++) {
+  for (ulong i = 0; i < side; i++) {
     b.insert(i, i);
-    for (int col = 0; col < side; col++) {
-      for (int row = 0; row < side; row++) {
+    for (ulong col = 0; col < side; col++) {
+      for (ulong row = 0; row < side; row++) {
         if ((col == row && col > i) || col != row) {
           ASSERT_FALSE(b.has(col, row));
         } else {
@@ -1128,8 +1128,8 @@ TEST(block_test, fills_till_depth_6) {
         }
       }
     }
-    for (int col = 0; col < side; col++) {
-      for (int row = 0; row < side; row++) {
+    for (ulong col = 0; col < side; col++) {
+      for (ulong row = 0; row < side; row++) {
         ASSERT_TRUE(b.has(col, row))
             << "(depth = " << treedepth << ") No point " << col << ", " << row;
       }

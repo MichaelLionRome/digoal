@@ -51,9 +51,6 @@ TEST(insertion_out_of_bounds, test_1) {
   ulong col, row;
   while (ifstream >> col >> row) {
     std::cout << col << ", " << row << std::endl;
-    if (col == 19469 && row == 1072) {
-      int debug = 0;
-    }
     insert_point(root_block, col, row, &qs);
     int has_it;
     has_point(root_block, col, row, &qs, &has_it);

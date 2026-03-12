@@ -24,13 +24,12 @@ SOFTWARE.
 #ifndef _BLOCK_FRONTIER_H
 #define _BLOCK_FRONTIER_H
 
-#include <vector.h>
+#include "vectors.h"
 
 struct block;
-
 struct block_frontier {
-  struct vector frontier;
-  struct vector blocks;
+  struct vector_uint32_t frontier;
+  struct vector_block_ptr_t blocks;
 };
 
 struct block_frontier *create_block_frontier(void);

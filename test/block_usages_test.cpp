@@ -39,7 +39,7 @@ bool comparePair(struct pair2dl a, struct pair2dl b) {
 }
 
 void printVec(std::vector<struct pair2dl> &v) {
-  for (int i = 0; i < v.size(); i++) {
+  for (size_t i = 0; i < v.size(); i++) {
     std::cout << v[i].col << ", " << v[i].row << "; ";
   }
   std::cout << std::endl;
@@ -61,8 +61,8 @@ TEST(usages, naive_scan_1) {
     insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
   }
 
-  struct vector result;
-  init_vector_with_capacity(&result, sizeof(struct pair2dl), qty);
+  struct vector_pair2dl_t result;
+  vector_pair2dl_t__init_vector_with_capacity(&result, qty);
 
   err_code = naive_scan_points(root_block, &qs, &result);
   if (err_code) {
@@ -71,11 +71,8 @@ TEST(usages, naive_scan_1) {
 
   std::vector<struct pair2dl> store_points;
   for (int i = 0; i < result.nof_items; i++) {
-    struct pair2dl *current;
-    get_element_at(&result, i, (char **)&current);
-    store_points.push_back(*current);
-    // ASSERT_EQ(array_pairs[i].col, current->col) << "COL FAILED AT i = " << i;
-    // ASSERT_EQ(array_pairs[i].row, current->row) << "ROW FAILED AT i = " << i;
+    struct pair2dl current = result.data[i];
+    store_points.push_back(current);
   }
 
   std::sort(init_elements.begin(), init_elements.end(), comparePair);
@@ -86,14 +83,13 @@ TEST(usages, naive_scan_1) {
 
   ASSERT_EQ(init_elements.size(), store_points.size()) << "DIFFERENT SIZE";
 
-  for (int i = 0; i < init_elements.size(); i++) {
+  for (size_t i = 0; i < init_elements.size(); i++) {
     ASSERT_EQ(init_elements[i].col, store_points[i].col)
         << "(col) DIFFERENT AT i = " << i;
     ASSERT_EQ(init_elements[i].row, store_points[i].row)
         << "(row) DIFFERENT AT i = " << i;
   }
-
-  free_vector(&result);
+  vector_pair2dl_t__free_vector(&result);
 
   err_code = free_rec_block(root_block);
   if (err_code)
@@ -107,11 +103,10 @@ TEST(usages, naive_scan_1) {
   }
 }
 
-bool has_pair(struct vector *v, ulong col, ulong row) {
-  for (int i = 0; i < v->nof_items; i++) {
-    struct pair2dl *pair;
-    get_element_at(v, i, (char **)&pair);
-    if (col == pair->col && row == pair->row) {
+bool has_pair(struct vector_pair2dl_t *v, long col, long row) {
+  for (long i = 0; i < v->nof_items; i++) {
+    struct pair2dl pair = v->data[i];
+    if (col == pair.col && row == pair.row) {
       return true;
     }
   }
@@ -135,8 +130,8 @@ TEST(usages, report_column_test_1) {
     insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
   }
 
-  struct vector result;
-  init_vector_with_capacity(&result, sizeof(struct pair2dl), 10);
+  struct vector_pair2dl_t result;
+  vector_pair2dl_t__init_vector_with_capacity(&result, 10);
 
   err_code = report_column(root_block, 3, &qs, &result);
   if (err_code) {
@@ -169,8 +164,8 @@ TEST(usages, report_row_test_1) {
     insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
   }
 
-  struct vector result;
-  init_vector_with_capacity(&result, sizeof(struct pair2dl), 10);
+  struct vector_pair2dl_t result;
+  vector_pair2dl_t__init_vector_with_capacity(&result, 10);
 
   err_code = report_row(root_block, 15, &qs, &result);
   if (err_code) {

@@ -42,19 +42,18 @@ std::vector<unsigned long> create_shuffled_sequence(unsigned long sequence_size,
 
 int main(void) {
 
-  random_benchmark_by_depth(30, 1 << 25 );
+  random_benchmark_by_depth(30, 1 << 25);
 
-  for(unsigned long i = 2; i < 12; i++){
+  for (unsigned long i = 2; i < 12; i++) {
     random_benchmark_by_depth_dense(i, 1 << i);
   }
 
-  for(unsigned long i = 2; i < 20; i++){
+  for (unsigned long i = 2; i < 20; i++) {
     random_benchmark_by_depth(i, 1 << i);
   }
   random_benchmark_by_depth(24, 1 << 20);
   random_benchmark_by_depth(28, 1 << 20);
   random_benchmark_by_depth(30, 1 << 20);
-  
 
   return 0;
 }
@@ -150,7 +149,8 @@ void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
   finish_queries_state(&qs);
 }
 
-void random_benchmark_by_depth_dense(uint32_t treedepth, uint32_t points_count) {
+void random_benchmark_by_depth_dense(uint32_t treedepth,
+                                     uint32_t points_count) {
   unsigned long side = 1 << treedepth;
   struct block *root_block = create_block(static_cast<TREE_DEPTH_T>(treedepth));
 
@@ -166,8 +166,8 @@ void random_benchmark_by_depth_dense(uint32_t treedepth, uint32_t points_count) 
   auto start = std::chrono::high_resolution_clock::now();
 
   for (size_t i = 0; i < points_count; i++) {
-    for(size_t j = 0; j < points_count; j++){
-     insert_point(root_block, random_seq_1[i], random_seq_2[j], &qs);
+    for (size_t j = 0; j < points_count; j++) {
+      insert_point(root_block, random_seq_1[i], random_seq_2[j], &qs);
     }
   }
 
@@ -194,15 +194,15 @@ void random_benchmark_by_depth_dense(uint32_t treedepth, uint32_t points_count) 
   start = std::chrono::high_resolution_clock::now();
 
   for (size_t i = 0; i < points_count; i++) {
-        for(size_t j = 0; j < points_count; j++){
-    int has_point_result;
-    has_point(root_block, random_seq_1[i], random_seq_2[j], &qs,
-              &has_point_result);
-    if (!has_point_result) {
-      std::cerr << "Point " << i << " not found (" << random_seq_1[i] << ", "
-                << random_seq_2[j] << ")" << std::endl;
-      exit(1);
-    }
+    for (size_t j = 0; j < points_count; j++) {
+      int has_point_result;
+      has_point(root_block, random_seq_1[i], random_seq_2[j], &qs,
+                &has_point_result);
+      if (!has_point_result) {
+        std::cerr << "Point " << i << " not found (" << random_seq_1[i] << ", "
+                  << random_seq_2[j] << ")" << std::endl;
+        exit(1);
+      }
     }
   }
   stop = std::chrono::high_resolution_clock::now();

@@ -28,10 +28,8 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <vector.h>
-
-#ifndef SUCCESS_ECODE
-#define SUCCESS_ECODE 0;
+#ifndef SUCCESS_ECODE_K2T
+#define SUCCESS_ECODE_K2T 0
 #endif
 
 #define NOT_IMPLEMENTED -100
@@ -50,21 +48,21 @@ SOFTWARE.
 
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \
-    if (err != SUCCESS_ECODE) {                                                \
+    if (err != SUCCESS_ECODE_K2T) {                                            \
       return (err);                                                            \
     }                                                                          \
   } while (0)
 
 #define CHECK_CHILD_ERR(err)                                                   \
   do {                                                                         \
-    if (err != SUCCESS_ECODE && err != DOES_NOT_EXIST_CHILD_ERR) {             \
+    if (err != SUCCESS_ECODE_K2T && err != DOES_NOT_EXIST_CHILD_ERR) {         \
       return (err);                                                            \
     }                                                                          \
   } while (0)
 /*
 #define _SAFE_OP_K2(op)                                                        \
   do {                                                                         \
-    if ((op) != SUCCESS_ECODE) {                                               \
+    if ((op) != SUCCESS_ECODE_K2T) { \
       printf("There was an error while running %s. Error code: %d\n", (#op),   \
              (op));                                                            \
       exit(op);                                                                \
@@ -82,15 +80,6 @@ SOFTWARE.
 #define FALSE 0
 #endif
 
-#define DEFINE_READ_ELEMENT_PROTOTYPE(typename, type)                          \
-  type read_##typename##_element(struct vector *v, uint32_t position);
-
-#define DEFINE_READ_ELEMENT(typename, type)                                    \
-  type read_##typename##_element(struct vector *v, uint32_t position) {        \
-    type *data = (type *)v->data;                                              \
-    return *(data + position);                                                 \
-  }
-
 #ifndef POP_COUNT
 #define POP_COUNT(u32_input) __builtin_popcount(u32_input)
 #endif
@@ -104,12 +93,11 @@ typedef unsigned long ulong;
 #define STARTING_BLOCK_CAPACITY 64
 #endif
 
-DEFINE_READ_ELEMENT_PROTOTYPE(uint, uint32_t)
-DEFINE_READ_ELEMENT_PROTOTYPE(block, struct block *)
-
 struct pair2dl {
   long col;
   long row;
 };
+
+typedef struct pair2dl pair2dl_t;
 
 #endif /* _K2TREE_DEFINITIONS_H_ */

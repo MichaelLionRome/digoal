@@ -40,7 +40,6 @@ set(SOURCES_ELEMENTS ${K2TreePath}/block.c
  ${K2TreePath}/block_frontier.c
  ${K2TreePath}/block_topology.c
  ${K2TreePath}/morton_code.c
- ${K2TreePath}/definitions.c
  ${K2TreePath}/default_memalloc.c
  ${K2TreePath}/custom_bv_handling.c
  ${K2TreePath}/int_stack.c

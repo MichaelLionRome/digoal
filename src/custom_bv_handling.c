@@ -49,7 +49,7 @@ int custom_init_bitvector(struct bitvector *input_bitvector,
   input_bitvector->size_in_bits = size_in_bits_;
   input_bitvector->alloc_tag = (uint32_t)container_alloc.size;
 
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }
 
 int custom_clean_bitvector(struct bitvector *input_bitvector) {
@@ -64,5 +64,5 @@ int custom_clean_bitvector(struct bitvector *input_bitvector) {
   k2tree_free_u32array(to_free);
   input_bitvector->container = NULL;
 
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }

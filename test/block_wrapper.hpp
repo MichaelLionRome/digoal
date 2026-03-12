@@ -78,9 +78,9 @@ public:
     return result == 1;
   }
 
-  static void pass_to_ss_bin(uint32_t input, uint32_t bits_count,
-                             stringstream &ss, bool separate, int sz = -1) {
-    for (auto bit_pos = 0; bit_pos < bits_count; bit_pos++) {
+  static void pass_to_ss_bin(uint32_t input, int bits_count, stringstream &ss,
+                             bool separate, int sz = -1) {
+    for (int bit_pos = 0; bit_pos < bits_count; bit_pos++) {
       if (sz > -1 && bit_pos >= sz)
         break;
       unsigned int current_mask = (1u << (bits_count - bit_pos - 1));
@@ -104,8 +104,6 @@ public:
     struct block_topology *bt = a_block->bt;
     struct bitvector *bv = bt->bv;
     uint32_t *container = bv->container;
-    uint32_t container_length = bv->container_size;
-    uint32_t sizeTraversed = 0;
     uint32_t uint_bits = sizeof(uint32_t) * 8;
     uint32_t nodes_count = bt->nodes_count;
     uint32_t used_bits = nodes_count * 4;
@@ -137,25 +135,16 @@ public:
     stringstream ss;
     struct block_frontier *bf = b->bf;
     for (int i = 0; i < bf->frontier.nof_items; i++) {
-      uint32_t *fval_ptr;
-      int err_code = get_element_at(&bf->frontier, i, (char **)&fval_ptr);
-      if (err_code)
-        throw runtime_error("error reading frontier at i = " + to_string(i));
-      uint32_t fval = *fval_ptr;
+      uint32_t fval = bf->frontier.data[i];
       ss << fval << ", ";
     }
     return ss.str();
   }
   void printSubBlocks() {
     struct block_frontier *bf = b->bf;
-    struct block **sb;
     for (int i = 0; i < bf->blocks.nof_items; i++) {
-      int err_code = get_element_at(&bf->blocks, i, (char **)&sb);
-      if (err_code)
-        throw runtime_error("error reading frontier block at i = " +
-                            to_string(i));
-
-      cout << getStringRepBlock(*sb, true) << endl;
+      struct block *sb = bf->blocks.data[i];
+      cout << getStringRepBlock(sb, true) << endl;
     }
   }
 };

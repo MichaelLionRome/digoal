@@ -57,7 +57,7 @@ int init_sequential_scan_result(struct sequential_scan_result *scr) {
   scr->subtrees_count_map = k2tree_alloc_u32array(MAX_NODES_IN_BLOCK);
   scr->relative_depth_map = k2tree_alloc_u32array(MAX_NODES_IN_BLOCK);
 
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }
 
 int clean_sequential_scan_result(struct sequential_scan_result *scr) {
@@ -65,6 +65,6 @@ int clean_sequential_scan_result(struct sequential_scan_result *scr) {
   k2tree_free_u32array(scr->subtrees_count_map);
   k2tree_free_u32array(scr->relative_depth_map);
 
-  return SUCCESS_ECODE;
+  return SUCCESS_ECODE_K2T;
 }
 /* END PRIVATE FUNCTIONS IMPLEMENTATION */

@@ -34,32 +34,30 @@ extern "C" {
 #include <iostream>
 #include <vector>
 
-bool has_pair(struct vector *v, ulong col, ulong row) {
+bool has_pair(struct vector_pair2dl_t *v, long col, long row) {
   for (int i = 0; i < v->nof_items; i++) {
-    struct pair2dl *pair;
-    get_element_at(v, i, (char **)&pair);
-    if (col == pair->col && row == pair->row) {
+    struct pair2dl pair = v->data[i];
+    if (col == pair.col && row == pair.row) {
       return true;
     }
   }
   return false;
 }
 
-void print_vector(struct vector *v) {
+void print_vector(struct vector_pair2dl_t *v) {
   for (int i = 0; i < v->nof_items; i++) {
-    struct pair2dl *pair;
-    get_element_at(v, i, (char **)&pair);
-    std::cout << "(" << pair->col << ", " << pair->row << ")" << std::endl;
+    struct pair2dl pair = v->data[i];
+    std::cout << "(" << pair.col << ", " << pair.row << ")" << std::endl;
   }
 }
 
 void interactive_report_row(unsigned long column, unsigned long row,
                             void *report_state) {
-  struct vector *v = (struct vector *)report_state;
+  struct vector_pair2dl_t *v = (struct vector_pair2dl_t *)report_state;
   struct pair2dl pair;
   pair.row = row;
   pair.col = column;
-  insert_element(v, (char *)&pair);
+  vector_pair2dl_t__insert_element(v, pair);
   std::cout << "found pair (" << column << ", " << row << ")" << std::endl;
 }
 
@@ -84,8 +82,8 @@ TEST(interactive_block_test, test1) {
     insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
   }
 
-  struct vector result;
-  init_vector_with_capacity(&result, sizeof(struct pair2dl), 10);
+  struct vector_pair2dl_t result;
+  vector_pair2dl_t__init_vector_with_capacity(&result, 10);
 
   err_code = report_row_interactively(root_block, 15, &qs,
                                       interactive_report_row, &result);
