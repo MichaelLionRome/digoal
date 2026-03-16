@@ -157,8 +157,6 @@ const string to_compare[] = {
     "1111111111",
 };
 
-constexpr int comp_arr_sz = countof(to_compare);
-
 TEST(block_test, fills_depth_3_test2) {
   uint32_t treedepth = 3;
   ulong side = 1 << treedepth;
