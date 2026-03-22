@@ -111,6 +111,21 @@ static inline int block_has_enough_space(struct block *input_block,
          (allocated_nodes - input_block->bt->nodes_count);
 }
 
+static inline int clean_child_result(struct child_result *cresult) {
+  cresult->resulting_block = NULL;
+  cresult->resulting_node_idx = 0;
+  cresult->resulting_relative_depth = 0;
+  cresult->is_leaf_result = FALSE;
+  cresult->exists = FALSE;
+  cresult->check_frontier = FALSE;
+  cresult->went_frontier = FALSE;
+  cresult->previous_block = NULL;
+  cresult->previous_preorder = 0;
+  cresult->previous_to_current_index = 0;
+  cresult->previous_depth = 0;
+  return SUCCESS_ECODE_K2T;
+}
+
 /* PRIVATE FUNCTIONS PROTOTYPES */
 int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
                           uint32_t subtrees_to_skip,
@@ -428,13 +443,8 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
 int find_point(struct block *input_block, struct queries_state *qs,
                struct point_search_result *psr) {
   struct child_result current_cr;
-  current_cr.resulting_node_idx = 0;
+  clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
-  current_cr.resulting_relative_depth = 0;
-  current_cr.is_leaf_result = FALSE;
-  current_cr.previous_block = NULL;
-  current_cr.check_frontier = FALSE;
-  current_cr.went_frontier = FALSE;
 
   uint32_t depth = input_block->block_depth;
   uint32_t relative_depth = 0;
@@ -1168,21 +1178,6 @@ int insert_point(struct block *input_block, ulong col, ulong row,
   struct block *insertion_block =
       il.parent_node.last_child_result_reached.resulting_block;
   return insert_point_at(insertion_block, &il, qs);
-}
-
-static inline int clean_child_result(struct child_result *cresult) {
-  cresult->resulting_block = NULL;
-  cresult->resulting_node_idx = 0;
-  cresult->resulting_relative_depth = 0;
-  cresult->is_leaf_result = FALSE;
-  cresult->exists = FALSE;
-  cresult->check_frontier = FALSE;
-  cresult->went_frontier = FALSE;
-  cresult->previous_block = NULL;
-  cresult->previous_preorder = 0;
-  cresult->previous_to_current_index = 0;
-  cresult->previous_depth = 0;
-  return SUCCESS_ECODE_K2T;
 }
 
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
