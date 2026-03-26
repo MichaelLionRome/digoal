@@ -35,17 +35,18 @@ int clean_sequential_scan_result(struct sequential_scan_result *scr);
 int init_queries_state(struct queries_state *qs, uint32_t tree_depth) {
   CHECK_ERR(init_morton_code(&qs->mc, tree_depth));
   init_int_stack(&qs->not_yet_traversed, 2 * tree_depth);
-  init_circular_queue(&qs->subtrees_count, 2 * tree_depth,
-                      sizeof(struct node_subtree_info));
+  init_nsi_t_stack(&qs->subtrees_count, 2 * tree_depth);
   qs->find_split_data = FALSE;
 #ifdef DEBUG_STATS
   qs->dstats.time_on_sequential_scan = 0;
+  qs->dstats.time_on_frontier_check = 0;
+  qs->dstats.split_count = 0;
 #endif
   return init_sequential_scan_result(&qs->sc_result);
 }
 
 int finish_queries_state(struct queries_state *qs) {
-  _SAFE_OP_K2(clean_circular_queue(&qs->subtrees_count));
+  free_nsi_t_stack(&qs->subtrees_count);
   free_int_stack(&qs->not_yet_traversed);
   CHECK_ERR(clean_morton_code(&qs->mc));
   return clean_sequential_scan_result(&qs->sc_result);

@@ -42,12 +42,6 @@ std::vector<unsigned long> create_shuffled_sequence(unsigned long sequence_size,
 
 int main(void) {
 
-  random_benchmark_by_depth(30, 1 << 25);
-
-  for (unsigned long i = 2; i < 12; i++) {
-    random_benchmark_by_depth_dense(i, 1 << i);
-  }
-
   for (unsigned long i = 2; i < 20; i++) {
     random_benchmark_by_depth(i, 1 << i);
   }
@@ -103,13 +97,22 @@ void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
             << duration.count() / points_count << std::endl;
 
 #ifdef DEBUG_STATS
+  std::cout << "(Times altered by measurement)" << std::endl;
   std::cout << "Time spent on sequential scan in total "
             << qs.dstats.time_on_sequential_scan << " microseconds"
             << std::endl;
   std::cout << "Time spent on sequential scan in average "
             << qs.dstats.time_on_sequential_scan / points_count
             << " microseconds" << std::endl;
+  std::cout << "Time spent on frontier_check in total "
+            << qs.dstats.time_on_frontier_check << " microseconds" << std::endl;
+  std::cout << "Time spent on frontier_check in average "
+            << qs.dstats.time_on_frontier_check / points_count
+            << " microseconds" << std::endl;
+  std::cout << "Split count: " << qs.dstats.split_count << std::endl;
   qs.dstats.time_on_sequential_scan = 0;
+  qs.dstats.time_on_frontier_check = 0;
+  qs.dstats.split_count = 0;
 #endif
 
   start = std::chrono::high_resolution_clock::now();
@@ -134,13 +137,22 @@ void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
   std::cout << "Average Time querying one point in Microseconds: "
             << duration.count() / points_count << std::endl;
 #ifdef DEBUG_STATS
+  std::cout << "(Times altered by measurement)" << std::endl;
   std::cout << "Time spent on sequential scan in total "
             << qs.dstats.time_on_sequential_scan << " microseconds"
             << std::endl;
   std::cout << "Time spent on sequential scan in average "
             << qs.dstats.time_on_sequential_scan / points_count
             << " microseconds" << std::endl;
+  std::cout << "Time spent on frontier_check in total "
+            << qs.dstats.time_on_frontier_check << " microseconds" << std::endl;
+  std::cout << "Time spent on frontier_check in average "
+            << qs.dstats.time_on_frontier_check / points_count
+            << " microseconds" << std::endl;
+  std::cout << "Split count: " << qs.dstats.split_count << std::endl;
   qs.dstats.time_on_sequential_scan = 0;
+  qs.dstats.time_on_frontier_check = 0;
+  qs.dstats.split_count = 0;
 #endif
 
   std::cout << "-------------------\n\n\n" << std::endl;
@@ -182,13 +194,22 @@ void random_benchmark_by_depth_dense(uint32_t treedepth,
             << duration.count() / points_count << std::endl;
 
 #ifdef DEBUG_STATS
+  std::cout << "(Times altered by measurement)" << std::endl;
   std::cout << "Time spent on sequential scan in total "
             << qs.dstats.time_on_sequential_scan << " microseconds"
             << std::endl;
   std::cout << "Time spent on sequential scan in average "
             << qs.dstats.time_on_sequential_scan / points_count
             << " microseconds" << std::endl;
+  std::cout << "Time spent on frontier_check in total "
+            << qs.dstats.time_on_frontier_check << " microseconds" << std::endl;
+  std::cout << "Time spent on frontier_check in average "
+            << qs.dstats.time_on_frontier_check / points_count
+            << " microseconds" << std::endl;
+  std::cout << "Split count: " << qs.dstats.split_count << std::endl;
   qs.dstats.time_on_sequential_scan = 0;
+  qs.dstats.time_on_frontier_check = 0;
+  qs.dstats.split_count = 0;
 #endif
 
   start = std::chrono::high_resolution_clock::now();
@@ -215,13 +236,22 @@ void random_benchmark_by_depth_dense(uint32_t treedepth,
   std::cout << "Average Time querying one point in Microseconds: "
             << duration.count() / points_count << std::endl;
 #ifdef DEBUG_STATS
+  std::cout << "(Times altered by measurement)" << std::endl;
   std::cout << "Time spent on sequential scan in total "
             << qs.dstats.time_on_sequential_scan << " microseconds"
             << std::endl;
   std::cout << "Time spent on sequential scan in average "
             << qs.dstats.time_on_sequential_scan / points_count
             << " microseconds" << std::endl;
+  std::cout << "Time spent on frontier_check in total "
+            << qs.dstats.time_on_frontier_check << " microseconds" << std::endl;
+  std::cout << "Time spent on frontier_check in average "
+            << qs.dstats.time_on_frontier_check / points_count
+            << " microseconds" << std::endl;
+  std::cout << "Split count: " << qs.dstats.split_count << std::endl;
   qs.dstats.time_on_sequential_scan = 0;
+  qs.dstats.time_on_frontier_check = 0;
+  qs.dstats.split_count = 0;
 #endif
 
   std::cout << "-------------------\n\n\n" << std::endl;

@@ -30,7 +30,7 @@ src/block_topology.c
 src/custom_bv_handling.c
 src/morton_code.c
 src/queries_state.c
-src/int_stack.c
+src/stacks.c
 src/vectors.c
 )
 
@@ -51,7 +51,6 @@ lib/c-vector/include
 
 set(LIB_SOURCES
 lib/c-bitvector/src/bitvector.c
-lib/c-queue/src/circular_queue.c
 )
 
 

@@ -25,11 +25,11 @@ SOFTWARE.
 #define _QUERIES_STATE_H
 
 #include <bitvector.h>
-#include <circular_queue.h>
 
-#include "int_stack.h"
+#include "definitions.h"
 #include "memalloc.h"
 #include "morton_code.h"
+#include "stacks.h"
 
 struct sequential_scan_result {
   uint32_t child_preorder;
@@ -38,15 +38,11 @@ struct sequential_scan_result {
   struct u32array_alloc relative_depth_map;
 };
 
-struct node_subtree_info {
-  uint32_t node_index;
-  uint32_t node_relative_depth;
-  uint32_t subtree_size;
-};
-
 #ifdef DEBUG_STATS
 struct debug_stats {
   unsigned long time_on_sequential_scan;
+  unsigned long time_on_frontier_check;
+  unsigned long split_count;
 };
 #endif
 
@@ -54,7 +50,7 @@ struct queries_state {
   struct morton_code mc;
   struct sequential_scan_result sc_result;
   struct int_stack not_yet_traversed;
-  struct circular_queue subtrees_count;
+  struct nsi_t_stack subtrees_count;
   int find_split_data;
 #ifdef DEBUG_STATS
   struct debug_stats dstats;

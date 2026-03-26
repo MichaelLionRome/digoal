@@ -24,13 +24,13 @@ SOFTWARE.
 #include <math.h>
 #include <string.h>
 
-#include <bitvector.h>
-#include <circular_queue.h>
-
 #include "block.h"
 #include "block_frontier.h"
 #include "definitions.h"
 #include "morton_code.h"
+#include "stacks.h"
+#include "vectors.h"
+#include <bitvector.h>
 
 #include "custom_bv_handling.h"
 #include "memalloc.h"
@@ -203,8 +203,19 @@ int child(struct block *input_block, uint32_t input_node_idx,
 
   uint32_t frontier_traversal_idx = 0;
   int is_frontier;
+#ifdef DEBUG_STATS
+  struct timeval tval_before, tval_after, tval_result;
+  gettimeofday(&tval_before, NULL);
+#endif
   CHECK_ERR(frontier_check(input_block->bf, input_node_idx,
                            &frontier_traversal_idx, &is_frontier));
+
+#ifdef DEBUG_STATS
+  gettimeofday(&tval_after, NULL);
+  timersub(&tval_after, &tval_before, &tval_result);
+  qs->dstats.time_on_sequential_scan +=
+      (unsigned long)tval_result.tv_sec * 1000000 + tval_result.tv_usec;
+#endif
 
   if (is_frontier) {
     struct block *child_block;
@@ -244,7 +255,6 @@ int child(struct block *input_block, uint32_t input_node_idx,
       input_block, input_node_idx, requested_child_position);
   qs->find_split_data = FALSE;
 #ifdef DEBUG_STATS
-  struct timeval tval_before, tval_after, tval_result;
   gettimeofday(&tval_before, NULL);
 #endif
   CHECK_ERR(sequential_scan_child(input_block, input_node_idx, subtrees_to_skip,
@@ -272,7 +282,7 @@ int reset_sequential_scan_child(struct queries_state *qs) {
   qs->sc_result.node_relative_depth = 0;
 
   if (qs->find_split_data) {
-    reset_circular_queue(&qs->subtrees_count);
+    reset_nsi_t_stack(&qs->subtrees_count);
   }
 
   return SUCCESS_ECODE_K2T;
@@ -301,20 +311,30 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
     nsi.node_index = input_node_idx;
     nsi.node_relative_depth = input_node_relative_depth;
     nsi.subtree_size = 1;
-    _SAFE_OP_K2(push_circular_queue(&qs->subtrees_count, (char *)&nsi));
+    push_nsi_t_stack(&qs->subtrees_count, nsi);
   }
 
   uint32_t current_node_index = input_node_idx;
   TREE_DEPTH_T depth = input_node_relative_depth;
   TREE_DEPTH_T real_depth = depth + input_block->block_depth;
 
-  int is_empty = empty_int_stack(&qs->not_yet_traversed);
-  while (!is_empty) {
+  while (!empty_int_stack(&qs->not_yet_traversed)) {
     current_node_index++;
 
     int is_frontier;
+
+#ifdef DEBUG_STATS
+    struct timeval tval_before, tval_after, tval_result;
+    gettimeofday(&tval_before, NULL);
+#endif
     CHECK_ERR(frontier_check(input_block->bf, input_node_idx,
                              frontier_traversal_idx, &is_frontier));
+#ifdef DEBUG_STATS
+    gettimeofday(&tval_after, NULL);
+    timersub(&tval_after, &tval_before, &tval_result);
+    qs->dstats.time_on_frontier_check +=
+        (unsigned long)tval_result.tv_sec * 1000000 + tval_result.tv_usec;
+#endif
 
     int reaching_leaf = (real_depth == input_block->tree_depth - 1);
 
@@ -328,12 +348,21 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
       nsi_w.node_index = current_node_index;
       nsi_w.node_relative_depth = depth;
       nsi_w.subtree_size = 1;
-      _SAFE_OP_K2(push_circular_queue(&qs->subtrees_count, (char *)&nsi_w));
+      push_nsi_t_stack(&qs->subtrees_count, nsi_w);
     }
     /* end block of split data */
 
+#ifdef DEBUG_STATS
+    gettimeofday(&tval_before, NULL);
+#endif
     CHECK_ERR(frontier_check(input_block->bf, current_node_index,
                              frontier_traversal_idx, &is_frontier));
+#ifdef DEBUG_STATS
+    gettimeofday(&tval_after, NULL);
+    timersub(&tval_after, &tval_before, &tval_result);
+    qs->dstats.time_on_frontier_check +=
+        (unsigned long)tval_result.tv_sec * 1000000 + tval_result.tv_usec;
+#endif
     real_depth = depth + input_block->block_depth;
     reaching_leaf = (real_depth == input_block->tree_depth - 1);
 
@@ -345,48 +374,38 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
 
       push_int_stack(&qs->not_yet_traversed, (int)current_children_count);
     } else {
-      uint32_t next_nyt = (uint32_t)pop_int_stack(&qs->not_yet_traversed) - 1;
+      int next_nyt = pop_int_stack(&qs->not_yet_traversed) - 1;
 
       int is_info_queue_empty = TRUE;
       struct node_subtree_info nsi_rep;
       /* start block of split data */
       if (qs->find_split_data) {
-        _SAFE_OP_K2(
-            empty_circular_queue(&qs->subtrees_count, &is_info_queue_empty));
-        if (!is_info_queue_empty) {
-          _SAFE_OP_K2(
-              pop_back_circular_queue(&qs->subtrees_count, (char *)&nsi_rep));
+        if (!(is_info_queue_empty = empty_nsi_t_stack(&qs->subtrees_count))) {
+          nsi_rep = pop_nsi_t_stack(&qs->subtrees_count);
           CHECK_ERR(mark_subtree_size(result, nsi_rep.node_index,
                                       nsi_rep.node_relative_depth,
                                       nsi_rep.subtree_size));
-          _SAFE_OP_K2(
-              empty_circular_queue(&qs->subtrees_count, &is_info_queue_empty));
-          if (!is_info_queue_empty) {
-            struct node_subtree_info *nsi_rep_within;
-            back_reference_circular_queue(&qs->subtrees_count,
-                                          (char **)&nsi_rep_within);
+          if (!(is_info_queue_empty = empty_nsi_t_stack(&qs->subtrees_count))) {
+            struct node_subtree_info *nsi_rep_within =
+                top_ref_nsi_t_stack(&qs->subtrees_count);
             nsi_rep_within->subtree_size += nsi_rep.subtree_size;
           }
         }
       }
       /* end block of split data */
-      is_empty = empty_int_stack(&qs->not_yet_traversed);
-      while (next_nyt == 0 && !is_empty) {
-        next_nyt = (uint32_t)pop_int_stack(&qs->not_yet_traversed) - 1;
+      while (next_nyt == 0 && !empty_int_stack(&qs->not_yet_traversed)) {
+        next_nyt = pop_int_stack(&qs->not_yet_traversed) - 1;
 
         /* start block of split data */
         if (qs->find_split_data && !is_info_queue_empty) {
-          _SAFE_OP_K2(
-              pop_back_circular_queue(&qs->subtrees_count, (char *)&nsi_rep));
+          nsi_rep = pop_nsi_t_stack(&qs->subtrees_count);
           CHECK_ERR(mark_subtree_size(result, nsi_rep.node_index,
                                       nsi_rep.node_relative_depth,
                                       nsi_rep.subtree_size));
-          _SAFE_OP_K2(
-              empty_circular_queue(&qs->subtrees_count, &is_info_queue_empty));
-          if (!is_info_queue_empty) {
-            struct node_subtree_info *nsi_rep_within;
-            _SAFE_OP_K2(back_reference_circular_queue(
-                &qs->subtrees_count, (char **)&nsi_rep_within));
+
+          if (!(is_info_queue_empty = empty_nsi_t_stack(&qs->subtrees_count))) {
+            struct node_subtree_info *nsi_rep_within =
+                top_ref_nsi_t_stack(&qs->subtrees_count);
             nsi_rep_within->subtree_size += nsi_rep.subtree_size;
           }
         }
@@ -395,8 +414,6 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
         if (depth > 0) {
           depth--;
         }
-        // Last op
-        is_empty = empty_int_stack(&qs->not_yet_traversed);
       }
       if (is_frontier && depth > 0) {
         depth--;
@@ -405,29 +422,18 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
         push_int_stack(&qs->not_yet_traversed, (int)next_nyt);
       }
     }
-
-    // Last op
-    is_empty = empty_int_stack(&qs->not_yet_traversed);
   }
   /* end block of split data */
   if (qs->find_split_data) {
-    int is_info_queue_empty;
-    _SAFE_OP_K2(
-        empty_circular_queue(&qs->subtrees_count, &is_info_queue_empty));
-    if (!is_info_queue_empty) {
-      struct node_subtree_info nsi_out_w;
-      _SAFE_OP_K2(
-          pop_back_circular_queue(&qs->subtrees_count, (char *)&nsi_out_w));
+    if (!empty_nsi_t_stack(&qs->subtrees_count)) {
+      struct node_subtree_info nsi_out_w = pop_nsi_t_stack(&qs->subtrees_count);
       CHECK_ERR(mark_subtree_size(result, nsi_out_w.node_index,
                                   nsi_out_w.node_relative_depth,
                                   nsi_out_w.subtree_size));
 
-      _SAFE_OP_K2(
-          empty_circular_queue(&qs->subtrees_count, &is_info_queue_empty));
-      if (!is_info_queue_empty) {
-        struct node_subtree_info *nsi_rep_within;
-        _SAFE_OP_K2(back_reference_circular_queue(&qs->subtrees_count,
-                                                  (char **)&nsi_rep_within));
+      if (!empty_nsi_t_stack(&qs->subtrees_count)) {
+        struct node_subtree_info *nsi_rep_within =
+            top_ref_nsi_t_stack(&qs->subtrees_count);
         nsi_rep_within->subtree_size += nsi_out_w.subtree_size;
       }
     }
@@ -528,8 +534,18 @@ int find_insertion_location(struct block *input_block, struct queries_state *qs,
   }
 
   int is_frontier;
+#ifdef DEBUG_STATS
+  struct timeval tval_before, tval_after, tval_result;
+  gettimeofday(&tval_before, NULL);
+#endif
   CHECK_ERR(frontier_check(reached_block->bf, node_index,
                            &frontier_traversal_idx, &is_frontier));
+#ifdef DEBUG_STATS
+  gettimeofday(&tval_after, NULL);
+  timersub(&tval_after, &tval_before, &tval_result);
+  qs->dstats.time_on_frontier_check +=
+      (unsigned long)tval_result.tv_sec * 1000000 + tval_result.tv_usec;
+#endif
   if (is_frontier) {
     return FRONTIER_NODE_WITHIN_FIND_INSERTION_LOC;
   }
@@ -553,7 +569,6 @@ int find_insertion_location(struct block *input_block, struct queries_state *qs,
 
   qs->find_split_data = FALSE;
 #ifdef DEBUG_STATS
-  struct timeval tval_before, tval_after, tval_result;
   gettimeofday(&tval_before, NULL);
 #endif
   CHECK_ERR(sequential_scan_child(
@@ -730,8 +745,18 @@ int split_block(struct block *input_block, struct queries_state *qs) {
   int found_loc = FALSE;
   for (uint32_t node_index = 1; node_index <= qs->sc_result.child_preorder;
        node_index++) {
+#ifdef DEBUG_STATS
+    struct timeval tval_before, tval_after, tval_result;
+    gettimeofday(&tval_before, NULL);
+#endif
     CHECK_ERR(frontier_check(input_block->bf, node_index,
                              &frontier_traversal_index, &is_frontier));
+#ifdef DEBUG_STATS
+    gettimeofday(&tval_after, NULL);
+    timersub(&tval_after, &tval_before, &tval_result);
+    qs->dstats.time_on_frontier_check +=
+        (unsigned long)tval_result.tv_sec * 1000000 + tval_result.tv_usec;
+#endif
     if (is_frontier) {
       continue;
     } else {
@@ -868,6 +893,9 @@ int insert_point_at(struct block *insertion_block,
   }
 
   CHECK_ERR(split_block(insertion_block, qs));
+#ifdef DEBUG_STATS
+  qs->dstats.split_count++;
+#endif
 
   struct insertion_location il_split;
   CHECK_ERR(find_insertion_location(insertion_block->root, qs, &il_split));

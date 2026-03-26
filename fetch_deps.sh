@@ -49,20 +49,3 @@ fi
 
 cd ..
 # End c-vector
-
-# Begin c-queue
-if [[ -d "c-queue" ]]; then
-    cd c-queue
-    git fetch
-    git pull
-else
-    if ! (git clone https://github.com/CristobalM/c-queue) then
-        echo "Couldn't retrieve c-queue repository.. exiting"
-        exit 1
-    fi
-    cd c-queue
-fi
-
-make
-cd ..
-# End c-queue

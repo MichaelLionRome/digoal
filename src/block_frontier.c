@@ -62,20 +62,22 @@ int free_block_frontier(struct block_frontier *bf) {
 
 int frontier_check(struct block_frontier *bf, uint32_t node_idx,
                    uint32_t *frontier_traversal_idx, int *result) {
-  if (*frontier_traversal_idx >= (uint32_t)bf->frontier.nof_items ||
+  uint32_t tmp_findex = *frontier_traversal_idx;
+  if (tmp_findex >= (uint32_t)bf->frontier.nof_items ||
       bf->frontier.nof_items == 0) {
     *result = FALSE;
     return SUCCESS_ECODE_K2T;
   }
 
-  uint32_t current = bf->frontier.data[*frontier_traversal_idx];
+  uint32_t current;
 
-  while (*frontier_traversal_idx < (uint32_t)bf->frontier.nof_items &&
-         (current = bf->frontier.data[*frontier_traversal_idx]) < node_idx) {
-    (*frontier_traversal_idx)++;
+  while (tmp_findex < (uint32_t)bf->frontier.nof_items &&
+         (current = bf->frontier.data[tmp_findex]) < node_idx) {
+    tmp_findex++;
   }
 
   *result = node_idx == current;
+  *frontier_traversal_idx = tmp_findex;
 
   return SUCCESS_ECODE_K2T;
 }
@@ -90,6 +92,7 @@ int get_child_block(struct block_frontier *bf, uint32_t frontier_node_idx,
 
   return SUCCESS_ECODE_K2T;
 }
+
 int find_insertion_point(struct block_frontier *bf, uint32_t preorder) {
   if (bf->frontier.nof_items == 0) {
     return 0;

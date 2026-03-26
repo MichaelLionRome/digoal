@@ -46,8 +46,6 @@ struct block {
   BLOCK_INDEX_T block_index;
 };
 
-typedef struct block block_t;
-
 typedef void (*point_reporter_fun_t)(ulong, ulong, void *);
 
 int has_point(struct block *input_block, ulong col, ulong row,

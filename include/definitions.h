@@ -87,7 +87,7 @@ SOFTWARE.
 typedef unsigned long ulong;
 
 #ifndef MAX_NODES_IN_BLOCK
-#define MAX_NODES_IN_BLOCK 1024
+#define MAX_NODES_IN_BLOCK 256
 #endif
 #ifndef STARTING_BLOCK_CAPACITY
 #define STARTING_BLOCK_CAPACITY 64
@@ -99,5 +99,13 @@ struct pair2dl {
 };
 
 typedef struct pair2dl pair2dl_t;
+
+struct node_subtree_info {
+  uint32_t node_index;
+  uint32_t node_relative_depth;
+  uint32_t subtree_size;
+};
+
+typedef struct node_subtree_info nsi_t;
 
 #endif /* _K2TREE_DEFINITIONS_H_ */
