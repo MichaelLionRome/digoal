@@ -46,7 +46,7 @@ class BlockWrapper {
 public:
   BlockWrapper(uint32_t tree_depth) {
     b = create_block(tree_depth);
-    init_queries_state(&qs, tree_depth);
+    init_queries_state(&qs, tree_depth, b->max_node_count);
   }
   BlockWrapper(uint32_t tree_depth, uint32_t max_node_count)
       : BlockWrapper(tree_depth) {

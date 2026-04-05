@@ -108,4 +108,8 @@ struct node_subtree_info {
 
 typedef struct node_subtree_info nsi_t;
 
+typedef uint8_t TREE_DEPTH_T;
+typedef uint16_t MAX_NODE_COUNT_T;
+typedef uint32_t BLOCK_INDEX_T;
+
 #endif /* _K2TREE_DEFINITIONS_H_ */

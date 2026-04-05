@@ -38,7 +38,7 @@ int main(void) {
   struct block *root_block = create_block(treedepth);
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth);
+  init_queries_state(&qs, treedepth, root_block->max_node_count);
 
   struct timeval tval_before, tval_after, tval_result;
 

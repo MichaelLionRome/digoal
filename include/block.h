@@ -23,17 +23,13 @@ SOFTWARE.
 */
 #ifndef _BLOCK_H_
 #define _BLOCK_H_
+#include <stdint.h>
 
 #include "block_frontier.h"
 #include "block_topology.h"
-#include "vectors.h"
-#include <stdint.h>
-
+#include "definitions.h"
 #include "queries_state.h"
-
-typedef uint8_t TREE_DEPTH_T;
-typedef uint16_t MAX_NODE_COUNT_T;
-typedef uint32_t BLOCK_INDEX_T;
+#include "vectors.h"
 
 struct block {
   struct block_topology *bt;

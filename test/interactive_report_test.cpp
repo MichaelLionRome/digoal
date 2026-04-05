@@ -71,7 +71,7 @@ TEST(interactive_block_test, test1) {
   struct block *root_block = create_block(treedepth);
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth);
+  init_queries_state(&qs, treedepth, root_block->max_node_count);
 
   std::vector<struct pair2dl> init_elements = {
       {0, 0},  {3, 3}, {15, 3}, {3, 15}, {30, 31}, {31, 8},

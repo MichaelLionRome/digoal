@@ -34,7 +34,7 @@ int main(void) {
   struct block *root_block = create_block(treedepth);
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth);
+  init_queries_state(&qs, treedepth, root_block->max_node_count);
 
   struct vector_pair2dl_t input_pairs;
   vector_pair2dl_t__init_vector_with_capacity(&input_pairs, 1000);

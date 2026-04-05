@@ -22,27 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include "queries_state.h"
-#include "definitions.h"
-
-#include "memalloc.h"
 
 /* PRIVATE PROTOTYPES */
-int init_sequential_scan_result(struct sequential_scan_result *scr);
+int init_sequential_scan_result(struct sequential_scan_result *scr,
+                                MAX_NODE_COUNT_T max_nodes_count);
 int clean_sequential_scan_result(struct sequential_scan_result *scr);
 /* END PRIVATE PROTOTYPES */
 
 /* IMPLEMENTATION PUBLIC FUNCTIONS */
-int init_queries_state(struct queries_state *qs, uint32_t tree_depth) {
+int init_queries_state(struct queries_state *qs, uint32_t tree_depth,
+                       MAX_NODE_COUNT_T max_nodes_count) {
   CHECK_ERR(init_morton_code(&qs->mc, tree_depth));
   init_int_stack(&qs->not_yet_traversed, 2 * tree_depth);
   init_nsi_t_stack(&qs->subtrees_count, 2 * tree_depth);
   qs->find_split_data = FALSE;
+  qs->max_nodes_count = max_nodes_count;
 #ifdef DEBUG_STATS
   qs->dstats.time_on_sequential_scan = 0;
   qs->dstats.time_on_frontier_check = 0;
   qs->dstats.split_count = 0;
 #endif
-  return init_sequential_scan_result(&qs->sc_result);
+  return init_sequential_scan_result(&qs->sc_result, qs->max_nodes_count);
 }
 
 int finish_queries_state(struct queries_state *qs) {
@@ -54,9 +54,10 @@ int finish_queries_state(struct queries_state *qs) {
 /* END IMPLEMENTATION PUBLIC FUNCTIONS */
 
 /* PRIVATE FUNCTIONS IMPLEMENTATION */
-int init_sequential_scan_result(struct sequential_scan_result *scr) {
-  scr->subtrees_count_map = k2tree_alloc_u32array(MAX_NODES_IN_BLOCK);
-  scr->relative_depth_map = k2tree_alloc_u32array(MAX_NODES_IN_BLOCK);
+int init_sequential_scan_result(struct sequential_scan_result *scr,
+                                MAX_NODE_COUNT_T max_nodes_count) {
+  scr->subtrees_count_map = k2tree_alloc_u32array(max_nodes_count);
+  scr->relative_depth_map = k2tree_alloc_u32array(max_nodes_count);
 
   return SUCCESS_ECODE_K2T;
 }

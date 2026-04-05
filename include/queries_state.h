@@ -52,12 +52,14 @@ struct queries_state {
   struct int_stack not_yet_traversed;
   struct nsi_t_stack subtrees_count;
   int find_split_data;
+  MAX_NODE_COUNT_T max_nodes_count;
 #ifdef DEBUG_STATS
   struct debug_stats dstats;
 #endif
 };
 
-int init_queries_state(struct queries_state *qs, uint32_t tree_depth);
+int init_queries_state(struct queries_state *qs, uint32_t tree_depth,
+                       MAX_NODE_COUNT_T max_nodes_count);
 int finish_queries_state(struct queries_state *qs);
 
 #endif /* _QUERIES_STATE_H */

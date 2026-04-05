@@ -42,7 +42,7 @@ TEST(block_test, test1) {
   uint32_t tree_depth = 3;
   struct block *root_block = create_block(tree_depth);
   struct queries_state qs;
-  init_queries_state(&qs, tree_depth);
+  init_queries_state(&qs, tree_depth, root_block->max_node_count);
 
   insert_point(root_block, 0, 0, &qs);
   int found_point;

@@ -31,7 +31,7 @@ int main(void) {
   uint32_t tree_depth = 32;
   struct block *root_block = create_block(tree_depth);
   struct queries_state qs;
-  init_queries_state(&qs, tree_depth);
+  init_queries_state(&qs, tree_depth, root_block->max_node_count);
 
   FILE *fp = fopen("../test/points_output.txt", "r");
 

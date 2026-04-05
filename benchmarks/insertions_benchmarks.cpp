@@ -72,7 +72,7 @@ void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
   struct block *root_block = create_block(static_cast<TREE_DEPTH_T>(treedepth));
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth);
+  init_queries_state(&qs, treedepth, root_block->max_node_count);
 
   auto random_seq_1 = create_shuffled_sequence(points_count, side);
   auto random_seq_2 = create_shuffled_sequence(points_count, side);
@@ -167,7 +167,7 @@ void random_benchmark_by_depth_dense(uint32_t treedepth,
   struct block *root_block = create_block(static_cast<TREE_DEPTH_T>(treedepth));
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth);
+  init_queries_state(&qs, treedepth, root_block->max_node_count);
 
   auto random_seq_1 = create_shuffled_sequence(points_count, side);
   auto random_seq_2 = create_shuffled_sequence(points_count, side);

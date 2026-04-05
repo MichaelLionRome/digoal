@@ -33,7 +33,7 @@ int main(void) {
     struct block *root_block = create_block(treedepth);
 
     struct queries_state qs;
-    init_queries_state(&qs, treedepth);
+    init_queries_state(&qs, treedepth, root_block->max_node_count);
 
     for (ulong col = 0; col < side; col++) {
       for (ulong row = 0; row < side; row++) {
