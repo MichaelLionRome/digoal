@@ -75,4 +75,6 @@ struct block *create_block(TREE_DEPTH_T tree_depth);
 int free_rec_block(struct block *input_block);
 int free_block(struct block *input_block);
 
+unsigned long measure_tree_size(struct block *input_block);
+
 #endif /* _BLOCK_H_ */

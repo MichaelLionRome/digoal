@@ -79,6 +79,10 @@ add_executable(insertions_benchmarks benchmarks/insertions_benchmarks.cpp)
 target_link_libraries(insertions_benchmarks k2dyn)
 
 
+add_executable(size_benchmarks benchmarks/size_benchmarks.cpp)
+target_link_libraries(size_benchmarks k2dyn)
+
+
 
 find_package(GTest QUIET)
 if(GTest_FOUND)

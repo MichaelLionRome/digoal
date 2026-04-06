@@ -1295,3 +1295,19 @@ int free_block(struct block *input_block) {
   k2tree_free_block(input_block);
   return SUCCESS_ECODE_K2T;
 }
+
+unsigned long measure_tree_size(struct block *input_block) {
+  unsigned long children_size = 0;
+  for (uint32_t child_block_index = 0;
+       child_block_index < input_block->bf->blocks.nof_items;
+       child_block_index++) {
+    children_size +=
+        measure_tree_size(input_block->bf->blocks.data[child_block_index]);
+  }
+
+  return children_size + sizeof(struct block) + sizeof(struct block_topology) +
+         sizeof(struct block_frontier) + sizeof(struct bitvector) +
+         input_block->bt->bv->container_size * sizeof(BVCTYPE) +
+         input_block->bf->frontier.capacity * sizeof(uint32_t) +
+         input_block->bf->blocks.capacity * sizeof(struct block *);
+}
