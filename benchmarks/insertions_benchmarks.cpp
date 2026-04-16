@@ -26,6 +26,7 @@ extern "C" {
 #include <queries_state.h>
 }
 
+#include "fisher_yates.hpp"
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -37,8 +38,6 @@ std::mt19937 rng(123321);
 
 void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count);
 void random_benchmark_by_depth_dense(uint32_t treedepth, uint32_t points_count);
-std::vector<unsigned long> create_shuffled_sequence(unsigned long sequence_size,
-                                                    unsigned long space_size);
 
 int main(void) {
 
@@ -52,21 +51,6 @@ int main(void) {
   return 0;
 }
 
-std::vector<unsigned long> create_shuffled_sequence(unsigned long sequence_size,
-                                                    unsigned long space_size) {
-  std::vector<unsigned long> build_seq(space_size, 0);
-  for (unsigned long i = 0; i < space_size; i++) {
-    build_seq[i] = i;
-  }
-
-  std::random_shuffle(build_seq.begin(), build_seq.end());
-  std::vector<unsigned long> out(sequence_size);
-
-  std::copy(build_seq.begin(), build_seq.begin() + sequence_size, out.begin());
-
-  return out;
-}
-
 void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
   unsigned long side = 1 << treedepth;
   struct block *root_block = create_block(static_cast<TREE_DEPTH_T>(treedepth));
@@ -74,8 +58,8 @@ void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
   struct queries_state qs;
   init_queries_state(&qs, treedepth, root_block->max_node_count);
 
-  auto random_seq_1 = create_shuffled_sequence(points_count, side);
-  auto random_seq_2 = create_shuffled_sequence(points_count, side);
+  auto random_seq_1 = fisher_yates(points_count, side);
+  auto random_seq_2 = fisher_yates(points_count, side);
 
   std::cout << "-------------------\n";
   std::cout << "Started random_benchmark_by_depth with treedepth = "
@@ -169,8 +153,8 @@ void random_benchmark_by_depth_dense(uint32_t treedepth,
   struct queries_state qs;
   init_queries_state(&qs, treedepth, root_block->max_node_count);
 
-  auto random_seq_1 = create_shuffled_sequence(points_count, side);
-  auto random_seq_2 = create_shuffled_sequence(points_count, side);
+  auto random_seq_1 = fisher_yates(points_count, side);
+  auto random_seq_2 = fisher_yates(points_count, side);
 
   std::cout << "-------------------\n";
   std::cout << "Started random_benchmark_by_depth_dense with treedepth = "

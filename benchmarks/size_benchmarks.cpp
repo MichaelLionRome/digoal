@@ -1,7 +1,12 @@
 #include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <iostream>
 #include <random>
+#include <unordered_map>
 #include <vector>
+
+#include "fisher_yates.hpp"
 
 extern "C" {
 #include "block.h"
@@ -14,68 +19,101 @@ struct BenchmarkResult {
   int node_count;
   unsigned long points_count;
   unsigned long size_bytes;
+  unsigned long bytes_ptrs;
+  unsigned long bytes_topologies;
+  unsigned long total_microseconds_inserting;
+  unsigned long inserted_points;
 };
 
-std::vector<unsigned long> create_shuffled_sequence(unsigned long sequence_size,
-                                                    unsigned long space_size);
 BenchmarkResult space_benchmark_random_insertion_by_depth_and_node_count(
     TREE_DEPTH_T treedepth, MAX_NODE_COUNT_T node_count,
-    unsigned long points_count);
+    unsigned long points_count, std::vector<unsigned long> &cols,
+    std::vector<unsigned long> &rows);
 
 int main(void) {
 
+  unsigned long points_count = 1 << 25;
+  unsigned long treedepth = 16;
+  unsigned long side = 1 << treedepth;
+  unsigned long side_count =
+      std::min((unsigned long)std::sqrt(points_count), side);
+
+  auto random_seq_1 = fisher_yates(side_count, side);
+  auto random_seq_2 = fisher_yates(side_count, side);
   std::vector<BenchmarkResult> results;
-  for (int node_count_base = 7; node_count_base <= 10; node_count_base++) {
+  std::cout << "started experiments" << std::endl;
+  for (int node_count_base = 6; node_count_base <= 10; node_count_base++) {
 
     results.push_back(space_benchmark_random_insertion_by_depth_and_node_count(
-        25, 1 << node_count_base, 1 << 20));
+        treedepth, 1 << node_count_base, points_count, random_seq_1,
+        random_seq_2));
   }
 
-  std::cout << "Tree depth\t\tNode count\t\tPoints count\t\tBytes" << std::endl;
+  std::cout << "Tree depth,Node count,Points count,Total Bytes,Bytes "
+               "Ptrs+Preorders,Bytes Topologies,Total Time(Microsecs), Avg "
+               "Time(Microsecs)"
+            << std::endl;
 
   for (auto bm : results) {
-    std::cout << bm.treedepth << "\t\t\t" << bm.node_count << "\t\t\t"
-              << bm.points_count << "\t\t\t" << bm.size_bytes << std::endl;
+    std::cout << bm.treedepth << "," << bm.node_count << ","
+              << bm.inserted_points << "," << bm.size_bytes << ","
+              << bm.bytes_ptrs << "," << bm.bytes_topologies << ","
+              << bm.total_microseconds_inserting << ","
+              << (float)bm.total_microseconds_inserting /
+                     (float)bm.inserted_points
+              << std::endl;
   }
 
   return 0;
 }
 
-std::vector<unsigned long> create_shuffled_sequence(unsigned long sequence_size,
-                                                    unsigned long space_size) {
-  std::vector<unsigned long> build_seq(space_size, 0);
-  for (unsigned long i = 0; i < space_size; i++) {
-    build_seq[i] = i;
-  }
-
-  std::random_shuffle(build_seq.begin(), build_seq.end());
-  std::vector<unsigned long> out(sequence_size);
-
-  std::copy(build_seq.begin(), build_seq.begin() + sequence_size, out.begin());
-
-  return out;
-}
-
 BenchmarkResult space_benchmark_random_insertion_by_depth_and_node_count(
     TREE_DEPTH_T treedepth, MAX_NODE_COUNT_T node_count,
-    unsigned long points_count) {
-  unsigned long side = 1 << treedepth;
+    unsigned long points_count, std::vector<unsigned long> &cols,
+    std::vector<unsigned long> &rows) {
   struct block *root_block = create_block(static_cast<TREE_DEPTH_T>(treedepth));
+  root_block->max_node_count = node_count;
 
   struct queries_state qs;
   init_queries_state(&qs, treedepth, root_block->max_node_count);
 
-  auto random_seq_1 = create_shuffled_sequence(points_count, side);
-  auto random_seq_2 = create_shuffled_sequence(points_count, side);
+  // auto random_seq_1 = create_shuffled_sequence(points_count, side);
+  // auto random_seq_2 = create_shuffled_sequence(points_count, side);
 
+  /*
   for (size_t i = 0; i < points_count; i++) {
-    insert_point(root_block, random_seq_1[i], random_seq_2[i], &qs);
+    insert_point(root_block, cols[i], rows[i], &qs);
   }
+  */
 
-  unsigned long sz = measure_tree_size(root_block);
+  auto start = std::chrono::high_resolution_clock::now();
+  unsigned long inserted_points = 0;
+  for (size_t i = 0; i < cols.size(); i++) {
+    if (i * rows.size() > points_count)
+      break;
+    for (size_t j = 0; j < rows.size(); j++) {
+      if (i * rows.size() + j > points_count)
+        break;
+      insert_point(root_block, cols[i], rows[j], &qs);
+      inserted_points++;
+    }
+  }
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration =
+      std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+  struct k2tree_measurement measurements = measure_tree_size(root_block);
 
   free_rec_block(root_block);
   finish_queries_state(&qs);
 
-  return {treedepth, node_count, points_count, sz};
+  return {treedepth,
+          node_count,
+          points_count,
+          measurements.total_bytes,
+          measurements.total_blocks *
+              (sizeof(uint32_t) + sizeof(struct block *)),
+          measurements.bytes_topology,
+          (unsigned long)duration.count(),
+          inserted_points};
 }

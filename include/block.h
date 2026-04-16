@@ -42,6 +42,12 @@ struct block {
   BLOCK_INDEX_T block_index;
 };
 
+struct k2tree_measurement {
+  unsigned long total_bytes;
+  unsigned long total_blocks;
+  unsigned long bytes_topology;
+};
+
 typedef void (*point_reporter_fun_t)(ulong, ulong, void *);
 
 int has_point(struct block *input_block, ulong col, ulong row,
@@ -75,6 +81,6 @@ struct block *create_block(TREE_DEPTH_T tree_depth);
 int free_rec_block(struct block *input_block);
 int free_block(struct block *input_block);
 
-unsigned long measure_tree_size(struct block *input_block);
+struct k2tree_measurement measure_tree_size(struct block *input_block);
 
 #endif /* _BLOCK_H_ */

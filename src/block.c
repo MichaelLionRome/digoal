@@ -1296,18 +1296,33 @@ int free_block(struct block *input_block) {
   return SUCCESS_ECODE_K2T;
 }
 
-unsigned long measure_tree_size(struct block *input_block) {
-  unsigned long children_size = 0;
+struct k2tree_measurement measure_tree_size(struct block *input_block) {
+  unsigned long children_total_bytes = 0;
+  unsigned long children_total_blocks = 0;
+  unsigned long children_bytes_topology = 0;
+
   for (uint32_t child_block_index = 0;
        child_block_index < input_block->bf->blocks.nof_items;
        child_block_index++) {
-    children_size +=
+    struct k2tree_measurement children_measurement =
         measure_tree_size(input_block->bf->blocks.data[child_block_index]);
+    children_total_bytes += children_measurement.total_bytes;
+    children_total_blocks += children_measurement.total_blocks;
+    children_bytes_topology += children_measurement.bytes_topology;
   }
 
-  return children_size + sizeof(struct block) + sizeof(struct block_topology) +
-         sizeof(struct block_frontier) + sizeof(struct bitvector) +
-         input_block->bt->bv->container_size * sizeof(BVCTYPE) +
-         input_block->bf->frontier.capacity * sizeof(uint32_t) +
-         input_block->bf->blocks.capacity * sizeof(struct block *);
+  unsigned long bytes_topology =
+      input_block->bt->bv->container_size * sizeof(BVCTYPE);
+
+  unsigned long block_total_bytes =
+      sizeof(struct block) + sizeof(struct block_topology) +
+      sizeof(struct block_frontier) + sizeof(struct bitvector) +
+      bytes_topology + input_block->bf->frontier.capacity * sizeof(uint32_t) +
+      input_block->bf->blocks.capacity * sizeof(struct block *);
+
+  struct k2tree_measurement result;
+  result.total_bytes = block_total_bytes + children_total_bytes;
+  result.bytes_topology = bytes_topology + children_bytes_topology;
+  result.total_blocks = 1 + children_total_blocks;
+  return result;
 }
