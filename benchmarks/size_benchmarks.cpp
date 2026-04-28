@@ -71,11 +71,10 @@ BenchmarkResult space_benchmark_random_insertion_by_depth_and_node_count(
     TREE_DEPTH_T treedepth, MAX_NODE_COUNT_T node_count,
     unsigned long points_count, std::vector<unsigned long> &cols,
     std::vector<unsigned long> &rows) {
-  struct block *root_block = create_block(static_cast<TREE_DEPTH_T>(treedepth));
-  root_block->max_node_count = node_count;
+  struct block *root_block = create_block();
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth, root_block->max_node_count);
+  init_queries_state(&qs, treedepth, node_count, root_block);
 
   // auto random_seq_1 = create_shuffled_sequence(points_count, side);
   // auto random_seq_2 = create_shuffled_sequence(points_count, side);

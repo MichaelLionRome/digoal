@@ -45,12 +45,12 @@ class BlockWrapper {
 
 public:
   BlockWrapper(uint32_t tree_depth) {
-    b = create_block(tree_depth);
-    init_queries_state(&qs, tree_depth, b->max_node_count);
+    b = create_block();
+    init_queries_state(&qs, tree_depth, MAX_NODES_IN_BLOCK, b);
   }
   BlockWrapper(uint32_t tree_depth, uint32_t max_node_count)
       : BlockWrapper(tree_depth) {
-    b->max_node_count = max_node_count;
+    qs.max_nodes_count = max_node_count;
   }
 
   ~BlockWrapper() noexcept(false) {
@@ -95,14 +95,14 @@ public:
 
   bool same_as(const string &other) {
     string my_string_rep = getStringRep();
-    string converted = my_string_rep.substr(0, b->bt->nodes_count * 4);
+    string converted = my_string_rep.substr(0, b->bt.nodes_count * 4);
     return converted == other;
   }
 
   static string getStringRepBlock(struct block *a_block, bool separate) {
     stringstream ss;
-    struct block_topology *bt = a_block->bt;
-    struct bitvector *bv = bt->bv;
+    struct block_topology *bt = &a_block->bt;
+    struct bitvector *bv = &bt->bv;
     uint32_t *container = bv->container;
     uint32_t uint_bits = sizeof(uint32_t) * 8;
     uint32_t nodes_count = bt->nodes_count;
@@ -117,7 +117,7 @@ public:
 
     if (extra_bits > 0) {
       uint32_t remainingBits;
-      bits_read(a_block->bt->bv, used_bits - extra_bits, used_bits - 1,
+      bits_read(&a_block->bt.bv, used_bits - extra_bits, used_bits - 1,
                 &remainingBits);
       remainingBits <<= (uint_bits - extra_bits);
       pass_to_ss_bin(remainingBits, uint_bits, ss, separate, extra_bits);
@@ -133,7 +133,7 @@ public:
 
   string frontierStr() {
     stringstream ss;
-    struct block_frontier *bf = b->bf;
+    struct block_frontier *bf = &b->bf;
     for (int i = 0; i < bf->frontier.nof_items; i++) {
       uint32_t fval = bf->frontier.data[i];
       ss << fval << ", ";
@@ -141,7 +141,7 @@ public:
     return ss.str();
   }
   void printSubBlocks() {
-    struct block_frontier *bf = b->bf;
+    struct block_frontier *bf = &b->bf;
     for (int i = 0; i < bf->blocks.nof_items; i++) {
       struct block *sb = bf->blocks.data[i];
       cout << getStringRepBlock(sb, true) << endl;

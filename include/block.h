@@ -32,14 +32,9 @@ SOFTWARE.
 #include "vectors.h"
 
 struct block {
-  struct block_topology *bt;
-  struct block_frontier *bf;
+  struct block_topology bt;
+  struct block_frontier bf;
   TREE_DEPTH_T block_depth;
-  TREE_DEPTH_T tree_depth;
-  MAX_NODE_COUNT_T max_node_count;
-
-  struct block *root;
-  BLOCK_INDEX_T block_index;
 };
 
 struct k2tree_measurement {
@@ -77,7 +72,7 @@ int report_row_interactively(struct block *input_block, ulong row,
                              point_reporter_fun_t point_reporter,
                              void *report_state);
 
-struct block *create_block(TREE_DEPTH_T tree_depth);
+struct block *create_block(void);
 int free_rec_block(struct block *input_block);
 int free_block(struct block *input_block);
 

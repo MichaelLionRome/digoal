@@ -31,10 +31,10 @@ SOFTWARE.
 int main(void) {
   int err_code;
   uint32_t treedepth = 25;
-  struct block *root_block = create_block(treedepth);
+  struct block *root_block = create_block();
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth, root_block->max_node_count);
+  init_queries_state(&qs, treedepth, MAX_NODES_IN_BLOCK, root_block);
 
   struct pair2dl array_pairs[] = {{0, 0},  {3, 3},   {15, 3},
                                   {3, 15}, {30, 31}, {31, 8}};

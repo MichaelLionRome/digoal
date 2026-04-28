@@ -38,9 +38,9 @@ extern "C" {
 
 TEST(insertion_out_of_bounds, test_1) {
   uint32_t tree_depth = 16;
-  struct block *root_block = create_block(tree_depth);
+  struct block *root_block = create_block();
   struct queries_state qs;
-  init_queries_state(&qs, tree_depth, root_block->max_node_count);
+  init_queries_state(&qs, tree_depth, MAX_NODES_IN_BLOCK, root_block);
 
   std::ifstream ifstream("../points_output.txt");
 

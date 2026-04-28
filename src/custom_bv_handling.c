@@ -43,11 +43,13 @@ int custom_init_bitvector(struct bitvector *input_bitvector,
   input_bitvector->container_size =
       CONVERT_BITS_TO_CONTAINER_NUM(size_in_bits_, uint32_t);
 
-  struct u32array_alloc container_alloc =
-      k2tree_alloc_u32array(input_bitvector->container_size);
-  input_bitvector->container = container_alloc.data;
+  if (input_bitvector->container_size == 0) {
+    input_bitvector->container = NULL;
+  } else {
+    input_bitvector->container =
+        k2tree_alloc_u32array(input_bitvector->container_size);
+  }
   input_bitvector->size_in_bits = size_in_bits_;
-  input_bitvector->alloc_tag = (uint32_t)container_alloc.size;
 
   return SUCCESS_ECODE_K2T;
 }
@@ -58,11 +60,11 @@ int custom_clean_bitvector(struct bitvector *input_bitvector) {
   if (!input_bitvector->container)
     return K2TREE_ERR_NULL_BITVECTOR_CONTAINER;
 
-  struct u32array_alloc to_free;
-  to_free.data = input_bitvector->container;
-  to_free.size = input_bitvector->alloc_tag;
-  k2tree_free_u32array(to_free);
-  input_bitvector->container = NULL;
+  uint32_t *to_free = input_bitvector->container;
+  if (to_free) {
+    k2tree_free_u32array(to_free);
+    input_bitvector->container = NULL;
+  }
 
   return SUCCESS_ECODE_K2T;
 }

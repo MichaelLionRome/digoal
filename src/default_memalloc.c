@@ -37,23 +37,8 @@ struct block *k2tree_alloc_block(void) {
   return (struct block *)malloc(sizeof(struct block));
 }
 
-struct block_topology *k2tree_alloc_block_topology(void) {
-  return (struct block_topology *)malloc(sizeof(struct block_topology));
-}
-
-struct block_frontier *k2tree_alloc_block_frontier(void) {
-  return (struct block_frontier *)malloc(sizeof(struct block_frontier));
-}
-
-struct bitvector *k2tree_alloc_bitvector(void) {
-  return (struct bitvector *)malloc(sizeof(struct bitvector));
-}
-
-struct u32array_alloc k2tree_alloc_u32array(int size) {
-  struct u32array_alloc out;
-  out.data = (uint32_t *)malloc(size * sizeof(uint32_t));
-  out.size = size;
-  return out;
+uint32_t *k2tree_alloc_u32array(int size) {
+  return (uint32_t *)malloc(size * sizeof(uint32_t));
 }
 
 int k2tree_free_block(struct block *b) {
@@ -61,22 +46,7 @@ int k2tree_free_block(struct block *b) {
   return SUCCESS_ECODE_K2T;
 }
 
-int k2tree_free_block_topology(struct block_topology *bt) {
-  free(bt);
-  return SUCCESS_ECODE_K2T;
-}
-
-int k2tree_free_block_frontier(struct block_frontier *bf) {
-  free(bf);
-  return SUCCESS_ECODE_K2T;
-}
-
-int k2tree_free_bitvector(struct bitvector *bv) {
-  free(bv);
-  return SUCCESS_ECODE_K2T;
-}
-
-int k2tree_free_u32array(struct u32array_alloc alloc) {
-  free(alloc.data);
+int k2tree_free_u32array(uint32_t *data) {
+  free(data);
   return SUCCESS_ECODE_K2T;
 }

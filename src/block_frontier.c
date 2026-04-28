@@ -40,8 +40,8 @@ int find_insertion_point(struct block_frontier *bf, uint32_t preorder);
 /* END PRIVATE PROTOTYPES */
 
 int init_block_frontier(struct block_frontier *bf) {
-  _SAFE_OP_K2(vector_uint32_t__init_vector(&(bf->frontier)));
-  _SAFE_OP_K2(vector_block_ptr_t__init_vector(&(bf->blocks)));
+  _SAFE_OP_K2(vector_uint32_t__init_vector_with_capacity(&bf->frontier, 0));
+  _SAFE_OP_K2(vector_block_ptr_t__init_vector_with_capacity(&bf->blocks, 0));
   return SUCCESS_ECODE_K2T;
 }
 
@@ -153,12 +153,6 @@ int add_frontier_node(struct block_frontier *bf,
   _SAFE_OP_K2(
       vector_block_ptr_t__insert_element_at(&(bf->blocks), b, insertion_point));
   return SUCCESS_ECODE_K2T;
-}
-
-struct block_frontier *create_block_frontier(void) {
-  struct block_frontier *new_bf = k2tree_alloc_block_frontier();
-  init_block_frontier(new_bf);
-  return new_bf;
 }
 
 /* TODO: (OPTIMIZATION) replace by binary search if needed */

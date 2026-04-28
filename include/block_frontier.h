@@ -32,8 +32,6 @@ struct block_frontier {
   struct vector_block_ptr_t blocks;
 };
 
-struct block_frontier *create_block_frontier(void);
-
 int init_block_frontier(struct block_frontier *bf);
 int init_block_frontier_with_capacity(struct block_frontier *bf,
                                       uint32_t capacity);

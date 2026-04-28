@@ -29,16 +29,15 @@ SOFTWARE.
 
 typedef uint16_t NODES_COUNT_T;
 struct block_topology {
-  struct bitvector *bv;
+  struct bitvector bv;
   NODES_COUNT_T nodes_count;
 };
 
-struct block_topology *create_block_topology(void);
+int create_block_topology(struct block_topology *bt);
 
 int free_block_topology(struct block_topology *bt);
 
-int init_block_topology(struct block_topology *bt, struct bitvector *bv,
-                        NODES_COUNT_T nodes_count);
+int init_block_topology(struct block_topology *bt, NODES_COUNT_T nodes_count);
 int child_exists(struct block_topology *bt, NODES_COUNT_T input_node_idx,
                  uint32_t requested_child_position, int *result);
 int read_node(struct block_topology *bt, NODES_COUNT_T node_idx,

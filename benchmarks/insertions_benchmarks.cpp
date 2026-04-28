@@ -53,10 +53,10 @@ int main(void) {
 
 void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
   unsigned long side = 1 << treedepth;
-  struct block *root_block = create_block(static_cast<TREE_DEPTH_T>(treedepth));
+  struct block *root_block = create_block();
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth, root_block->max_node_count);
+  init_queries_state(&qs, treedepth, MAX_NODES_IN_BLOCK, root_block);
 
   auto random_seq_1 = fisher_yates(points_count, side);
   auto random_seq_2 = fisher_yates(points_count, side);
@@ -148,10 +148,10 @@ void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
 void random_benchmark_by_depth_dense(uint32_t treedepth,
                                      uint32_t points_count) {
   unsigned long side = 1 << treedepth;
-  struct block *root_block = create_block(static_cast<TREE_DEPTH_T>(treedepth));
+  struct block *root_block = create_block();
 
   struct queries_state qs;
-  init_queries_state(&qs, treedepth, root_block->max_node_count);
+  init_queries_state(&qs, treedepth, MAX_NODES_IN_BLOCK, root_block);
 
   auto random_seq_1 = fisher_yates(points_count, side);
   auto random_seq_2 = fisher_yates(points_count, side);

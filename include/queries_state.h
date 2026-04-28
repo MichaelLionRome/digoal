@@ -34,8 +34,8 @@ SOFTWARE.
 struct sequential_scan_result {
   uint32_t child_preorder;
   uint32_t node_relative_depth;
-  struct u32array_alloc subtrees_count_map;
-  struct u32array_alloc relative_depth_map;
+  uint32_t *subtrees_count_map;
+  uint32_t *relative_depth_map;
 };
 
 #ifdef DEBUG_STATS
@@ -46,6 +46,8 @@ struct debug_stats {
 };
 #endif
 
+struct block;
+
 struct queries_state {
   struct morton_code mc;
   struct sequential_scan_result sc_result;
@@ -53,13 +55,17 @@ struct queries_state {
   struct nsi_t_stack subtrees_count;
   int find_split_data;
   MAX_NODE_COUNT_T max_nodes_count;
+  TREE_DEPTH_T treedepth;
+
+  struct block *root;
 #ifdef DEBUG_STATS
   struct debug_stats dstats;
 #endif
 };
 
 int init_queries_state(struct queries_state *qs, uint32_t tree_depth,
-                       MAX_NODE_COUNT_T max_nodes_count);
+                       MAX_NODE_COUNT_T max_nodes_count,
+                       struct block *root_block);
 int finish_queries_state(struct queries_state *qs);
 
 #endif /* _QUERIES_STATE_H */
