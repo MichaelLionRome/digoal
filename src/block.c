@@ -1295,9 +1295,8 @@ struct k2tree_measurement measure_tree_size(struct block *input_block) {
       input_block->bt.bv.container_size * sizeof(BVCTYPE);
 
   unsigned long block_total_bytes =
-      sizeof(struct block) + sizeof(struct block_topology) +
-      sizeof(struct block_frontier) + sizeof(struct bitvector) +
-      bytes_topology + input_block->bf.frontier.capacity * sizeof(uint32_t) +
+      sizeof(struct block) + bytes_topology +
+      input_block->bf.frontier.capacity * sizeof(uint32_t) +
       input_block->bf.blocks.capacity * sizeof(struct block *);
 
   struct k2tree_measurement result;
