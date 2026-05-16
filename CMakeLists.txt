@@ -23,6 +23,8 @@ if(WITH_DEBUG_STATS)
 add_definitions(-DDEBUG_STATS)
 endif()
 
+add_definitions(-DVERY_LIGHT_FIELDS)
+
 set(SOURCES_REQUIRED
 src/block.c
 src/block_frontier.c

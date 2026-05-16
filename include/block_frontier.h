@@ -28,7 +28,7 @@ SOFTWARE.
 
 struct block;
 struct block_frontier {
-  struct vector_uint32_t frontier;
+  struct vector_uint16_t frontier;
   struct vector_block_ptr_t blocks;
 };
 

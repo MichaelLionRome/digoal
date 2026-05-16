@@ -40,14 +40,14 @@ int find_insertion_point(struct block_frontier *bf, uint32_t preorder);
 /* END PRIVATE PROTOTYPES */
 
 int init_block_frontier(struct block_frontier *bf) {
-  _SAFE_OP_K2(vector_uint32_t__init_vector_with_capacity(&bf->frontier, 0));
+  _SAFE_OP_K2(vector_uint16_t__init_vector_with_capacity(&bf->frontier, 0));
   _SAFE_OP_K2(vector_block_ptr_t__init_vector_with_capacity(&bf->blocks, 0));
   return SUCCESS_ECODE_K2T;
 }
 
 int init_block_frontier_with_capacity(struct block_frontier *bf,
                                       uint32_t capacity) {
-  _SAFE_OP_K2(vector_uint32_t__init_vector_with_capacity(&(bf->frontier),
+  _SAFE_OP_K2(vector_uint16_t__init_vector_with_capacity(&(bf->frontier),
                                                          (long)capacity));
   _SAFE_OP_K2(
       vector_block_ptr_t__init_vector_with_capacity(&(bf->blocks), capacity));
@@ -55,7 +55,7 @@ int init_block_frontier_with_capacity(struct block_frontier *bf,
 }
 
 int free_block_frontier(struct block_frontier *bf) {
-  vector_uint32_t__free_vector(&(bf->frontier));
+  vector_uint16_t__free_vector(&(bf->frontier));
   vector_block_ptr_t__free_vector(&(bf->blocks));
   return SUCCESS_ECODE_K2T;
 }
@@ -148,7 +148,7 @@ int add_frontier_node(struct block_frontier *bf,
                       uint32_t new_frontier_node_preorder, struct block *b) {
   uint32_t insertion_point =
       find_insertion_point(bf, new_frontier_node_preorder);
-  _SAFE_OP_K2(vector_uint32_t__insert_element_at(
+  _SAFE_OP_K2(vector_uint16_t__insert_element_at(
       &(bf->frontier), new_frontier_node_preorder, insertion_point));
   _SAFE_OP_K2(
       vector_block_ptr_t__insert_element_at(&(bf->blocks), b, insertion_point));
