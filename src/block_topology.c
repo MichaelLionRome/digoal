@@ -221,10 +221,6 @@ int insert_node_at(struct block_topology *bt, NODES_COUNT_T node_index,
                    uint32_t code) {
   // Enlarge if needed
   uint32_t start_position = 4 * node_index;
-  if (start_position >= bt->bv.size_in_bits) {
-    CHECK_ERR(enlarge_block_size_to(bt, node_index + 1));
-  }
-
   uint32_t end_position = start_position + 3; // inclusive
   uint32_t four_bits_rep = to_4_bits_table[code];
 
