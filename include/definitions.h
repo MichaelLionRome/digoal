@@ -59,18 +59,17 @@ SOFTWARE.
       return (err);                                                            \
     }                                                                          \
   } while (0)
-/*
+
 #define _SAFE_OP_K2(op)                                                        \
   do {                                                                         \
-    if ((op) != SUCCESS_ECODE_K2T) { \
+    if ((op) != SUCCESS_ECODE_K2T) {                                           \
       printf("There was an error while running %s. Error code: %d\n", (#op),   \
              (op));                                                            \
       exit(op);                                                                \
     }                                                                          \
   } while (0)
-*/
 
-#define _SAFE_OP_K2(op) op
+//#define _SAFE_OP_K2(op) op
 
 #ifndef TRUE
 #define TRUE 1

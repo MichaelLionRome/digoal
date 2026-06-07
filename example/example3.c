@@ -72,9 +72,9 @@ int main(void) {
     printf("element %d = (%lu, %lu)\n", i, current.col, current.row);
   }
 
-  vector_pair2dl_t__free_vector(&result);
-
 clean_up:
+  vector_pair2dl_t__free_vector(&result);
+  vector_pair2dl_t__free_vector(&input_pairs);
 
   err_code = free_rec_block(root_block);
   if (err_code)

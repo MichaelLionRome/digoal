@@ -50,15 +50,15 @@ int collapse_bits(struct block_topology *bt, uint32_t from, uint32_t to);
 /* END PRIVATE PROTOTYPES */
 
 int init_block_topology(struct block_topology *bt, NODES_COUNT_T nodes_count) {
-  bt->nodes_count = nodes_count;
-  CHECK_ERR(custom_init_bitvector(&bt->bv, nodes_count * 4));
+  CHECK_ERR(custom_init_bitvector(&bt->bv, nodes_count));
+  set_nodes_count(bt, nodes_count);
   return 0;
 }
 
 int child_exists(struct block_topology *bt, NODES_COUNT_T input_node_idx,
                  uint32_t requested_child_position, int *result) {
   struct bitvector *bv = &bt->bv;
-  if (input_node_idx >= bv->size_in_bits / 4) {
+  if (input_node_idx >= get_nodes_capacity(bt)) {
     *result = FALSE;
     return SUCCESS_ECODE_K2T;
   }
@@ -79,7 +79,7 @@ int read_node(struct block_topology *bt, NODES_COUNT_T node_idx,
 
 int count_children(struct block_topology *bt, NODES_COUNT_T node_idx,
                    uint32_t *result) {
-  if (node_idx >= bt->nodes_count) {
+  if (node_idx >= get_nodes_count(bt)) {
     return 0;
   }
 
@@ -92,12 +92,6 @@ int count_children(struct block_topology *bt, NODES_COUNT_T node_idx,
 }
 
 int resize_bv_to(struct bitvector *bv, uint32_t new_size) {
-
-  if (bv->size_in_bits == new_size) {
-    return SUCCESS_ECODE_K2T;
-  }
-
-  bv->size_in_bits = new_size;
   uint32_t new_container_size = CEIL_OF_DIV(new_size, uint_bits);
 
   if (new_container_size == bv->container_size) {
@@ -112,7 +106,8 @@ int resize_bv_to(struct bitvector *bv, uint32_t new_size) {
     memcpy(new_container, bv->container, new_container_size * sizeof(uint32_t));
   }
 
-  _SAFE_OP_K2(custom_clean_bitvector(bv));
+  if (bv->container_size > 0)
+    _SAFE_OP_K2(custom_clean_bitvector(bv));
 
   bv->container = new_container;
   bv->container_size = new_container_size;
@@ -126,7 +121,7 @@ int shift_bv_right_from(struct bitvector *bv, uint32_t from_location,
     return SUCCESS_ECODE_K2T;
   }
 
-  uint32_t original_size = bv->size_in_bits;
+  uint32_t original_size = bv->container_size * uint_bits;
 
   if (to_location + shift_amount > original_size) {
     CHECK_ERR(resize_bv_to(bv, (uint32_t)to_location + shift_amount));
@@ -189,16 +184,17 @@ int enlarge_block_size_to(struct block_topology *bt, uint32_t new_block_size) {
 
 int shift_right_nodes_after(struct block_topology *bt, NODES_COUNT_T node_index,
                             NODES_COUNT_T nodes_to_insert) {
-  NODES_COUNT_T next_size = bt->nodes_count + nodes_to_insert;
+  uint32_t nodes_count = get_nodes_count(bt);
+  NODES_COUNT_T next_size = nodes_count + nodes_to_insert;
   if (next_size > get_allocated_nodes(bt)) {
     CHECK_ERR(enlarge_block_size_to(bt, next_size));
   }
 
-  CHECK_ERR(shift_bv_right_from(&bt->bv, 4 * (node_index + 1),
-                                4 * bt->nodes_count, 4 * nodes_to_insert));
+  CHECK_ERR(shift_bv_right_from(&bt->bv, 4 * (node_index + 1), 4 * nodes_count,
+                                4 * nodes_to_insert));
 
-  if (node_index + 1 < bt->nodes_count) {
-    bt->nodes_count += nodes_to_insert;
+  if ((uint32_t)(node_index + 1) < nodes_count) {
+    set_nodes_count(bt, nodes_count + nodes_to_insert);
   }
 
   return SUCCESS_ECODE_K2T;
@@ -215,7 +211,7 @@ int mark_child_in_node(struct block_topology *bt, NODES_COUNT_T node_index,
   return SUCCESS_ECODE_K2T;
 }
 
-uint32_t to_4_bits_table[] = {1 << 3, 1 << 2, 1 << 1, 1 << 0};
+const uint32_t to_4_bits_table[] = {1 << 3, 1 << 2, 1 << 1, 1 << 0};
 
 int insert_node_at(struct block_topology *bt, NODES_COUNT_T node_index,
                    uint32_t code) {
@@ -226,8 +222,9 @@ int insert_node_at(struct block_topology *bt, NODES_COUNT_T node_index,
 
   _SAFE_OP_K2(bits_write(&bt->bv, start_position, end_position, four_bits_rep));
 
-  if (node_index + 1 > bt->nodes_count) {
-    bt->nodes_count = node_index + 1;
+  uint32_t nodes_count = get_nodes_count(bt);
+  if ((uint32_t)(node_index + 1) > nodes_count) {
+    set_nodes_count(bt, node_index + 1);
   }
 
   return SUCCESS_ECODE_K2T;
@@ -267,7 +264,7 @@ int shift_left_from(struct bitvector *bv, uint32_t from,
                     uint32_t shift_amount) {
   if (shift_amount == 0)
     return SUCCESS_ECODE_K2T;
-  uint32_t to = bv->size_in_bits - 1;
+  uint32_t to = bv->container_size * uint_bits - 1;
   int amount_to_shift_int = (int)to - (int)from + 1;
   if (amount_to_shift_int == 0) {
     return SUCCESS_ECODE_K2T;
@@ -338,7 +335,7 @@ int collapse_bits(struct block_topology *bt, uint32_t from, uint32_t to) {
   uint32_t blocks_to_collpase = bits_to_collapse / uint_bits;
   uint32_t extra_bits = bits_to_collapse % uint_bits;
 
-  if (bits_to_collapse >= bv->size_in_bits)
+  if (bits_to_collapse >= bv->container_size * uint_bits)
     return COLLAPSE_BITS_BITS_DIFF_GTE_THAN_BVSIZE;
 
   for (uint32_t i = 0; i < blocks_to_collpase; i++) {
@@ -350,14 +347,16 @@ int collapse_bits(struct block_topology *bt, uint32_t from, uint32_t to) {
     _SAFE_OP_K2(bits_write(bv, to - extra_bits + 1, to, 0));
 
   CHECK_ERR(shift_left_from(bv, to + 1, bits_to_collapse));
-  CHECK_ERR(resize_bv_to(&bt->bv, bv->size_in_bits - bits_to_collapse));
+  CHECK_ERR(
+      resize_bv_to(&bt->bv, bv->container_size * uint_bits - bits_to_collapse));
 
   return SUCCESS_ECODE_K2T;
 }
 
 int collapse_nodes(struct block_topology *bt, uint32_t from, uint32_t to) {
   CHECK_ERR(collapse_bits(bt, 4 * from, 4 * (to + 1) - 1));
-  bt->nodes_count -= (to - from + 1);
+  uint32_t nodes_count = get_nodes_count(bt);
+  set_nodes_count(bt, nodes_count - (to - from + 1));
   return SUCCESS_ECODE_K2T;
 }
 
@@ -367,6 +366,25 @@ int create_block_topology(struct block_topology *bt) {
 }
 
 int free_block_topology(struct block_topology *bt) {
-  _SAFE_OP_K2(custom_clean_bitvector(&bt->bv));
+  if (bt->bv.container_size > 0)
+    _SAFE_OP_K2(custom_clean_bitvector(&bt->bv));
   return SUCCESS_ECODE_K2T;
+}
+
+uint32_t get_nodes_count(struct block_topology *bt) {
+  return bt->bv.nodes_count;
+}
+
+int set_nodes_count(struct block_topology *bt, uint32_t nodes_count) {
+  if (4 * nodes_count > bt->bv.container_size * uint_bits) {
+    printf("Error container not big enough %d > %d\n", 4 * nodes_count,
+           bt->bv.container_size * uint_bits);
+    exit(1);
+  }
+  bt->bv.nodes_count = nodes_count;
+  return SUCCESS_ECODE_K2T;
+}
+
+uint32_t get_nodes_capacity(struct block_topology *bt) {
+  return bt->bv.container_size * (uint_bits / 4);
 }

@@ -32,7 +32,8 @@ int init_morton_code(struct morton_code *mc, uint32_t treedepth) {
 }
 
 int clean_morton_code(struct morton_code *mc) {
-  custom_clean_bitvector(&mc->container);
+  if (mc->container.container_size > 0)
+    custom_clean_bitvector(&mc->container);
   return SUCCESS_ECODE_K2T;
 }
 

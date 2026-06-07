@@ -22,7 +22,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 #include "custom_bv_handling.h"
+#include <assert.h>
 
 #include "memalloc.h"
 
@@ -36,20 +38,20 @@ SOFTWARE.
    (((bits_num) % BITS_IN_TYPE(container_type)) > 0 ? 1 : 0))
 
 int custom_init_bitvector(struct bitvector *input_bitvector,
-                          uint32_t size_in_bits_) {
+                          NODES_BV_T nodes_count) {
   if (!input_bitvector)
     return K2TREE_ERR_NULL_BITVECTOR;
 
   input_bitvector->container_size =
-      CONVERT_BITS_TO_CONTAINER_NUM(size_in_bits_, uint32_t);
+      CONVERT_BITS_TO_CONTAINER_NUM(nodes_count * 4, uint32_t);
 
-  if (input_bitvector->container_size == 0) {
-    input_bitvector->container = NULL;
-  } else {
+  input_bitvector->container = NULL;
+  if (input_bitvector->container_size > 0) {
     input_bitvector->container =
         k2tree_alloc_u32array(input_bitvector->container_size);
   }
-  input_bitvector->size_in_bits = size_in_bits_;
+
+  input_bitvector->nodes_count = nodes_count;
 
   return SUCCESS_ECODE_K2T;
 }

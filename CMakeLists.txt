@@ -46,14 +46,16 @@ ${SOURCES_MEM_DEFAULT}
 )
 
 set(LIB_INCLUDES
-lib/c-bitvector/include
+bitvector/include
 lib/c-queue/include
 lib/c-vector/include
 )
 
 set(LIB_SOURCES
-lib/c-bitvector/src/bitvector.c
+bitvector/src/bitvector.c
 )
+
+add_subdirectory(bitvector)
 
 
 include_directories(include ${LIB_INCLUDES})

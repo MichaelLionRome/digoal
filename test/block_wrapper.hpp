@@ -95,7 +95,7 @@ public:
 
   bool same_as(const string &other) {
     string my_string_rep = getStringRep();
-    string converted = my_string_rep.substr(0, b->bt.nodes_count * 4);
+    string converted = my_string_rep.substr(0, get_nodes_count(&b->bt) * 4);
     return converted == other;
   }
 
@@ -105,7 +105,7 @@ public:
     struct bitvector *bv = &bt->bv;
     uint32_t *container = bv->container;
     uint32_t uint_bits = sizeof(uint32_t) * 8;
-    uint32_t nodes_count = bt->nodes_count;
+    uint32_t nodes_count = get_nodes_count(bt);
     uint32_t used_bits = nodes_count * 4;
     uint32_t blocks_count = used_bits / uint_bits;
     uint32_t extra_bits = used_bits % uint_bits;
@@ -123,7 +123,6 @@ public:
       pass_to_ss_bin(remainingBits, uint_bits, ss, separate, extra_bits);
     }
 
-    // return ss.str().substr(0, b->bt->nodes_count * 4);
     return ss.str();
   }
 

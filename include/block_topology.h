@@ -30,7 +30,6 @@ SOFTWARE.
 typedef uint16_t NODES_COUNT_T;
 struct block_topology {
   struct bitvector bv;
-  NODES_COUNT_T nodes_count;
 };
 
 int create_block_topology(struct block_topology *bt);
@@ -55,5 +54,9 @@ int insert_node_at(struct block_topology *bt, NODES_COUNT_T node_index,
 int extract_sub_bitvector(struct block_topology *bt, uint32_t from, uint32_t to,
                           struct bitvector *result);
 int collapse_nodes(struct block_topology *bt, uint32_t from, uint32_t to);
+
+uint32_t get_nodes_count(struct block_topology *bt);
+int set_nodes_count(struct block_topology *bt, uint32_t nodes_count);
+uint32_t get_nodes_capacity(struct block_topology *bt);
 
 #endif /* _BLOCK_TOPOLOGY_H */

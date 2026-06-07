@@ -44,7 +44,10 @@ TEST(block_test, test1) {
   struct queries_state qs;
   init_queries_state(&qs, tree_depth, MAX_NODES_IN_BLOCK, root_block);
 
-  insert_point(root_block, 0, 0, &qs);
+  int err = insert_point(root_block, 0, 0, &qs);
+  if (err) {
+    FAIL() << "ERR CODE INSERTION: " << err;
+  }
   int found_point;
   has_point(root_block, 0, 0, &qs, &found_point);
   ASSERT_EQ(1, found_point);

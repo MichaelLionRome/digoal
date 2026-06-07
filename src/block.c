@@ -107,7 +107,8 @@ static inline int mark_subtree_size(struct sequential_scan_result *sc_result,
 static inline int block_has_enough_space(struct block *input_block,
                                          struct insertion_location *il) {
   uint32_t allocated_nodes = get_allocated_nodes(&input_block->bt);
-  return il->remaining_depth <= (allocated_nodes - input_block->bt.nodes_count);
+  return il->remaining_depth <=
+         (allocated_nodes - get_nodes_count(&input_block->bt));
 }
 
 static inline int clean_child_result(struct child_result *cresult) {
@@ -241,7 +242,7 @@ int child(struct block *input_block, uint32_t input_node_idx,
     return child_err_code;
   }
 
-  int exists;
+  int exists = 0;
   CHECK_ERR(child_exists(&input_block->bt, input_node_idx,
                          requested_child_position, &exists));
   if (!exists) {
@@ -555,7 +556,7 @@ int find_insertion_location(struct block *input_block, struct queries_state *qs,
       reached_block, &psr.last_child_result_reached, child_code);
 
   if (to_be_skipped_subtrees == 0 && psr.depth_reached == 0) {
-    if (reached_block->bt.nodes_count == 0) {
+    if (get_nodes_count(&reached_block->bt) == 0) {
       result->insertion_index = 0;
       result->remaining_depth = qs->treedepth - psr.depth_reached;
     } else {
@@ -589,7 +590,8 @@ int find_insertion_location(struct block *input_block, struct queries_state *qs,
 int get_previous_siblings_count(struct block *input_block,
                                 struct child_result *parent_node_result,
                                 uint32_t child_code) {
-  if (parent_node_result->resulting_node_idx >= input_block->bt.nodes_count) {
+  if (parent_node_result->resulting_node_idx >=
+      get_nodes_count(&input_block->bt)) {
     return 0;
   }
   return get_subtree_skipping_qty(
@@ -606,7 +608,7 @@ int get_previous_siblings_count(struct block *input_block,
 int make_room(struct block *input_block, struct insertion_location *il) {
   uint32_t next_node_index = il->insertion_index;
   uint32_t nodes_to_insert = il->remaining_depth;
-  uint32_t occupied_nodes = input_block->bt.nodes_count;
+  uint32_t occupied_nodes = get_nodes_count(&input_block->bt);
 
   if (nodes_to_insert == 0) {
     return SUCCESS_ECODE_K2T;
@@ -615,7 +617,8 @@ int make_room(struct block *input_block, struct insertion_location *il) {
   if (occupied_nodes < next_node_index + nodes_to_insert) {
     CHECK_ERR(enlarge_block_size_to(&input_block->bt,
                                     occupied_nodes + nodes_to_insert));
-    input_block->bt.nodes_count += nodes_to_insert;
+    uint32_t nodes_count = get_nodes_count(&input_block->bt);
+    set_nodes_count(&input_block->bt, nodes_count + nodes_to_insert);
   } else {
     CHECK_ERR(shift_right_nodes_after(&input_block->bt, next_node_index - 1,
                                       nodes_to_insert));
@@ -757,7 +760,7 @@ int split_block(struct block *input_block, struct queries_state *qs) {
     }
 
     uint32_t subtree_size = qs->sc_result.subtrees_count_map[node_index];
-    if (subtree_size >= input_block->bt.nodes_count / 4) {
+    if (subtree_size >= get_nodes_count(&input_block->bt) / 4) {
       new_frontier_node_position = node_index;
       new_frontier_node_relative_depth =
           qs->sc_result.relative_depth_map[node_index];
@@ -872,7 +875,7 @@ int insert_point_at(struct block *insertion_block,
 
   // Check if can enlarge block to fit
   uint32_t next_amount_of_nodes =
-      insertion_block->bt.nodes_count + il->remaining_depth;
+      get_nodes_count(&insertion_block->bt) + il->remaining_depth;
   if (next_amount_of_nodes <= qs->max_nodes_count) {
     uint32_t next_block_sz = 1 << (uint32_t)ceil(log2(next_amount_of_nodes));
     CHECK_ERR(enlarge_block_size_to(&insertion_block->bt, next_block_sz));

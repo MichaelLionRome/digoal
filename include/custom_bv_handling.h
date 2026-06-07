@@ -28,7 +28,7 @@ SOFTWARE.
 #include <stdint.h>
 
 int custom_init_bitvector(struct bitvector *input_bitvector,
-                          uint32_t size_in_bits_);
+                          NODES_BV_T nodes_count);
 int custom_clean_bitvector(struct bitvector *input_bitvector);
 
 #endif /* _CUSTOM_BV_HANDLING_H */

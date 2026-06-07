@@ -1,4 +1,3 @@
-/*
 MIT License
 
 Copyright (c) 2020 Cristobal Miranda T.
@@ -20,33 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-*/
-#include <stdlib.h>
-
-#include <bitvector.h>
-
-#include "memalloc.h"
-
-#include "block.h"
-#include "block_frontier.h"
-#include "block_topology.h"
-
-#include "definitions.h"
-
-struct block *k2tree_alloc_block(void) {
-  return (struct block *)malloc(sizeof(struct block));
-}
-
-uint32_t *k2tree_alloc_u32array(int size) {
-  return (uint32_t *)calloc(size, sizeof(uint32_t));
-}
-
-int k2tree_free_block(struct block *b) {
-  free(b);
-  return SUCCESS_ECODE_K2T;
-}
-
-int k2tree_free_u32array(uint32_t *data) {
-  free(data);
-  return SUCCESS_ECODE_K2T;
-}
