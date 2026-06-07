@@ -145,6 +145,10 @@ TEST(usages, report_column_test_1) {
   ASSERT_TRUE(has_pair(&result, 3, 29)) << "Cant find pair 3,29";
 
   ASSERT_EQ(result.nof_items, 5) << "Does not have 5 elements";
+
+  vector_pair2dl_t__free_vector(&result);
+  finish_queries_state(&qs);
+  free_rec_block(root_block);
 }
 
 TEST(usages, report_row_test_1) {
@@ -178,4 +182,8 @@ TEST(usages, report_row_test_1) {
   ASSERT_TRUE(has_pair(&result, 15, 15)) << "Cant find pair 15,15";
 
   ASSERT_EQ(result.nof_items, 4) << "Does not have 4 elements";
+
+  vector_pair2dl_t__free_vector(&result);
+  finish_queries_state(&qs);
+  free_rec_block(root_block);
 }

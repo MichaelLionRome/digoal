@@ -25,6 +25,7 @@ SOFTWARE.
 
 #include "custom_bv_handling.h"
 #include <assert.h>
+#include <block.h>
 
 #include "memalloc.h"
 
@@ -37,7 +38,7 @@ SOFTWARE.
   (((bits_num) / BITS_IN_TYPE(container_type)) +                               \
    (((bits_num) % BITS_IN_TYPE(container_type)) > 0 ? 1 : 0))
 
-int custom_init_bitvector(struct bitvector *input_bitvector,
+int custom_init_bitvector(struct block *input_bitvector,
                           NODES_BV_T nodes_count) {
   if (!input_bitvector)
     return K2TREE_ERR_NULL_BITVECTOR;
@@ -56,7 +57,7 @@ int custom_init_bitvector(struct bitvector *input_bitvector,
   return SUCCESS_ECODE_K2T;
 }
 
-int custom_clean_bitvector(struct bitvector *input_bitvector) {
+int custom_clean_bitvector(struct block *input_bitvector) {
   if (!input_bitvector)
     return K2TREE_ERR_NULL_BITVECTOR;
   if (!input_bitvector->container)

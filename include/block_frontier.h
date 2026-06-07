@@ -27,31 +27,33 @@ SOFTWARE.
 #include "vectors.h"
 
 struct block;
-struct block_frontier {
+/*
+struct block {
   struct vector_uint16_t frontier;
   struct vector_block_ptr_t blocks;
 };
+*/
 
-int init_block_frontier(struct block_frontier *bf);
-int init_block_frontier_with_capacity(struct block_frontier *bf,
-                                      uint32_t capacity);
-int free_block_frontier(struct block_frontier *bf);
-int frontier_check(struct block_frontier *bf, uint32_t node_idx,
-                   uint32_t *frontier_traversal_idx, int *result);
+void init_block_frontier(struct block *input_block);
+void init_block_frontier_with_capacity(struct block *input_block,
+                                       uint32_t capacity);
+void free_block_frontier(struct block *input_block);
+int frontier_check(struct block *input_block, uint32_t node_idx,
+                   uint32_t *frontier_traversal_idx);
 
-int get_child_block(struct block_frontier *bf, uint32_t frontier_node_idx,
-                    struct block **child_block_result);
+struct block *get_child_block(struct block *input_block,
+                              uint32_t frontier_node_idx);
 
-int extract_sub_block_frontier(struct block_frontier *bf,
+int extract_sub_block_frontier(struct block *input_block,
                                uint32_t preorder_from, uint32_t preorder_to,
-                               struct block_frontier *to_fill_bf);
+                               struct block *to_fill_bf);
 
-int add_frontier_node(struct block_frontier *bf,
+int add_frontier_node(struct block *input_block,
                       uint32_t new_frontier_node_preorder, struct block *b);
 
-int fix_frontier_indexes(struct block_frontier *bf, uint32_t start, int delta);
+int fix_frontier_indexes(struct block *input_block, uint32_t start, int delta);
 
-int collapse_frontier_nodes(struct block_frontier *bf, uint32_t from_preorder,
+int collapse_frontier_nodes(struct block *input_block, uint32_t from_preorder,
                             uint32_t to_preorder);
 
 #endif /* _BLOCK_FRONTIER_H */

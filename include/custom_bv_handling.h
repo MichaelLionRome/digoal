@@ -27,8 +27,10 @@ SOFTWARE.
 #include <bitvector.h>
 #include <stdint.h>
 
-int custom_init_bitvector(struct bitvector *input_bitvector,
+struct block;
+
+int custom_init_bitvector(struct block *input_bitvector,
                           NODES_BV_T nodes_count);
-int custom_clean_bitvector(struct bitvector *input_bitvector);
+int custom_clean_bitvector(struct block *input_bitvector);
 
 #endif /* _CUSTOM_BV_HANDLING_H */

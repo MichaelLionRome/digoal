@@ -1,8 +1,8 @@
 
+#include <bitvector.h>
+#include <block.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <bitvector.h>
 
 #define SAFE_OP(op)                                                            \
   do {                                                                         \
@@ -23,6 +23,8 @@
 #define CHECK_BOUNDARIES(input_bitvector, position)                            \
   do {                                                                         \
     if ((position) >= (input_bitvector->container_size * BVCTYPE_BITS)) {      \
+      fprintf(stderr, "CHECK BOUNDARIES; %d >= %d", (int)position,             \
+              (int)(input_bitvector->container_size * BVCTYPE_BITS));          \
       return ERR_OUT_OF_BOUNDARIES;                                            \
     }                                                                          \
   } while (0)
@@ -38,7 +40,7 @@
 static inline uint32_t _extract_right_side(uint32_t input_block,
                                            uint32_t extract_index);
 
-int init_bitvector(struct bitvector *input_bitvector, NODES_BV_T nodes_count_) {
+int init_bitvector(struct block *input_bitvector, NODES_BV_T nodes_count_) {
   if (!input_bitvector)
     return ERR_NULL_BITVECTOR;
 
@@ -51,7 +53,7 @@ int init_bitvector(struct bitvector *input_bitvector, NODES_BV_T nodes_count_) {
   return SUCCESS_ECODE;
 }
 
-int clean_bitvector(struct bitvector *input_bitvector) {
+int clean_bitvector(struct block *input_bitvector) {
   if (!input_bitvector)
     return ERR_NULL_BITVECTOR;
   if (!input_bitvector->container)
@@ -63,8 +65,7 @@ int clean_bitvector(struct bitvector *input_bitvector) {
   return SUCCESS_ECODE;
 }
 
-int bit_read(struct bitvector *input_bitvector, uint32_t position,
-             int *result) {
+int bit_read(struct block *input_bitvector, uint32_t position, int *result) {
   CHECK_BOUNDARIES(input_bitvector, position);
 
   BVCTYPE *container = input_bitvector->container;
@@ -78,7 +79,7 @@ int bit_read(struct bitvector *input_bitvector, uint32_t position,
   return SUCCESS_ECODE;
 }
 
-int bit_set(struct bitvector *input_bitvector, uint32_t position) {
+int bit_set(struct block *input_bitvector, uint32_t position) {
   CHECK_BOUNDARIES(input_bitvector, position);
   int bit_is_set;
   SAFE_OP(bit_read(input_bitvector, position, &bit_is_set));
@@ -96,7 +97,7 @@ int bit_set(struct bitvector *input_bitvector, uint32_t position) {
   return SUCCESS_ECODE;
 }
 
-int bit_clear(struct bitvector *input_bitvector, uint32_t position) {
+int bit_clear(struct block *input_bitvector, uint32_t position) {
   CHECK_BOUNDARIES(input_bitvector, position);
   int bit_is_set;
   SAFE_OP(bit_read(input_bitvector, position, &bit_is_set));
@@ -133,7 +134,7 @@ static inline uint32_t _extract_right_side(uint32_t input_block,
   return input_block & right_side_bitmasks[extract_index];
 }
 
-int bits_write(struct bitvector *input_bitvector, uint32_t from, uint32_t to,
+int bits_write(struct block *input_bitvector, uint32_t from, uint32_t to,
                BVCTYPE to_write) {
   CHECK_BOUNDARIES(input_bitvector, from);
   CHECK_BOUNDARIES(input_bitvector, to);
@@ -182,7 +183,7 @@ int bits_write(struct bitvector *input_bitvector, uint32_t from, uint32_t to,
   return SUCCESS_ECODE;
 }
 
-int bits_read(struct bitvector *input_bitvector, uint32_t from, uint32_t to,
+int bits_read(struct block *input_bitvector, uint32_t from, uint32_t to,
               uint32_t *result) {
   CHECK_BOUNDARIES(input_bitvector, from);
   CHECK_BOUNDARIES(input_bitvector, to);

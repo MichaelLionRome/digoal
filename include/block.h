@@ -31,9 +31,17 @@ SOFTWARE.
 #include "queries_state.h"
 #include "vectors.h"
 
+#define PREORDERS_T uint8_t
+
 struct block {
-  struct block_topology bt;
-  struct block_frontier bf;
+  PREORDERS_T *preorders;
+  struct block **children_blocks;
+
+  BVCTYPE *container;
+
+  PREORDERS_T children;
+  CONTAINER_SZ_T container_size;
+  NODES_BV_T nodes_count;
   TREE_DEPTH_T block_depth;
 };
 

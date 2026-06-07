@@ -27,22 +27,25 @@ typedef uint32_t SZ_BITS_T;
 typedef uint32_t CONTAINER_SZ_T;
 typedef uint32_t NODES_BV_T;
 #endif
-
-struct bitvector {
+/*
+struct block {
   BVCTYPE *container;
   NODES_BV_T nodes_count;
   CONTAINER_SZ_T container_size;
 };
+*/
 
-int init_bitvector(struct bitvector *input_bitvector, NODES_BV_T nodes_count_);
-int clean_bitvector(struct bitvector *input_bitvector);
+struct block;
 
-int bit_read(struct bitvector *input_bitvector, uint32_t position, int *result);
-int bit_set(struct bitvector *input_bitvector, uint32_t position);
-int bit_clear(struct bitvector *input_bitvector, uint32_t position);
-int bits_write(struct bitvector *input_bitvector, uint32_t from, uint32_t to,
+int init_bitvector(struct block *input_bitvector, NODES_BV_T nodes_count_);
+int clean_bitvector(struct block *input_bitvector);
+
+int bit_read(struct block *input_bitvector, uint32_t position, int *result);
+int bit_set(struct block *input_bitvector, uint32_t position);
+int bit_clear(struct block *input_bitvector, uint32_t position);
+int bits_write(struct block *input_bitvector, uint32_t from, uint32_t to,
                BVCTYPE to_write);
-int bits_read(struct bitvector *input_bitvector, uint32_t from, uint32_t to,
+int bits_read(struct block *input_bitvector, uint32_t from, uint32_t to,
               uint32_t *result);
 
 #endif /* _BITVECTOR_H_ */

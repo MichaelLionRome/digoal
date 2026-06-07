@@ -33,9 +33,9 @@ int clean_sequential_scan_result(struct sequential_scan_result *scr);
 int init_queries_state(struct queries_state *qs, uint32_t tree_depth,
                        MAX_NODE_COUNT_T max_nodes_count,
                        struct block *root_block) {
-  CHECK_ERR(init_morton_code(&qs->mc, tree_depth));
-  init_int_stack(&qs->not_yet_traversed, 2 * tree_depth);
-  init_nsi_t_stack(&qs->subtrees_count, 2 * tree_depth);
+  init_morton_code(&(qs->mc), tree_depth);
+  init_int_stack(&(qs->not_yet_traversed), 2 * tree_depth);
+  init_nsi_t_stack(&(qs->subtrees_count), 2 * tree_depth);
   qs->find_split_data = FALSE;
   qs->max_nodes_count = max_nodes_count;
   qs->root = root_block;
@@ -51,7 +51,7 @@ int init_queries_state(struct queries_state *qs, uint32_t tree_depth,
 int finish_queries_state(struct queries_state *qs) {
   free_nsi_t_stack(&qs->subtrees_count);
   free_int_stack(&qs->not_yet_traversed);
-  CHECK_ERR(clean_morton_code(&qs->mc));
+  clean_morton_code(&qs->mc);
   return clean_sequential_scan_result(&qs->sc_result);
 }
 /* END IMPLEMENTATION PUBLIC FUNCTIONS */

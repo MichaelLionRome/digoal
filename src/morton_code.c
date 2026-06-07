@@ -25,37 +25,37 @@ SOFTWARE.
 
 #include "custom_bv_handling.h"
 
-int init_morton_code(struct morton_code *mc, uint32_t treedepth) {
+void init_morton_code(struct morton_code *mc, uint32_t treedepth) {
   mc->treedepth = treedepth;
-  CHECK_ERR(custom_init_bitvector(&mc->container, 2 * treedepth));
-  return SUCCESS_ECODE_K2T;
+  mc->container =
+      (MC_CONTAINER_T *)malloc(2 * mc->treedepth * sizeof(MC_CONTAINER_T));
 }
 
-int clean_morton_code(struct morton_code *mc) {
-  if (mc->container.container_size > 0)
-    custom_clean_bitvector(&mc->container);
-  return SUCCESS_ECODE_K2T;
+void clean_morton_code(struct morton_code *mc) {
+  if (mc->container) {
+
+    free(mc->container);
+    mc->container = NULL;
+  }
 }
 
-int add_element_morton_code(struct morton_code *mc, uint32_t position,
-                            uint32_t code) {
-  _SAFE_OP_K2(bits_write(&mc->container, 2 * position, 2 * position + 1, code));
-  return SUCCESS_ECODE_K2T;
+void add_element_morton_code(struct morton_code *mc, uint32_t position,
+                             uint32_t code) {
+  mc->container[2 * position] = (code & 2) > 0 ? 1 : 0;
+  mc->container[2 * position + 1] = (code & 1) > 0 ? 1 : 0;
 }
 
-int get_code_at_morton_code(struct morton_code *mc, uint32_t position,
-                            uint32_t *result) {
-  _SAFE_OP_K2(
-      bits_read(&mc->container, 2 * position, 2 * position + 1, result));
-  return SUCCESS_ECODE_K2T;
+uint32_t get_code_at_morton_code(struct morton_code *mc, uint32_t position) {
+  return (mc->container[2 * position] << 1) + mc->container[2 * position + 1];
 }
 
-int leaf_child_morton_code(struct morton_code *mc, uint32_t *result) {
-  return get_code_at_morton_code(mc, mc->treedepth - 1, result);
+uint32_t leaf_child_morton_code(struct morton_code *mc) {
+  return get_code_at_morton_code(mc, mc->treedepth - 1);
 }
 
-int convert_coordinates_to_morton_code(ulong col, ulong row, uint32_t treedepth,
-                                       struct morton_code *result) {
+void convert_coordinates_to_morton_code(ulong col, ulong row,
+                                        uint32_t treedepth,
+                                        struct morton_code *result) {
   ulong current_level = (1L << (ulong)treedepth);
 
   ulong half_level;
@@ -77,9 +77,8 @@ int convert_coordinates_to_morton_code(ulong col, ulong row, uint32_t treedepth,
     row %= half_level;
     current_level = half_level;
 
-    _SAFE_OP_K2(add_element_morton_code(result, mc_position++, quadrant));
+    add_element_morton_code(result, mc_position++, quadrant);
   }
-  return SUCCESS_ECODE_K2T;
 }
 
 int convert_morton_code_to_coordinates(struct morton_code *input_mc,
@@ -87,8 +86,7 @@ int convert_morton_code_to_coordinates(struct morton_code *input_mc,
   long col = 0;
   long row = 0;
   for (unsigned int i = 0; i < input_mc->treedepth; i++) {
-    uint32_t current;
-    CHECK_ERR(get_code_at_morton_code(input_mc, i, &current));
+    uint32_t current = get_code_at_morton_code(input_mc, i);
     uint32_t current_pow = input_mc->treedepth - 1 - i;
     switch (current) {
     case 3:

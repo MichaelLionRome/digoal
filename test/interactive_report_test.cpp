@@ -105,4 +105,9 @@ TEST(interactive_block_test, test1) {
   std::cout << "now printing all points..." << std::endl;
 
   scan_points_interactively(root_block, &qs, interactive_print_all, nullptr);
+
+  vector_pair2dl_t__free_vector(&result);
+
+  finish_queries_state(&qs);
+  free_rec_block(root_block);
 }

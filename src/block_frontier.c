@@ -36,135 +36,204 @@ SOFTWARE.
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
 /* PRIVATE PROTOTYPES */
-int find_insertion_point(struct block_frontier *bf, uint32_t preorder);
+int find_insertion_point(struct block *input_block, uint32_t preorder);
 /* END PRIVATE PROTOTYPES */
 
-int init_block_frontier(struct block_frontier *bf) {
-  _SAFE_OP_K2(vector_uint16_t__init_vector_with_capacity(&bf->frontier, 0));
-  _SAFE_OP_K2(vector_block_ptr_t__init_vector_with_capacity(&bf->blocks, 0));
-  return SUCCESS_ECODE_K2T;
+void init_block_frontier(struct block *input_block) {
+  //_SAFE_OP_K2(vector_uint16_t__init_vector_with_capacity(&bf->frontier, 0));
+  //_SAFE_OP_K2(vector_block_ptr_t__init_vector_with_capacity(&bf->blocks, 0));
+  input_block->preorders = NULL;
+  input_block->children_blocks = NULL;
+  input_block->children = 0;
 }
 
-int init_block_frontier_with_capacity(struct block_frontier *bf,
-                                      uint32_t capacity) {
-  _SAFE_OP_K2(vector_uint16_t__init_vector_with_capacity(&(bf->frontier),
-                                                         (long)capacity));
-  _SAFE_OP_K2(
-      vector_block_ptr_t__init_vector_with_capacity(&(bf->blocks), capacity));
-  return SUCCESS_ECODE_K2T;
+void init_block_frontier_with_capacity(struct block *input_block,
+                                       uint32_t capacity) {
+  /*
+_SAFE_OP_K2(vector_uint16_t__init_vector_with_capacity(&(bf->frontier),
+                   (long)capacity));
+_SAFE_OP_K2(
+vector_block_ptr_t__init_vector_with_capacity(&(bf->blocks), capacity));
+*/
+  input_block->preorders =
+      (PREORDERS_T *)malloc(sizeof(PREORDERS_T) * capacity);
+  input_block->children_blocks =
+      (struct block **)malloc(sizeof(struct block *) * capacity);
 }
 
-int free_block_frontier(struct block_frontier *bf) {
-  vector_uint16_t__free_vector(&(bf->frontier));
-  vector_block_ptr_t__free_vector(&(bf->blocks));
-  return SUCCESS_ECODE_K2T;
+void free_block_frontier(struct block *input_block) {
+  // vector_uint16_t__free_vector(&(bf->frontier));
+  // vector_block_ptr_t__free_vector(&(bf->blocks));
+  // return SUCCESS_ECODE_K2T;
+  if (input_block->children > 0) {
+    free(input_block->preorders);
+    free(input_block->children_blocks);
+  }
 }
 
-int frontier_check(struct block_frontier *bf, uint32_t node_idx,
-                   uint32_t *frontier_traversal_idx, int *result) {
+int frontier_check(struct block *input_block, uint32_t node_idx,
+                   uint32_t *frontier_traversal_idx) {
   uint32_t tmp_findex = *frontier_traversal_idx;
-  if (tmp_findex >= (uint32_t)bf->frontier.nof_items ||
-      bf->frontier.nof_items == 0) {
-    *result = FALSE;
-    return SUCCESS_ECODE_K2T;
+  uint32_t children = (uint32_t)input_block->children;
+  if (tmp_findex >= children || input_block->children == 0) {
+    return FALSE;
   }
 
   uint32_t current;
 
-  while (tmp_findex < (uint32_t)bf->frontier.nof_items &&
-         (current = bf->frontier.data[tmp_findex]) < node_idx) {
+  while (tmp_findex < children &&
+         (current = input_block->preorders[tmp_findex]) < node_idx) {
     tmp_findex++;
   }
 
-  *result = node_idx == current;
   *frontier_traversal_idx = tmp_findex;
 
-  return SUCCESS_ECODE_K2T;
+  return node_idx == current;
 }
 
-int get_child_block(struct block_frontier *bf, uint32_t frontier_node_idx,
-                    struct block **child_block_result) {
-  if (frontier_node_idx > (uint32_t)bf->blocks.nof_items) {
-    return FRONTIER_OUT_OF_BOUNDS;
+struct block *get_child_block(struct block *input_block,
+                              uint32_t frontier_node_idx) {
+  if (frontier_node_idx > input_block->children) {
+    fprintf(stderr, "frontier node out of bound %d > %d",
+            (int)frontier_node_idx, (int)input_block->children);
+    exit(1);
   }
-
-  *child_block_result = bf->blocks.data[frontier_node_idx];
-
-  return SUCCESS_ECODE_K2T;
+  return input_block->children_blocks[frontier_node_idx];
 }
 
-int find_insertion_point(struct block_frontier *bf, uint32_t preorder) {
-  if (bf->frontier.nof_items == 0) {
+int find_insertion_point(struct block *input_block, uint32_t preorder) {
+  if (input_block->children == 0) {
     return 0;
   }
-  if (bf->frontier.data[0] >= preorder) {
+  if (input_block->preorders[0] >= preorder) {
     return 0;
   }
 
-  for (uint32_t i = 0; i < (uint32_t)bf->frontier.nof_items; i++) {
-    if (bf->frontier.data[i] > preorder) {
+  for (PREORDERS_T i = 0; i < input_block->children; i++) {
+    if (input_block->preorders[i] > preorder) {
       return i;
     }
   }
 
-  return (int)bf->frontier.nof_items;
+  return (int)input_block->children;
 }
 
-int extract_sub_block_frontier(struct block_frontier *bf,
+int extract_sub_block_frontier(struct block *input_block,
                                uint32_t preorder_from, uint32_t preorder_to,
-                               struct block_frontier *to_fill_bf) {
+                               struct block *to_fill_bf) {
   uint32_t from_index_loc =
-      find_insertion_point(bf, preorder_from); // inclusive
-  if (from_index_loc == (uint32_t)bf->frontier.nof_items) {
-    CHECK_ERR(init_block_frontier(to_fill_bf));
+      find_insertion_point(input_block, preorder_from); // inclusive
+  if (from_index_loc == (uint32_t)input_block->children) {
+    init_block_frontier(to_fill_bf);
     return SUCCESS_ECODE_K2T;
   }
 
-  uint32_t to_index_loc = find_insertion_point(bf, preorder_to); // exclusive
+  uint32_t to_index_loc =
+      find_insertion_point(input_block, preorder_to); // exclusive
   uint32_t sub_block_size = to_index_loc - from_index_loc;
-  uint32_t terminal_block_size = bf->frontier.nof_items - to_index_loc;
+  uint32_t terminal_block_size = input_block->children - to_index_loc;
 
-  CHECK_ERR(
-      init_block_frontier_with_capacity(to_fill_bf, MAX(8, sub_block_size)));
+  free_block_frontier(to_fill_bf);
 
-  memcpy(to_fill_bf->frontier.data, bf->frontier.data + from_index_loc,
-         sub_block_size * sizeof(uint32_t));
-  memcpy(to_fill_bf->blocks.data, bf->blocks.data + from_index_loc,
-         sub_block_size * sizeof(block_ptr_t));
+  if (sub_block_size > 0)
+    init_block_frontier_with_capacity(to_fill_bf, sub_block_size);
 
-  /* shrink data in parent block_frontier -- TODO: evaluate if realloc to
-   * smaller container is worthy */
-  memmove(bf->frontier.data + from_index_loc, bf->frontier.data + to_index_loc,
-          terminal_block_size * sizeof(uint32_t));
-  bf->frontier.nof_items = from_index_loc + terminal_block_size;
-  memmove(bf->blocks.data + from_index_loc, bf->blocks.data + to_index_loc,
-          terminal_block_size * sizeof(block_ptr_t));
-  bf->blocks.nof_items = from_index_loc + terminal_block_size;
+  to_fill_bf->children = sub_block_size;
+
+  if (sub_block_size > 0) {
+
+    memcpy(to_fill_bf->preorders, input_block->preorders + from_index_loc,
+           sub_block_size * sizeof(uint32_t));
+    memcpy(to_fill_bf->children_blocks,
+           input_block->children_blocks + from_index_loc,
+           sub_block_size * sizeof(block_ptr_t));
+  }
+
+  uint32_t next_children = from_index_loc + terminal_block_size;
+  PREORDERS_T *new_parent_preorders = NULL;
+  struct block **new_parent_cblocks = NULL;
+  if (next_children > 0) {
+    new_parent_preorders =
+        (PREORDERS_T *)malloc(sizeof(PREORDERS_T) * next_children);
+    new_parent_cblocks =
+        (struct block **)malloc(sizeof(struct block *) * next_children);
+    memcpy(new_parent_preorders, input_block->preorders,
+           from_index_loc * sizeof(PREORDERS_T));
+    memcpy(new_parent_cblocks, input_block->children_blocks,
+           from_index_loc * sizeof(struct block *));
+    memcpy(new_parent_preorders + from_index_loc,
+           input_block->preorders + to_index_loc,
+           terminal_block_size * sizeof(PREORDERS_T));
+    memcpy(new_parent_cblocks + from_index_loc,
+           input_block->children_blocks + to_index_loc,
+           terminal_block_size * sizeof(struct block *));
+  }
+
+  free_block_frontier(input_block);
+
+  input_block->preorders = new_parent_preorders;
+  input_block->children_blocks = new_parent_cblocks;
+  input_block->children = next_children;
+
+  /*
+    memmove(input_block->preorders + from_index_loc, input_block->preorders +
+    to_index_loc, terminal_block_size * sizeof(uint32_t));
+    memmove(input_block->children_blocks + from_index_loc,
+    input_block->children_blocks + to_index_loc, terminal_block_size *
+    sizeof(block_ptr_t));
+            */
 
   return SUCCESS_ECODE_K2T;
 }
 
-int add_frontier_node(struct block_frontier *bf,
+int add_frontier_node(struct block *input_block,
                       uint32_t new_frontier_node_preorder, struct block *b) {
   uint32_t insertion_point =
-      find_insertion_point(bf, new_frontier_node_preorder);
-  _SAFE_OP_K2(vector_uint16_t__insert_element_at(
-      &(bf->frontier), new_frontier_node_preorder, insertion_point));
-  _SAFE_OP_K2(
-      vector_block_ptr_t__insert_element_at(&(bf->blocks), b, insertion_point));
+      find_insertion_point(input_block, new_frontier_node_preorder);
+
+  uint32_t children = (uint32_t)input_block->children;
+  PREORDERS_T *new_preorders =
+      (PREORDERS_T *)malloc(sizeof(PREORDERS_T) * (children + 1));
+  struct block **new_children_blocks =
+      (struct block **)malloc(sizeof(struct block *) * (children + 1));
+  if (children > 0) {
+    memcpy(new_preorders, input_block->preorders,
+           insertion_point * sizeof(PREORDERS_T));
+    memcpy(new_children_blocks, input_block->children_blocks,
+           insertion_point * sizeof(struct block *));
+  }
+
+  if (children > insertion_point) {
+    memcpy(new_preorders + insertion_point + 1,
+           input_block->preorders + insertion_point,
+           (children - insertion_point) * sizeof(PREORDERS_T));
+    memcpy(new_children_blocks + insertion_point + 1,
+           input_block->children_blocks + insertion_point,
+           (children - insertion_point) * sizeof(struct block *));
+  }
+
+  new_preorders[insertion_point] = new_frontier_node_preorder;
+  new_children_blocks[insertion_point] = b;
+
+  free_block_frontier(input_block);
+
+  input_block->preorders = new_preorders;
+  input_block->children_blocks = new_children_blocks;
+  input_block->children++;
+
   return SUCCESS_ECODE_K2T;
 }
 
 /* TODO: (OPTIMIZATION) replace by binary search if needed */
-int fix_frontier_indexes(struct block_frontier *bf, uint32_t start, int delta) {
-  for (int i = 0; i < bf->frontier.nof_items; i++) {
-    uint32_t current_preorder = bf->frontier.data[i];
+int fix_frontier_indexes(struct block *input_block, uint32_t start, int delta) {
+  for (int i = 0; i < input_block->children; i++) {
+    uint32_t current_preorder = input_block->preorders[i];
     if (current_preorder >= start) {
       if ((int)current_preorder < delta) {
         return FIX_INDEXES_PREORDER_HIGHER_THAN_DELTA;
       }
       uint32_t new_val = current_preorder - (uint32_t)delta;
-      bf->frontier.data[i] = new_val;
+      input_block->preorders[i] = (PREORDERS_T)new_val;
     }
   }
   return SUCCESS_ECODE_K2T;
@@ -172,18 +241,18 @@ int fix_frontier_indexes(struct block_frontier *bf, uint32_t start, int delta) {
 
 /* TODO: (OPTIMIZATION) replace by binary search if needed to find extreme
  * points */
-int collapse_frontier_nodes(struct block_frontier *bf, uint32_t from_preorder,
+int collapse_frontier_nodes(struct block *input_block, uint32_t from_preorder,
                             uint32_t to_preorder) {
   /* nothing to do in this case */
-  if (bf->frontier.nof_items == 0) {
+  if (input_block->children == 0) {
     return SUCCESS_ECODE_K2T;
   }
 
   int left_extreme = -1;
   int right_extreme = -1;
-  for (int i = 0; i < bf->frontier.nof_items; i++) {
+  for (int i = 0; i < input_block->children; i++) {
     // uint32_t current_preorder = read_uint_element(&bf->frontier, i);
-    uint32_t current_preorder = bf->frontier.data[i];
+    uint32_t current_preorder = input_block->preorders[i];
     if (current_preorder >= from_preorder && left_extreme == -1) {
       left_extreme = i;
     }
@@ -197,17 +266,19 @@ int collapse_frontier_nodes(struct block_frontier *bf, uint32_t from_preorder,
   }
 
   int delete_size = right_extreme - left_extreme + 1;
-  int new_size = bf->frontier.nof_items - delete_size;
+  int new_size = input_block->children - delete_size;
 
-  memmove(&bf->frontier + left_extreme, &bf->frontier + (right_extreme + 1),
-          (bf->frontier.nof_items - right_extreme) * sizeof(uint32_t));
+  uint32_t children = (uint32_t)input_block->children;
 
-  bf->frontier.nof_items = new_size;
+  memmove(input_block->preorders + left_extreme,
+          input_block->preorders + (right_extreme + 1),
+          (children - right_extreme) * sizeof(uint32_t));
 
-  memmove(&bf->blocks + left_extreme, &bf->blocks + (right_extreme + 1),
-          (bf->blocks.nof_items - right_extreme) * sizeof(block_ptr_t));
+  memmove(input_block->children_blocks + left_extreme,
+          input_block->children_blocks + (right_extreme + 1),
+          (children - right_extreme) * sizeof(block_ptr_t));
 
-  bf->blocks.nof_items = new_size;
+  input_block->children = new_size;
 
   return SUCCESS_ECODE_K2T;
 }

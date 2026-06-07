@@ -95,17 +95,16 @@ public:
 
   bool same_as(const string &other) {
     string my_string_rep = getStringRep();
-    string converted = my_string_rep.substr(0, get_nodes_count(&b->bt) * 4);
+    string converted = my_string_rep.substr(0, get_nodes_count(b) * 4);
     return converted == other;
   }
 
   static string getStringRepBlock(struct block *a_block, bool separate) {
     stringstream ss;
-    struct block_topology *bt = &a_block->bt;
-    struct bitvector *bv = &bt->bv;
-    uint32_t *container = bv->container;
+
+    uint32_t *container = a_block->container;
     uint32_t uint_bits = sizeof(uint32_t) * 8;
-    uint32_t nodes_count = get_nodes_count(bt);
+    uint32_t nodes_count = get_nodes_count(a_block);
     uint32_t used_bits = nodes_count * 4;
     uint32_t blocks_count = used_bits / uint_bits;
     uint32_t extra_bits = used_bits % uint_bits;
@@ -117,8 +116,7 @@ public:
 
     if (extra_bits > 0) {
       uint32_t remainingBits;
-      bits_read(&a_block->bt.bv, used_bits - extra_bits, used_bits - 1,
-                &remainingBits);
+      bits_read(a_block, used_bits - extra_bits, used_bits - 1, &remainingBits);
       remainingBits <<= (uint_bits - extra_bits);
       pass_to_ss_bin(remainingBits, uint_bits, ss, separate, extra_bits);
     }
@@ -132,17 +130,15 @@ public:
 
   string frontierStr() {
     stringstream ss;
-    struct block_frontier *bf = &b->bf;
-    for (int i = 0; i < bf->frontier.nof_items; i++) {
-      uint32_t fval = bf->frontier.data[i];
+    for (int i = 0; i < b->children; i++) {
+      uint32_t fval = b->preorders[i];
       ss << fval << ", ";
     }
     return ss.str();
   }
   void printSubBlocks() {
-    struct block_frontier *bf = &b->bf;
-    for (int i = 0; i < bf->blocks.nof_items; i++) {
-      struct block *sb = bf->blocks.data[i];
+    for (int i = 0; i < b->children; i++) {
+      struct block *sb = b->children_blocks[i];
       cout << getStringRepBlock(sb, true) << endl;
     }
   }

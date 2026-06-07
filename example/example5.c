@@ -41,10 +41,12 @@ int main(void) {
     insert_point(root_block, col, row, &qs);
     int has_it;
     has_point(root_block, col, row, &qs, &has_it);
-    printf("Has point?: %s\n", has_it ? "YES" : "NO");
+    printf("Has point?(%lu, %lu): %s\n", col, row, has_it ? "YES" : "NO");
   }
 
   fclose(fp);
+  finish_queries_state(&qs);
+  free_rec_block(root_block);
 
   return 0;
 }

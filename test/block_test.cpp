@@ -41,19 +41,18 @@ using namespace std;
 TEST(block_test, test1) {
   uint32_t tree_depth = 3;
   struct block *root_block = create_block();
-  struct queries_state qs;
-  init_queries_state(&qs, tree_depth, MAX_NODES_IN_BLOCK, root_block);
+  struct queries_state *qs = new struct queries_state;
+  init_queries_state(qs, tree_depth, MAX_NODES_IN_BLOCK, root_block);
 
-  int err = insert_point(root_block, 0, 0, &qs);
-  if (err) {
-    FAIL() << "ERR CODE INSERTION: " << err;
-  }
+  insert_point(root_block, 1, 1, qs);
+
   int found_point;
-  has_point(root_block, 0, 0, &qs, &found_point);
+  has_point(root_block, 1, 1, qs, &found_point);
   ASSERT_EQ(1, found_point);
 
-  free_block(root_block);
-  finish_queries_state(&qs);
+  finish_queries_state(qs);
+  free_rec_block(root_block);
+  delete qs;
 }
 
 TEST(block_test, test2) {

@@ -11,19 +11,24 @@ endif()
 
 # set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
 set(CMAKE_C_FLAGS "-Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition -Werror")
-set(CMAKE_C_FLAGS_DEBUG "-g -DDEBUG_STATS")
+#set(CMAKE_C_FLAGS "-Wall -Wextra -std=c99 -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition")
+set(CMAKE_C_FLAGS_DEBUG "-g")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG_STATS")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -pedantic -Werror")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG_STATS")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-
+set(CMAKE_LINKER_FLAGS_DEBUG "-fsanitize=address")
 option(WITH_DEBUG_STATS "Debug stats" OFF)
 
 if(WITH_DEBUG_STATS)
 add_definitions(-DDEBUG_STATS)
 endif()
 
-add_definitions(-DVERY_LIGHT_FIELDS)
+add_definitions(-DLIGHT_FIELDS)
 
 set(SOURCES_REQUIRED
 src/block.c
@@ -55,7 +60,7 @@ set(LIB_SOURCES
 bitvector/src/bitvector.c
 )
 
-add_subdirectory(bitvector)
+#add_subdirectory(bitvector)
 
 
 include_directories(include ${LIB_INCLUDES})
@@ -70,12 +75,14 @@ add_executable(example2 example/example2.c)
 add_executable(example3 example/example3.c)
 add_executable(example4 example/example4.c)
 add_executable(example5 example/example5.c)
+add_executable(example6 example/example6.c)
 
 target_link_libraries(example1 k2dyn)
 target_link_libraries(example2 k2dyn)
 target_link_libraries(example3 k2dyn)
 target_link_libraries(example4 k2dyn)
 target_link_libraries(example5 k2dyn)
+target_link_libraries(example6 k2dyn)
 
 
 
