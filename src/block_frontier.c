@@ -146,7 +146,7 @@ int extract_sub_block_frontier(struct block *input_block,
            sub_block_size * sizeof(uint32_t));
     memcpy(to_fill_bf->children_blocks,
            input_block->children_blocks + from_index_loc,
-           sub_block_size * sizeof(block_ptr_t));
+           sub_block_size * sizeof(struct block *));
   }
 
   uint32_t next_children = from_index_loc + terminal_block_size;
@@ -276,7 +276,7 @@ int collapse_frontier_nodes(struct block *input_block, uint32_t from_preorder,
 
   memmove(input_block->children_blocks + left_extreme,
           input_block->children_blocks + (right_extreme + 1),
-          (children - right_extreme) * sizeof(block_ptr_t));
+          (children - right_extreme) * sizeof(struct block *));
 
   input_block->children = new_size;
 
