@@ -25,6 +25,7 @@ SOFTWARE.
 #define _BLOCK_H_
 #include <stdint.h>
 
+#include <bitvector.h>
 #include "block_frontier.h"
 #include "block_topology.h"
 #include "definitions.h"
