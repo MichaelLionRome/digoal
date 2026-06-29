@@ -27,13 +27,6 @@ typedef uint32_t SZ_BITS_T;
 typedef uint32_t CONTAINER_SZ_T;
 typedef uint32_t NODES_BV_T;
 #endif
-/*
-struct block {
-  BVCTYPE *container;
-  NODES_BV_T nodes_count;
-  CONTAINER_SZ_T container_size;
-};
-*/
 
 struct block;
 
