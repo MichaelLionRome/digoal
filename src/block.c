@@ -1242,9 +1242,16 @@ int report_row_interactively(struct block *input_block, ulong row,
 
 struct block *create_block(void) {
   struct block *new_block = k2tree_alloc_block();
+  new_block->block_depth = 0;
+  new_block->container = NULL;
+  new_block->container_size = 0;
+  new_block->children_blocks = NULL;
+  new_block->preorders = NULL;
+  new_block->nodes_count = 0;
+  new_block->children = 0;
   create_block_topology(new_block);
   init_block_frontier(new_block);
-  new_block->block_depth = 0;
+  
   return new_block;
 }
 
