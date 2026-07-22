@@ -1251,7 +1251,7 @@ struct block *create_block(void) {
   new_block->children = 0;
   create_block_topology(new_block);
   init_block_frontier(new_block);
-  
+
   return new_block;
 }
 

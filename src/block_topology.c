@@ -222,11 +222,15 @@ int insert_node_at(struct block *input_block, NODES_COUNT_T node_index,
   uint32_t start_position = 4 * node_index;
   uint32_t end_position = start_position + 3; // inclusive
   uint32_t four_bits_rep = to_4_bits_table[code];
+  uint32_t nodes_count = get_nodes_count(input_block);
+
+  if (node_index >= nodes_count) {
+    CHECK_ERR(enlarge_block_size_to(input_block, node_index + 1));
+  }
 
   _SAFE_OP_K2(
       bits_write(input_block, start_position, end_position, four_bits_rep));
 
-  uint32_t nodes_count = get_nodes_count(input_block);
   if ((uint32_t)(node_index + 1) > nodes_count) {
     set_nodes_count(input_block, node_index + 1);
   }
