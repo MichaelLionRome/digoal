@@ -32,15 +32,13 @@ SOFTWARE.
 #include "vectors.h"
 #include <bitvector.h>
 
-#define PREORDERS_T uint8_t
-
 struct block {
-  PREORDERS_T *preorders;
+  NODES_BV_T *preorders;
   struct block **children_blocks;
 
   BVCTYPE *container;
 
-  PREORDERS_T children;
+  NODES_BV_T children;
   CONTAINER_SZ_T container_size;
   NODES_BV_T nodes_count;
   TREE_DEPTH_T block_depth;

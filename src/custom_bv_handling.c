@@ -52,7 +52,7 @@ int custom_init_bitvector(struct block *input_bitvector,
         k2tree_alloc_u32array(input_bitvector->container_size);
   }
 
-  input_bitvector->nodes_count = nodes_count;
+  // input_bitvector->nodes_count = nodes_count;
 
   return SUCCESS_ECODE_K2T;
 }
