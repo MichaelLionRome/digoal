@@ -14,16 +14,13 @@
 typedef uint32_t BVCTYPE;
 
 #ifdef VERY_LIGHT_FIELDS
-typedef uint16_t SZ_BITS_T;
 typedef uint8_t CONTAINER_SZ_T;
 typedef uint8_t NODES_BV_T;
 #elif defined(LIGHT_FIELDS)
-typedef uint32_t SZ_BITS_T;
 typedef uint16_t CONTAINER_SZ_T;
 typedef uint16_t NODES_BV_T;
 
 #else
-typedef uint32_t SZ_BITS_T;
 typedef uint32_t CONTAINER_SZ_T;
 typedef uint32_t NODES_BV_T;
 #endif

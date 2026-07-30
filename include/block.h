@@ -41,7 +41,6 @@ struct block {
   NODES_BV_T children;
   CONTAINER_SZ_T container_size;
   NODES_BV_T nodes_count;
-  TREE_DEPTH_T block_depth;
 };
 
 struct k2tree_measurement {

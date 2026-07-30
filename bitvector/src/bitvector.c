@@ -48,7 +48,6 @@ int init_bitvector(struct block *input_bitvector, NODES_BV_T nodes_count_) {
       CONVERT_BITS_TO_CONTAINER_NUM(nodes_count_ * 4, BVCTYPE);
   input_bitvector->container =
       (BVCTYPE *)calloc(input_bitvector->container_size, sizeof(BVCTYPE));
-  input_bitvector->nodes_count = nodes_count_;
 
   return SUCCESS_ECODE;
 }

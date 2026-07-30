@@ -47,6 +47,7 @@ struct child_result {
   struct block *resulting_block;
   uint32_t resulting_node_idx;
   TREE_DEPTH_T resulting_relative_depth;
+  TREE_DEPTH_T block_depth;
   int is_leaf_result;
   int exists;
 
@@ -113,6 +114,7 @@ static inline int block_has_enough_space(struct block *input_block,
 
 static inline int clean_child_result(struct child_result *cresult) {
   cresult->resulting_block = NULL;
+  cresult->block_depth = 0;
   cresult->resulting_node_idx = 0;
   cresult->resulting_relative_depth = 0;
   cresult->is_leaf_result = FALSE;
@@ -131,7 +133,7 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
                           uint32_t subtrees_to_skip,
                           uint32_t *frontier_traversal_idx,
                           TREE_DEPTH_T input_node_relative_depth,
-                          struct queries_state *qs);
+                          struct queries_state *qs, TREE_DEPTH_T block_depth);
 
 /**
   Posible return codes:
@@ -141,13 +143,14 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
 int child(struct block *input_block, uint32_t input_node_idx,
           uint32_t requested_child_position,
           TREE_DEPTH_T input_node_relative_depth, struct child_result *result,
-          struct queries_state *qs);
+          struct queries_state *qs, TREE_DEPTH_T block_depth);
 
 int find_point(struct block *input_block, struct queries_state *qs,
-               struct point_search_result *psr);
+               struct point_search_result *psr, TREE_DEPTH_T block_depth);
 
 int find_insertion_location(struct block *input_block, struct queries_state *qs,
-                            struct insertion_location *result);
+                            struct insertion_location *result,
+                            TREE_DEPTH_T block_depth);
 
 int get_previous_siblings_count(struct block *input_block,
                                 struct child_result *parent_node_result,
@@ -157,22 +160,26 @@ int make_room(struct block *input_block, struct insertion_location *il);
 int insert_point_mc(struct block *input_block, struct morton_code *mc,
                     struct insertion_location *il);
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
-                   TREE_DEPTH_T relative_depth, struct block **new_block);
-int split_block(struct block *input_block, struct queries_state *qs);
+                   struct block **new_block);
+int split_block(struct block *input_block, struct queries_state *qs,
+                TREE_DEPTH_T block_depth);
 int reset_sequential_scan_child(struct queries_state *qs);
 
 int insert_point_at(struct block *insertion_block,
-                    struct insertion_location *il, struct queries_state *qs);
+                    struct insertion_location *il, struct queries_state *qs,
+                    TREE_DEPTH_T block_depth);
 
 int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
                           struct vector_pair2dl_t *result,
-                          struct child_result *cresult);
+                          struct child_result *cresult,
+                          TREE_DEPTH_T block_depth);
 
 int naive_scan_points_rec_interactively(struct block *input_block,
                                         struct queries_state *qs,
                                         point_reporter_fun_t point_reporter,
                                         void *report_state,
-                                        struct child_result *cresult);
+                                        struct child_result *cresult,
+                                        TREE_DEPTH_T block_depth);
 
 int report_rec(ulong current_col, struct queries_state *qs,
                struct vector_pair2dl_t *result, struct child_result *current_cr,
@@ -190,14 +197,15 @@ int report_rec_interactively(ulong current_col, struct queries_state *qs,
 int child(struct block *input_block, uint32_t input_node_idx,
           uint32_t requested_child_position,
           TREE_DEPTH_T input_node_relative_depth, struct child_result *result,
-          struct queries_state *qs) {
+          struct queries_state *qs, TREE_DEPTH_T block_depth) {
   TREE_DEPTH_T tree_depth = qs->treedepth;
-  if (input_block->block_depth + input_node_relative_depth + 1 == tree_depth) {
+  if (block_depth + input_node_relative_depth + 1 == tree_depth) {
     /* Create leaf result */
     result->resulting_block = input_block;
     result->resulting_node_idx = input_node_idx;
     result->resulting_relative_depth = input_node_relative_depth;
     result->is_leaf_result = TRUE;
+    result->block_depth = block_depth;
     return SUCCESS_ECODE_K2T;
   }
 
@@ -220,8 +228,8 @@ int child(struct block *input_block, uint32_t input_node_idx,
   if (is_frontier) {
     struct block *child_block =
         get_child_block(input_block, frontier_traversal_idx);
-    int child_err_code =
-        child(child_block, 0, requested_child_position, 0, result, qs);
+    int child_err_code = child(child_block, 0, requested_child_position, 0,
+                               result, qs, block_depth + 1);
     if (child_err_code != SUCCESS_ECODE_K2T &&
         child_err_code != DOES_NOT_EXIST_CHILD_ERR) {
       return child_err_code;
@@ -231,8 +239,7 @@ int child(struct block *input_block, uint32_t input_node_idx,
     result->previous_preorder = input_node_idx;
     result->previous_to_current_index = requested_child_position;
     result->previous_depth = input_node_relative_depth;
-    if (result->resulting_relative_depth +
-            result->resulting_block->block_depth + 1 ==
+    if (result->resulting_relative_depth + result->block_depth + 1 ==
         qs->treedepth) {
       result->is_leaf_result = TRUE;
     }
@@ -248,6 +255,7 @@ int child(struct block *input_block, uint32_t input_node_idx,
   if (!exists) {
     result->exists = FALSE;
     result->resulting_block = input_block;
+    result->block_depth = block_depth;
     return DOES_NOT_EXIST_CHILD_ERR;
   }
 
@@ -259,7 +267,7 @@ int child(struct block *input_block, uint32_t input_node_idx,
 #endif
   CHECK_ERR(sequential_scan_child(input_block, input_node_idx, subtrees_to_skip,
                                   &frontier_traversal_idx,
-                                  input_node_relative_depth, qs));
+                                  input_node_relative_depth, qs, block_depth));
 
 #ifdef DEBUG_STATS
   gettimeofday(&tval_after, NULL);
@@ -272,6 +280,7 @@ int child(struct block *input_block, uint32_t input_node_idx,
   result->resulting_node_idx = qs->sc_result.child_preorder + 1;
   result->resulting_relative_depth = input_node_relative_depth + 1;
   result->exists = TRUE;
+  result->block_depth = block_depth;
 
   return SUCCESS_ECODE_K2T;
 }
@@ -292,7 +301,7 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
                           uint32_t subtrees_to_skip,
                           uint32_t *frontier_traversal_idx,
                           TREE_DEPTH_T input_node_relative_depth,
-                          struct queries_state *qs) {
+                          struct queries_state *qs, TREE_DEPTH_T block_depth) {
 
   reset_sequential_scan_child(qs);
 
@@ -316,7 +325,7 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
 
   uint32_t current_node_index = input_node_idx;
   TREE_DEPTH_T depth = input_node_relative_depth;
-  TREE_DEPTH_T real_depth = depth + input_block->block_depth;
+  TREE_DEPTH_T real_depth = depth + block_depth;
 
   while (!empty_int_stack(&qs->not_yet_traversed)) {
     current_node_index++;
@@ -363,7 +372,7 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
     qs->dstats.time_on_frontier_check +=
         (unsigned long)tval_result.tv_sec * 1000000 + tval_result.tv_usec;
 #endif
-    real_depth = depth + input_block->block_depth;
+    real_depth = depth + block_depth;
     reaching_leaf = (real_depth == qs->treedepth - 1);
 
     uint32_t current_children_count;
@@ -446,21 +455,22 @@ int sequential_scan_child(struct block *input_block, uint32_t input_node_idx,
 }
 
 int find_point(struct block *input_block, struct queries_state *qs,
-               struct point_search_result *psr) {
+               struct point_search_result *psr, TREE_DEPTH_T block_depth) {
   struct child_result current_cr;
   clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
+  current_cr.block_depth = block_depth;
 
-  uint32_t depth = input_block->block_depth;
+  uint32_t depth = block_depth;
   uint32_t relative_depth = 0;
-  for (depth = input_block->block_depth; depth < qs->treedepth; depth++) {
-    relative_depth = depth - current_cr.resulting_block->block_depth;
+  for (depth = block_depth; depth < qs->treedepth; depth++) {
+    relative_depth = depth - current_cr.block_depth;
     struct child_result prev_cr = current_cr;
     uint32_t current_mcode = get_code_at_morton_code(&qs->mc, depth);
 
-    int child_err_code =
-        child(current_cr.resulting_block, current_cr.resulting_node_idx,
-              current_mcode, relative_depth, &current_cr, qs);
+    int child_err_code = child(
+        current_cr.resulting_block, current_cr.resulting_node_idx,
+        current_mcode, relative_depth, &current_cr, qs, current_cr.block_depth);
     if (child_err_code != 0 && child_err_code != DOES_NOT_EXIST_CHILD_ERR) {
       return child_err_code;
     }
@@ -470,6 +480,7 @@ int find_point(struct block *input_block, struct queries_state *qs,
         current_cr.resulting_block != input_block) {
       prev_cr.previous_block = prev_cr.resulting_block;
       prev_cr.resulting_block = current_cr.resulting_block;
+      prev_cr.block_depth = current_cr.block_depth;
 
       prev_cr.previous_depth = prev_cr.resulting_relative_depth;
       prev_cr.previous_preorder = prev_cr.resulting_node_idx;
@@ -511,11 +522,13 @@ int find_point(struct block *input_block, struct queries_state *qs,
 }
 
 int find_insertion_location(struct block *input_block, struct queries_state *qs,
-                            struct insertion_location *result) {
+                            struct insertion_location *result,
+                            TREE_DEPTH_T block_depth) {
   struct point_search_result psr;
-  CHECK_ERR(find_point(input_block, qs, &psr));
+  CHECK_ERR(find_point(input_block, qs, &psr, block_depth));
 
   struct block *reached_block = psr.last_child_result_reached.resulting_block;
+  TREE_DEPTH_T reached_block_depth = psr.last_child_result_reached.block_depth;
 
   uint32_t frontier_traversal_idx = 0;
   uint32_t node_index = psr.last_child_result_reached.resulting_node_idx;
@@ -568,8 +581,8 @@ int find_insertion_location(struct block *input_block, struct queries_state *qs,
 #endif
   CHECK_ERR(sequential_scan_child(
       reached_block, node_index, to_be_skipped_subtrees,
-      &frontier_traversal_idx, psr.depth_reached - reached_block->block_depth,
-      qs));
+      &frontier_traversal_idx, psr.depth_reached - reached_block_depth, qs,
+      reached_block_depth));
 #ifdef DEBUG_STATS
   gettimeofday(&tval_after, NULL);
   timersub(&tval_after, &tval_before, &tval_result);
@@ -665,7 +678,7 @@ int insert_point_mc(struct block *input_block, struct morton_code *mc,
  * @return int Result code
  */
 int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
-                   TREE_DEPTH_T relative_depth, struct block **new_block) {
+                   struct block **new_block) {
   struct block *created_block = create_block();
 
   /* initialize block topology */
@@ -678,8 +691,6 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
   CHECK_ERR(collapse_nodes(input_block, from + 1, to));
   /* initialize block frontier */
   CHECK_ERR(extract_sub_block_frontier(input_block, from, to, created_block));
-
-  created_block->block_depth = relative_depth;
 
   *new_block = created_block;
 
@@ -696,7 +707,8 @@ int make_new_block(struct block *input_block, uint32_t from, uint32_t to,
  * @param qs Used to gather sizes of each subtree in a single scan
  * @return int
  */
-int split_block(struct block *input_block, struct queries_state *qs) {
+int split_block(struct block *input_block, struct queries_state *qs,
+                TREE_DEPTH_T block_depth) {
   /* find split location */
   uint32_t new_frontier_node_position;
   uint32_t new_frontier_node_relative_depth;
@@ -711,7 +723,7 @@ int split_block(struct block *input_block, struct queries_state *qs) {
   gettimeofday(&tval_before, NULL);
 #endif
   CHECK_ERR(sequential_scan_child(input_block, 0, children_count,
-                                  &traversal_frontier_idx, 0, qs));
+                                  &traversal_frontier_idx, 0, qs, block_depth));
 #ifdef DEBUG_STATS
   gettimeofday(&tval_after, NULL);
   timersub(&tval_after, &tval_before, &tval_result);
@@ -780,7 +792,8 @@ int split_block(struct block *input_block, struct queries_state *qs) {
 #endif
   CHECK_ERR(sequential_scan_child(input_block, new_frontier_node_position,
                                   children_count, &traversal_frontier_idx,
-                                  new_frontier_node_relative_depth, qs));
+                                  new_frontier_node_relative_depth, qs,
+                                  block_depth));
 #ifdef DEBUG_STATS
   gettimeofday(&tval_after, NULL);
   timersub(&tval_after, &tval_before, &tval_result);
@@ -791,9 +804,8 @@ int split_block(struct block *input_block, struct queries_state *qs) {
   uint32_t right_index = qs->sc_result.child_preorder;
 
   struct block *new_block;
-  CHECK_ERR(make_new_block(
-      input_block, new_frontier_node_position, right_index,
-      new_frontier_node_relative_depth + input_block->block_depth, &new_block));
+  CHECK_ERR(make_new_block(input_block, new_frontier_node_position, right_index,
+                           &new_block));
 
   CHECK_ERR(fix_frontier_indexes(new_block, 0, new_frontier_node_position + 1));
 
@@ -827,7 +839,8 @@ int split_block(struct block *input_block, struct queries_state *qs) {
  * @return int
  */
 int insert_point_at(struct block *insertion_block,
-                    struct insertion_location *il, struct queries_state *qs) {
+                    struct insertion_location *il, struct queries_state *qs,
+                    TREE_DEPTH_T block_depth) {
 
   if (block_has_enough_space(insertion_block, il)) {
     CHECK_ERR(make_room(insertion_block, il));
@@ -868,20 +881,20 @@ int insert_point_at(struct block *insertion_block,
   if (next_amount_of_nodes <= qs->max_nodes_count) {
     uint32_t next_block_sz = 1 << (uint32_t)ceil(log2(next_amount_of_nodes));
     CHECK_ERR(enlarge_block_size_to(insertion_block, next_block_sz));
-    return insert_point_at(insertion_block, il, qs);
+    return insert_point_at(insertion_block, il, qs, block_depth);
   }
 
-  CHECK_ERR(split_block(insertion_block, qs));
+  CHECK_ERR(split_block(insertion_block, qs, block_depth));
 #ifdef DEBUG_STATS
   qs->dstats.split_count++;
 #endif
 
   struct insertion_location il_split;
-  CHECK_ERR(find_insertion_location(qs->root, qs, &il_split));
+  CHECK_ERR(find_insertion_location(qs->root, qs, &il_split, 0));
 
   return insert_point_at(
       il_split.parent_node.last_child_result_reached.resulting_block, &il_split,
-      qs);
+      qs, il_split.parent_node.last_child_result_reached.block_depth);
 }
 
 /**
@@ -897,9 +910,9 @@ int insert_point_at(struct block *insertion_block,
  */
 int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
                           struct vector_pair2dl_t *result,
-                          struct child_result *cresult) {
-  TREE_DEPTH_T real_depth =
-      cresult->resulting_relative_depth + input_block->block_depth;
+                          struct child_result *cresult,
+                          TREE_DEPTH_T block_depth) {
+  TREE_DEPTH_T real_depth = cresult->resulting_relative_depth + block_depth;
 
   for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
     if (real_depth == qs->treedepth - 1) {
@@ -917,7 +930,7 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
 
     struct child_result cr;
     int err = child(input_block, cresult->resulting_node_idx, child_pos,
-                    cresult->resulting_relative_depth, &cr, qs);
+                    cresult->resulting_relative_depth, &cr, qs, block_depth);
 
     if (err == DOES_NOT_EXIST_CHILD_ERR) {
       continue;
@@ -925,7 +938,7 @@ int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
       return err;
     }
     add_element_morton_code(&qs->mc, real_depth, child_pos);
-    naive_scan_points_rec(cr.resulting_block, qs, result, &cr);
+    naive_scan_points_rec(cr.resulting_block, qs, result, &cr, cr.block_depth);
   }
 
   return SUCCESS_ECODE_K2T;
@@ -947,9 +960,9 @@ int naive_scan_points_rec_interactively(struct block *input_block,
                                         struct queries_state *qs,
                                         point_reporter_fun_t point_reporter,
                                         void *report_state,
-                                        struct child_result *cresult) {
-  TREE_DEPTH_T real_depth =
-      cresult->resulting_relative_depth + input_block->block_depth;
+                                        struct child_result *cresult,
+                                        TREE_DEPTH_T block_depth) {
+  TREE_DEPTH_T real_depth = cresult->resulting_relative_depth + block_depth;
 
   for (uint32_t child_pos = 0; child_pos < 4; child_pos++) {
     if (real_depth == qs->treedepth - 1) {
@@ -967,7 +980,7 @@ int naive_scan_points_rec_interactively(struct block *input_block,
 
     struct child_result cr;
     int err = child(input_block, cresult->resulting_node_idx, child_pos,
-                    cresult->resulting_relative_depth, &cr, qs);
+                    cresult->resulting_relative_depth, &cr, qs, block_depth);
 
     if (err == DOES_NOT_EXIST_CHILD_ERR) {
       continue;
@@ -976,7 +989,7 @@ int naive_scan_points_rec_interactively(struct block *input_block,
     }
     add_element_morton_code(&qs->mc, real_depth, child_pos);
     naive_scan_points_rec_interactively(cr.resulting_block, qs, point_reporter,
-                                        report_state, &cr);
+                                        report_state, &cr, cr.block_depth);
   }
 
   return SUCCESS_ECODE_K2T;
@@ -1018,9 +1031,10 @@ int report_rec(ulong current_col, struct queries_state *qs,
                struct vector_pair2dl_t *result, struct child_result *current_cr,
                int which_report) {
   struct block *current_block = current_cr->resulting_block;
+  TREE_DEPTH_T current_block_depth = current_cr->block_depth;
   TREE_DEPTH_T tree_depth = qs->treedepth;
   TREE_DEPTH_T relative_depth = current_cr->resulting_relative_depth;
-  TREE_DEPTH_T real_depth = relative_depth + current_block->block_depth;
+  TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
   if (real_depth + 1 == tree_depth) {
     // report the coordinate, because we have reached a leaf
     ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
@@ -1063,7 +1077,7 @@ int report_rec(ulong current_col, struct queries_state *qs,
     // We need to restore next_cr because each time it will be polluted by child
     next_cr = *current_cr;
     CHECK_CHILD_ERR(child(current_block, current_node_index, child_pos,
-                          relative_depth, &next_cr, qs));
+                          relative_depth, &next_cr, qs, current_block_depth));
     if (next_cr.exists) {
       // We don't need to clean up the morton code because we are traversing in
       // preorder-dfs and always writing in a random access fashion
@@ -1098,9 +1112,10 @@ int report_rec_interactively(ulong current_col, struct queries_state *qs,
                              struct child_result *current_cr, int which_report,
                              void *report_state) {
   struct block *current_block = current_cr->resulting_block;
+  TREE_DEPTH_T current_block_depth = current_cr->block_depth;
   TREE_DEPTH_T tree_depth = qs->treedepth;
   TREE_DEPTH_T relative_depth = current_cr->resulting_relative_depth;
-  TREE_DEPTH_T real_depth = relative_depth + current_block->block_depth;
+  TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
   if (real_depth + 1 == tree_depth) {
     // report the coordinate, because we have reached a leaf
     ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
@@ -1143,7 +1158,7 @@ int report_rec_interactively(ulong current_col, struct queries_state *qs,
     // We need to restore next_cr because each time it will be polluted by child
     next_cr = *current_cr;
     CHECK_CHILD_ERR(child(current_block, current_node_index, child_pos,
-                          relative_depth, &next_cr, qs));
+                          relative_depth, &next_cr, qs, current_block_depth));
     if (next_cr.exists) {
       // We don't need to clean up the morton code because we are traversing in
       // preorder-dfs and always writing in a random access fashion
@@ -1168,7 +1183,7 @@ int has_point(struct block *input_block, ulong col, ulong row,
   convert_coordinates_to_morton_code(col, row, qs->treedepth, &qs->mc);
 
   struct point_search_result psr;
-  CHECK_ERR(find_point(input_block, qs, &psr));
+  CHECK_ERR(find_point(input_block, qs, &psr, 0));
 
   *result = psr.point_exists;
 
@@ -1179,17 +1194,19 @@ int insert_point(struct block *input_block, ulong col, ulong row,
                  struct queries_state *qs) {
   convert_coordinates_to_morton_code(col, row, qs->treedepth, &qs->mc);
   struct insertion_location il;
-  CHECK_ERR(find_insertion_location(input_block, qs, &il));
+  CHECK_ERR(find_insertion_location(input_block, qs, &il, 0));
   struct block *insertion_block =
       il.parent_node.last_child_result_reached.resulting_block;
-  return insert_point_at(insertion_block, &il, qs);
+  TREE_DEPTH_T insertion_block_depth =
+      il.parent_node.last_child_result_reached.block_depth;
+  return insert_point_at(insertion_block, &il, qs, insertion_block_depth);
 }
 
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
                       struct vector_pair2dl_t *result) {
   struct child_result cresult;
   clean_child_result(&cresult);
-  return naive_scan_points_rec(input_block, qs, result, &cresult);
+  return naive_scan_points_rec(input_block, qs, result, &cresult, 0);
 }
 
 int scan_points_interactively(struct block *input_block,
@@ -1199,7 +1216,7 @@ int scan_points_interactively(struct block *input_block,
   struct child_result cresult;
   clean_child_result(&cresult);
   return naive_scan_points_rec_interactively(input_block, qs, point_reporter,
-                                             report_state, &cresult);
+                                             report_state, &cresult, 0);
 }
 
 int report_column(struct block *input_block, ulong col,
@@ -1207,6 +1224,7 @@ int report_column(struct block *input_block, ulong col,
   struct child_result current_cr;
   clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
+  current_cr.block_depth = 0;
   return report_rec(col, qs, result, &current_cr, REPORT_COLUMN);
 }
 
@@ -1215,6 +1233,7 @@ int report_row(struct block *input_block, ulong row, struct queries_state *qs,
   struct child_result current_cr;
   clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
+  current_cr.block_depth = 0;
   return report_rec(row, qs, result, &current_cr, REPORT_ROW);
 }
 
@@ -1225,6 +1244,7 @@ int report_column_interactively(struct block *input_block, ulong col,
   struct child_result current_cr;
   clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
+  current_cr.block_depth = 0;
   return report_rec_interactively(col, qs, point_reporter, &current_cr,
                                   REPORT_COLUMN, report_state);
 }
@@ -1236,13 +1256,13 @@ int report_row_interactively(struct block *input_block, ulong row,
   struct child_result current_cr;
   clean_child_result(&current_cr);
   current_cr.resulting_block = input_block;
+  current_cr.block_depth = 0;
   return report_rec_interactively(row, qs, point_reporter, &current_cr,
                                   REPORT_ROW, report_state);
 }
 
 struct block *create_block(void) {
   struct block *new_block = k2tree_alloc_block();
-  new_block->block_depth = 0;
   new_block->container = NULL;
   new_block->container_size = 0;
   new_block->children_blocks = NULL;
