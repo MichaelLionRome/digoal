@@ -26,6 +26,7 @@ SOFTWARE.
 #define K2TREEELEMENTSTEST_BLOCK_WRAPPER_HPP
 
 extern "C" {
+#include <bitvector.h>
 #include <block.h>
 #include <block_frontier.h>
 #include <block_topology.h>
@@ -142,6 +143,57 @@ public:
       cout << getStringRepBlock(sb, true) << endl;
     }
   }
+
+  void bitset(uint32_t position) {
+    int err_check;
+    if ((err_check = bit_set(b, position))) {
+      throw runtime_error("bitset: BITSET ERROR, CODE = " +
+                          to_string(err_check));
+    }
+  }
+
+  bool bitread(uint32_t position) {
+    int result;
+    int err_check;
+    if ((err_check = bit_read(b, position, &result))) {
+      throw runtime_error("bitread: BITREAD ERROR, CODE = " +
+                          to_string(err_check));
+    }
+
+    return result;
+  }
+
+  uint32_t bitsread(uint32_t from, uint32_t to) {
+    uint32_t result;
+    int err_check;
+    if ((err_check = bits_read(b, from, to, &result))) {
+      throw runtime_error("bitsread: BITSREAD ERROR, CODE = " +
+                          to_string(err_check));
+    }
+    return result;
+  }
+
+  void bitswrite(uint32_t from, uint32_t to, uint32_t data) {
+    int err_check;
+    if ((err_check = bits_write(b, from, to, data))) {
+      throw runtime_error("bitswrite: BITSWRITE ERROR, CODE = " +
+                          to_string(err_check));
+    }
+  }
+
+  void bitclear(uint32_t position) {
+    int err_check;
+    if ((err_check = bit_clear(b, position))) {
+      throw runtime_error("bitclear: BITCLEAR ERROR, CODE = " +
+                          to_string(err_check));
+    }
+  }
+
+  uint32_t read_block(uint32_t index) { return b->container[index]; }
+
+  uint32_t bv_size() { return b->container_size * 8 * sizeof(uint32_t); }
+
+  void init_topology_debug(uint32_t size) { enlarge_block_size_to(b, size); }
 };
 
 #endif // K2TREEELEMENTSTEST_BLOCK_WRAPPER_HPP

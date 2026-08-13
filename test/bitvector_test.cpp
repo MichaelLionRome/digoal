@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "bitvector_wrapper.h"
+#include "block_wrapper.hpp"
 
 #include <iostream>
 #include <string>
@@ -8,7 +8,8 @@
 using namespace std;
 
 TEST(some_bitvector_test_s, test1) {
-  BitvectorWrapper some_bitvector(8);
+  BlockWrapper some_bitvector(8, 1000);
+  some_bitvector.init_topology_debug(256);
 
   some_bitvector.bitset(0);
   some_bitvector.bitset(1);
@@ -26,19 +27,20 @@ TEST(some_bitvector_test_s, test1) {
   ASSERT_FALSE(some_bitvector.bitread(7)) << "7 failed";
 }
 
-TEST(fills200x4, test1) {
-  BitvectorWrapper some_bitvector(200);
+TEST(fills1000, test1) {
+  BlockWrapper some_bitvector(32, 128);
+  some_bitvector.init_topology_debug(256);
 
   for (int i = 0; i < 10; i++) {
     some_bitvector.bitset(i);
   }
 
   for (int i = 0; i < 10; i++) {
-    ASSERT_TRUE(some_bitvector.bitread(i)) << "Bitread i = " << i << " failed";
+    ASSERT_TRUE(some_bitvector.bitread(i));
   }
 
-  for (int i = 10; i < 200 * 4; i++) {
-    ASSERT_FALSE(some_bitvector.bitread(i)) << "Bitread i = " << i << " failed";
+  for (int i = 10; i < 1000; i++) {
+    ASSERT_FALSE(some_bitvector.bitread(i));
   }
 }
 
@@ -46,8 +48,10 @@ TEST(borders_test, test1) {
 
   string input_ =
       "11111111111111111111111111111111111111111111110011111111110011111111";
-  BitvectorWrapper some_bitvector(input_.size());
-  for (int i = 0; i < (int)some_bitvector.size(); i++) {
+  BlockWrapper some_bitvector(input_.size());
+  some_bitvector.init_topology_debug(256);
+
+  for (int i = 0; i < (int)some_bitvector.bv_size(); i++) {
     if (input_[i] == '1')
       some_bitvector.bitset(i);
   }
@@ -56,13 +60,9 @@ TEST(borders_test, test1) {
   ASSERT_EQ(3327, portion);
 }
 
-TEST(creation, test1) {
-  BitvectorWrapper some_bitvector(5);
-  ASSERT_EQ(5, some_bitvector.size());
-}
-
 TEST(set_value, test1) {
-  BitvectorWrapper bv(128);
+  BlockWrapper bv(128);
+  bv.init_topology_debug(256);
   bv.bitset(123);
   ASSERT_TRUE(bv.bitread(123));
   for (int i = 0; i < 128; i++) {
@@ -73,7 +73,8 @@ TEST(set_value, test1) {
 }
 
 TEST(set_value, test2) {
-  BitvectorWrapper bv(128);
+  BlockWrapper bv(128);
+  bv.init_topology_debug(256);
   for (int i = 0; i < 128; i++) {
     bv.bitset(i);
   }
@@ -83,21 +84,24 @@ TEST(set_value, test2) {
 }
 
 TEST(set_value, test3) {
-  BitvectorWrapper bv(128);
+  BlockWrapper bv(128);
+  bv.init_topology_debug(256);
   bv.bitset(0);
   uint32_t left_most_block = bv.read_block(0);
   ASSERT_EQ(1u << 31u, left_most_block);
 }
 
 TEST(set_value, test4) {
-  BitvectorWrapper bv(128);
+  BlockWrapper bv(128);
+  bv.init_topology_debug(256);
   bv.bitset(31);
   uint32_t left_most_block = bv.read_block(0);
   ASSERT_EQ(1, left_most_block);
 }
 
 TEST(clear_value, test1) {
-  BitvectorWrapper bv(128);
+  BlockWrapper bv(128);
+  bv.init_topology_debug(256);
   for (int i = 0; i < 128; i++) {
     bv.bitset(i);
   }
@@ -111,7 +115,8 @@ TEST(clear_value, test1) {
 }
 
 TEST(writeT, test1) {
-  BitvectorWrapper bv(64);
+  BlockWrapper bv(64);
+  bv.init_topology_debug(256);
   uint32_t to_write = 2;
   bv.bitswrite(31, 32, to_write);
   uint32_t read_result = bv.bitsread(31, 32);
@@ -119,7 +124,8 @@ TEST(writeT, test1) {
 }
 
 TEST(writeT, test2) {
-  BitvectorWrapper bv(127);
+  BlockWrapper bv(127);
+  bv.init_topology_debug(256);
 
   uint32_t to_write = (1 << 31) + (1 << 30);
 

@@ -37,6 +37,7 @@ src/morton_code.c
 src/queries_state.c
 src/stacks.c
 src/vectors.c
+src/bitvector.c
 )
 
 set(SOURCES_MEM_DEFAULT
@@ -48,23 +49,10 @@ ${SOURCES_REQUIRED}
 ${SOURCES_MEM_DEFAULT}
 )
 
-set(LIB_INCLUDES
-bitvector/include
-lib/c-queue/include
-lib/c-vector/include
-)
+include_directories(include)
 
-set(LIB_SOURCES
-bitvector/src/bitvector.c
-)
-
-#add_subdirectory(bitvector)
-
-
-include_directories(include ${LIB_INCLUDES})
-
-add_library(k2dyn ${SOURCES} ${LIB_SOURCES})
-add_library(k2dyn_noalloc ${SOURCES_REQUIRED} ${LIB_SOURCES})
+add_library(k2dyn ${SOURCES})
+add_library(k2dyn_noalloc ${SOURCES_REQUIRED})
 target_link_libraries(k2dyn m)
 target_link_libraries(k2dyn_noalloc m)
 
@@ -105,7 +93,7 @@ add_executable(morton_code_test test/morton_code_test.cpp)
 add_executable(block_usages_test test/block_usages_test.cpp)
 add_executable(debug_insertion_out_of_bounds_1_test test/debug_insertion_out_of_bounds_1_test.cpp)
 add_executable(interactive_report_test test/interactive_report_test.cpp)
-
+add_executable(bitvector_test test/bitvector_test.cpp)
 
 target_link_libraries(block_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn)
 target_link_libraries(block_leak_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn)
@@ -113,6 +101,7 @@ target_link_libraries(morton_code_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn )
 target_link_libraries(block_usages_test   ${GTEST_BOTH_LIBRARIES} pthread k2dyn )
 target_link_libraries(debug_insertion_out_of_bounds_1_test   k2dyn  ${GTEST_BOTH_LIBRARIES} pthread)
 target_link_libraries(interactive_report_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
+target_link_libraries(bitvector_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 
 
 add_test(NAME block_test COMMAND ./block_test)
