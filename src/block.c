@@ -39,10 +39,6 @@ SOFTWARE.
 #include <sys/time.h>
 #endif
 
-/* Definitions to simplify reporting */
-#define REPORT_COLUMN 0
-#define REPORT_ROW 1
-
 struct child_result {
   struct block *resulting_block;
   uint32_t resulting_node_idx;
@@ -994,22 +990,6 @@ int naive_scan_points_rec_interactively(struct block *input_block,
 
   return SUCCESS_ECODE_K2T;
 }
-
-/* definitions to simplify reporting */
-#define REPORT_FIRST_HALF(which_report, child_pos)                             \
-  (((which_report) == REPORT_COLUMN && (child_pos) < 2) ||                     \
-   ((which_report) == REPORT_ROW && (child_pos) % 2 == 0))
-
-#define REPORT_SECOND_HALF(which_report, child_pos)                            \
-  (((which_report) == REPORT_COLUMN && (child_pos) >= 2) ||                    \
-   ((which_report) == REPORT_ROW && (child_pos) % 2 == 1))
-
-#define REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,      \
-                                  child_pos)                                   \
-  (((current_col) < (half_length) &&                                           \
-    REPORT_FIRST_HALF(which_report, child_pos)) ||                             \
-   ((current_col) >= (half_length) &&                                          \
-    REPORT_SECOND_HALF(which_report, child_pos)))
 
 /**
  * @brief Recursive function to scan for points in a row or column

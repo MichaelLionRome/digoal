@@ -38,6 +38,7 @@ src/queries_state.c
 src/stacks.c
 src/vectors.c
 src/bitvector.c
+src/k2node.c
 )
 
 set(SOURCES_MEM_DEFAULT
@@ -52,9 +53,7 @@ ${SOURCES_MEM_DEFAULT}
 include_directories(include)
 
 add_library(k2dyn ${SOURCES})
-add_library(k2dyn_noalloc ${SOURCES_REQUIRED})
 target_link_libraries(k2dyn m)
-target_link_libraries(k2dyn_noalloc m)
 
 add_executable(example1 example/example1.c)
 add_executable(example2 example/example2.c)
@@ -62,6 +61,7 @@ add_executable(example3 example/example3.c)
 add_executable(example4 example/example4.c)
 add_executable(example5 example/example5.c)
 add_executable(example6 example/example6.c)
+add_executable(example7 example/example7.c)
 
 target_link_libraries(example1 k2dyn)
 target_link_libraries(example2 k2dyn)
@@ -69,6 +69,7 @@ target_link_libraries(example3 k2dyn)
 target_link_libraries(example4 k2dyn)
 target_link_libraries(example5 k2dyn)
 target_link_libraries(example6 k2dyn)
+target_link_libraries(example7 k2dyn)
 
 
 
@@ -94,6 +95,7 @@ add_executable(block_usages_test test/block_usages_test.cpp)
 add_executable(debug_insertion_out_of_bounds_1_test test/debug_insertion_out_of_bounds_1_test.cpp)
 add_executable(interactive_report_test test/interactive_report_test.cpp)
 add_executable(bitvector_test test/bitvector_test.cpp)
+add_executable(k2node_test test/k2node_test.cpp)
 
 target_link_libraries(block_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn)
 target_link_libraries(block_leak_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn)
@@ -102,6 +104,7 @@ target_link_libraries(block_usages_test   ${GTEST_BOTH_LIBRARIES} pthread k2dyn 
 target_link_libraries(debug_insertion_out_of_bounds_1_test   k2dyn  ${GTEST_BOTH_LIBRARIES} pthread)
 target_link_libraries(interactive_report_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 target_link_libraries(bitvector_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
+target_link_libraries(k2node_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 
 
 add_test(NAME block_test COMMAND ./block_test)
@@ -109,5 +112,6 @@ add_test(NAME block_leak_test COMMAND ./block_leak_test)
 add_test(NAME morton_code_test COMMAND ./morton_code_test)
 add_test(NAME block_usages_test COMMAND ./block_usages_test)
 add_test(NAME interactive_report_test COMMAND ./interactive_report_test)
+add_test(NAME k2node_test COMMAND ./k2node_test)
 
 endif()

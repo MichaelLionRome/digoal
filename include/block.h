@@ -25,12 +25,31 @@ SOFTWARE.
 #define _BLOCK_H_
 #include <stdint.h>
 
+#include "bitvector.h"
 #include "block_frontier.h"
 #include "block_topology.h"
 #include "definitions.h"
 #include "queries_state.h"
 #include "vectors.h"
-#include <bitvector.h>
+
+/* definitions to simplify reporting */
+#define REPORT_COLUMN 0
+#define REPORT_ROW 1
+
+#define REPORT_FIRST_HALF(which_report, child_pos)                             \
+  (((which_report) == REPORT_COLUMN && (child_pos) < 2) ||                     \
+   ((which_report) == REPORT_ROW && (child_pos) % 2 == 0))
+
+#define REPORT_SECOND_HALF(which_report, child_pos)                            \
+  (((which_report) == REPORT_COLUMN && (child_pos) >= 2) ||                    \
+   ((which_report) == REPORT_ROW && (child_pos) % 2 == 1))
+
+#define REPORT_CONTINUE_CONDITION(current_col, half_length, which_report,      \
+                                  child_pos)                                   \
+  (((current_col) < (half_length) &&                                           \
+    REPORT_FIRST_HALF(which_report, child_pos)) ||                             \
+   ((current_col) >= (half_length) &&                                          \
+    REPORT_SECOND_HALF(which_report, child_pos)))
 
 struct block {
   NODES_BV_T *preorders;
