@@ -83,11 +83,18 @@ void convert_coordinates_to_morton_code(ulong col, ulong row,
 
 int convert_morton_code_to_coordinates(struct morton_code *input_mc,
                                        struct pair2dl *result) {
+  return convert_morton_code_to_coordinates_select_treedepth(
+      input_mc, result, input_mc->treedepth);
+}
+
+int convert_morton_code_to_coordinates_select_treedepth(
+    struct morton_code *input_mc, struct pair2dl *result,
+    TREE_DEPTH_T treedepth) {
   long col = 0;
   long row = 0;
-  for (unsigned int i = 0; i < input_mc->treedepth; i++) {
+  for (unsigned int i = 0; i < treedepth; i++) {
     uint32_t current = get_code_at_morton_code(input_mc, i);
-    uint32_t current_pow = input_mc->treedepth - 1 - i;
+    uint32_t current_pow = treedepth - 1 - i;
     switch (current) {
     case 3:
       col += 1 << current_pow;

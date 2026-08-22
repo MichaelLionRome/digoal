@@ -47,4 +47,8 @@ void convert_coordinates_to_morton_code(ulong col, ulong row,
 
 int convert_morton_code_to_coordinates(struct morton_code *input_mc,
                                        struct pair2dl *result);
+
+int convert_morton_code_to_coordinates_select_treedepth(
+    struct morton_code *input_mc, struct pair2dl *result,
+    TREE_DEPTH_T treedepth);
 #endif /* _MORTON_CODE_H */

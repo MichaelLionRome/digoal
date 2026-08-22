@@ -38,31 +38,23 @@ extern "C" {
 
 TEST(k2node_tests, can_insert_1) {
 
-  for (TREE_DEPTH_T treedepth = 5; treedepth < 10; treedepth++) {
-    for (TREE_DEPTH_T cut_depth = 1; cut_depth < treedepth; cut_depth++) {
+  for (TREE_DEPTH_T treedepth = 3; treedepth < 7; treedepth++) {
+    for (TREE_DEPTH_T cut_depth = 1; cut_depth < treedepth - 1; cut_depth++) {
       struct k2node *root_node = create_k2node();
-      TREE_DEPTH_T subtree_depth = treedepth - cut_depth;
-
-      struct queries_state qs;
-      init_queries_state(&qs, subtree_depth, 256, NULL);
 
       struct k2qstate st;
-      st.cut_depth = cut_depth;
-      st.k2tree_depth = treedepth;
-      st.qs = &qs;
+      init_k2qstate(&st, treedepth, 255, cut_depth);
 
       ulong side = 1 << treedepth;
 
       for (ulong col = 0; col < side; col++) {
         for (ulong row = 0; row < side; row++) {
           k2node_insert_point(root_node, col, row, &st);
-          st.qs->root = NULL;
           for (ulong col_check = 0; col_check < col; col_check++) {
             for (ulong row_check = 0; row_check < row; row_check++) {
               int has_the_point;
               k2node_has_point(root_node, col_check, row_check, &st,
                                &has_the_point);
-              st.qs->root = NULL;
               ASSERT_TRUE(has_the_point)
                   << (int)treedepth << ";" << (int)cut_depth
                   << " (1)- current (" << col << ", " << row << ") - check: ("
@@ -72,7 +64,6 @@ TEST(k2node_tests, can_insert_1) {
           for (ulong row_check = 0; row_check <= row; row_check++) {
             int has_the_point;
             k2node_has_point(root_node, col, row_check, &st, &has_the_point);
-            st.qs->root = NULL;
             ASSERT_TRUE(has_the_point)
                 << (int)treedepth << ";" << (int)cut_depth << " (2)- current ("
                 << col << ", " << row << ") - check: (" << col << ", "
@@ -84,7 +75,6 @@ TEST(k2node_tests, can_insert_1) {
               int has_the_point;
               k2node_has_point(root_node, col_check, row_check, &st,
                                &has_the_point);
-              st.qs->root = NULL;
               ASSERT_FALSE(has_the_point)
                   << (int)treedepth << ";" << (int)cut_depth
                   << " (3)- current (" << col << ", " << row << ") - check: ("
@@ -94,8 +84,7 @@ TEST(k2node_tests, can_insert_1) {
           for (ulong row_check = row + 1; row_check < side; row_check++) {
             int has_the_point;
             k2node_has_point(root_node, col, row_check, &st, &has_the_point);
-            st.qs->root = NULL;
-            if (has_the_point) {
+            if ((bool)has_the_point) {
               struct vector_pair2dl_t result;
 
               vector_pair2dl_t__init_vector(&result);
@@ -109,7 +98,7 @@ TEST(k2node_tests, can_insert_1) {
 
               vector_pair2dl_t__free_vector(&result);
             }
-            ASSERT_FALSE(has_the_point)
+            ASSERT_FALSE((bool)has_the_point)
                 << (int)treedepth << ";" << (int)cut_depth << " (4)- current ("
                 << col << ", " << row << ") - check: (" << col << ", "
                 << row_check << ")";
@@ -118,7 +107,7 @@ TEST(k2node_tests, can_insert_1) {
       }
 
       free_rec_k2node(root_node, 0, st.cut_depth);
-      finish_queries_state(&qs);
+      clean_k2qstate(&st);
     }
   }
 }

@@ -27,9 +27,10 @@ SOFTWARE.
 #include "block.h"
 
 struct k2qstate {
-  struct queries_state *qs;
+  struct queries_state qs;
   TREE_DEPTH_T k2tree_depth;
   TREE_DEPTH_T cut_depth;
+  struct morton_code mc;
 };
 
 struct k2node {
@@ -70,6 +71,9 @@ struct k2node *create_k2node(void);
 int free_rec_k2node(struct k2node *input_node, ulong current_depth,
                     ulong cut_depth);
 
+int init_k2qstate(struct k2qstate *st, TREE_DEPTH_T treedepth,
+                  MAX_NODE_COUNT_T max_nodes_count, TREE_DEPTH_T cut_depth);
+int clean_k2qstate(struct k2qstate *st);
 struct k2tree_measurement k2node_measure_tree_size(struct k2node *input_node,
                                                    ulong cut_depth);
 
