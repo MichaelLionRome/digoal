@@ -384,6 +384,14 @@ int k2node_report_column_interactively(struct k2node *input_node, ulong col,
                                          point_reporter, report_state);
 }
 
+int k2node_report_row_interactively(struct k2node *input_node, ulong row,
+                                    struct k2qstate *st,
+                                    point_reporter_fun_t point_reporter,
+                                    void *report_state) {
+  return k2node_report_interactively_rec(input_node, row, REPORT_ROW, 0, st,
+                                         point_reporter, report_state);
+}
+
 struct k2node *create_k2node(void) {
   return (struct k2node *)calloc(1, sizeof(struct k2node));
 }
