@@ -68,7 +68,17 @@ struct k2tree_measurement {
   unsigned long bytes_topology;
 };
 
+struct sip_join_input {
+  struct block **blocks;
+  struct queries_state **qss;
+  struct sip_ipoint *join_coords;
+  int join_size;
+
+  struct sip_ipoint *_join_coords;
+};
+
 typedef void (*point_reporter_fun_t)(ulong, ulong, void *);
+typedef void (*coord_reporter_fun_t)(ulong, void *);
 
 int has_point(struct block *input_block, ulong col, ulong row,
               struct queries_state *qs, int *result);
@@ -96,6 +106,9 @@ int report_row_interactively(struct block *input_block, ulong row,
                              struct queries_state *qs,
                              point_reporter_fun_t point_reporter,
                              void *report_state);
+
+int sip_join(struct sip_join_input input, coord_reporter_fun_t coord_reporter,
+             void *report_state);
 
 struct block *create_block(void);
 int free_rec_block(struct block *input_block);

@@ -92,12 +92,19 @@ typedef unsigned long ulong;
 #define STARTING_BLOCK_CAPACITY 64
 #endif
 
-struct pair2dl {
+typedef struct pair2dl {
   long col;
   long row;
-};
+} pair2dl_t;
 
-typedef struct pair2dl pair2dl_t;
+// typedef struct pair2dl pair2dl_t;
+
+typedef enum { COLUMN_COORD = 0, ROW_COORD = 1 } coord_t;
+
+struct sip_ipoint {
+  long coord;
+  coord_t coord_type;
+};
 
 struct node_subtree_info {
   uint32_t node_index;

@@ -1297,3 +1297,154 @@ struct k2tree_measurement measure_tree_size(struct block *input_block) {
   result.total_blocks = 1 + children_total_blocks;
   return result;
 }
+
+static inline void sip_select_child(long coord, coord_t coord_type,
+                                    int *selected_child_1,
+                                    int *selected_child_2, long half_length) {
+  switch (coord_type) {
+  case COLUMN_COORD:
+    if (coord < half_length) {
+      *selected_child_1 = 0;
+      *selected_child_2 = 1;
+    } else {
+      *selected_child_1 = 2;
+      *selected_child_2 = 3;
+    }
+    break;
+  case ROW_COORD:
+  default:
+    if (coord < half_length) {
+      *selected_child_1 = 0;
+      *selected_child_2 = 2;
+    } else {
+      *selected_child_1 = 1;
+      *selected_child_2 = 3;
+    }
+    break;
+  }
+}
+
+static inline int sip_assign_valid_part(int *valid_part_1, int *valid_part_2,
+                                        int selected_child_1,
+                                        int selected_child_2, int index,
+                                        struct child_result *crs) {
+  if (*valid_part_1)
+    CHECK_ERR(child_exists(crs[index].resulting_block,
+                           crs[index].resulting_node_idx, selected_child_1,
+                           valid_part_1));
+  if (*valid_part_2)
+    CHECK_ERR(child_exists(crs[index].resulting_block,
+                           crs[index].resulting_node_idx, selected_child_2,
+                           valid_part_2));
+  return SUCCESS_ECODE_K2T;
+}
+
+static int sip_join_rec(struct sip_join_input input,
+                        coord_reporter_fun_t coord_reporter, void *report_state,
+                        struct child_result *crs, struct morton_code *mc,
+                        TREE_DEPTH_T current_depth) {
+  TREE_DEPTH_T current_block_depth =
+      crs[current_depth * input.join_size].block_depth;
+  TREE_DEPTH_T tree_depth = input.qss[0]->treedepth;
+  TREE_DEPTH_T relative_depth =
+      crs[current_depth * input.join_size].resulting_relative_depth;
+  TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
+  ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
+  ulong half_length = side_length >> 1;
+
+  int valid_parts[2] = {TRUE, TRUE};
+  int selected_children[2];
+  for (int i = 0; i < input.join_size; i++) {
+    int join_index = current_depth * input.join_size + i;
+    sip_select_child(input._join_coords[join_index].coord,
+                     input._join_coords[join_index].coord_type,
+                     &selected_children[0], &selected_children[1], half_length);
+    CHECK_ERR(sip_assign_valid_part(&valid_parts[0], &valid_parts[1],
+                                    selected_children[0], selected_children[1],
+                                    current_depth * input.join_size + i, crs));
+  }
+
+  for (int i = 0; i < 2; i++) {
+    if (valid_parts[i]) {
+      // Will always be the last given band
+      add_element_morton_code(mc, real_depth, selected_children[i]);
+      if (real_depth + 1 == tree_depth) {
+        struct pair2dl pair;
+        convert_morton_code_to_coordinates(mc, &pair);
+        switch (input.join_coords[input.join_size - 1].coord_type) {
+        case COLUMN_COORD:
+          coord_reporter(pair.row, report_state);
+          break;
+        case ROW_COORD:
+        default:
+          coord_reporter(pair.col, report_state);
+          break;
+        }
+      } else {
+        for (int j = 0; j < input.join_size; j++) {
+          int join_index = current_depth * input.join_size + j;
+          int next_depth_join_index = (current_depth + 1) * input.join_size + j;
+          sip_select_child(input._join_coords[join_index].coord,
+                           input._join_coords[join_index].coord_type,
+                           &selected_children[0], &selected_children[1],
+                           half_length);
+
+          struct child_result next_cr =
+              crs[current_depth * input.join_size + j];
+          CHECK_ERR(child(next_cr.resulting_block, next_cr.resulting_node_idx,
+                          selected_children[i],
+                          next_cr.resulting_relative_depth, &next_cr,
+                          input.qss[j], next_cr.block_depth));
+          crs[next_depth_join_index] = next_cr;
+          input._join_coords[next_depth_join_index].coord_type =
+              input._join_coords[join_index].coord_type;
+          input._join_coords[next_depth_join_index].coord =
+              input._join_coords[join_index].coord % half_length;
+
+          if (!next_cr.exists) {
+            // debug
+            fprintf(stderr, "!next_cr.exists");
+            exit(1);
+          }
+        }
+
+        CHECK_ERR(sip_join_rec(input, coord_reporter, report_state, crs, mc,
+                               current_depth + 1));
+      }
+    }
+  }
+
+  return SUCCESS_ECODE_K2T;
+}
+
+int sip_join(struct sip_join_input input, coord_reporter_fun_t coord_reporter,
+             void *report_state) {
+  TREE_DEPTH_T treedepth = input.qss[0]->treedepth;
+  struct child_result *crs =
+      malloc(input.join_size * treedepth * sizeof(struct child_result));
+  input._join_coords =
+      malloc(input.join_size * treedepth * sizeof(struct sip_ipoint));
+  for (int j = 0; j < treedepth; j++) {
+    for (int i = 0; i < input.join_size; i++) {
+      int index = j * input.join_size + i;
+      clean_child_result(crs + index);
+      crs[index].resulting_block = input.blocks[i];
+    }
+  }
+
+  for (int i = 0; i < input.join_size; i++) {
+    input.qss[i]->root = input.blocks[i];
+    input._join_coords[i] = input.join_coords[i];
+  }
+
+  struct morton_code mc;
+  init_morton_code(&mc, treedepth);
+
+  CHECK_ERR(sip_join_rec(input, coord_reporter, report_state, crs, &mc, 0));
+
+  free(crs);
+  free(input._join_coords);
+  clean_morton_code(&mc);
+
+  return SUCCESS_ECODE_K2T;
+}
