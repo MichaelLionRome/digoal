@@ -432,3 +432,83 @@ int clean_k2qstate(struct k2qstate *st) {
   clean_morton_code(&st->mc);
   return SUCCESS_ECODE_K2T;
 }
+
+
+static inline void sip_select_child(long coord, coord_t coord_type,
+                                    int *selected_child_1,
+                                    int *selected_child_2, long half_length) {
+  switch (coord_type) {
+  case COLUMN_COORD:
+    if (coord < half_length) {
+      *selected_child_1 = 0;
+      *selected_child_2 = 1;
+    } else {
+      *selected_child_1 = 2;
+      *selected_child_2 = 3;
+    }
+    break;
+  case ROW_COORD:
+  default:
+    if (coord < half_length) {
+      *selected_child_1 = 0;
+      *selected_child_2 = 2;
+    } else {
+      *selected_child_1 = 1;
+      *selected_child_2 = 3;
+    }
+    break;
+  }
+}
+
+static inline int sip_assign_valid_part(int *valid_part_1, int *valid_part_2,
+                                        int selected_child_1,
+                                        int selected_child_2) {
+  
+}
+
+static int k2node_sip_join_rec(struct k2node_sip_input input, TREE_DEPTH_T current_depth, TREE_DEPTH_T treedepth, TREE_DEPTH_T cut_depth, struct morton_code *mc, struct vector_block_ptr_t *acc_blocks, struct k2node **current_nodes, struct sip_ipoint *join_coords){
+  if(current_depth == cut_depth){
+
+    
+    // vector_block_ptr_t__insert_element(acc_blocks, current_nodes)
+    return SUCCESS_ECODE_K2T;  
+  }
+
+  ulong side_length = 1UL << ((ulong)treedepth - current_depth);
+  ulong half_length = side_length >> 1;
+
+  int valid_parts[2] = {TRUE, TRUE};
+  int selected_children[2];
+  for(int i = 0; i < input.join_size; i++){
+    sip_select_child()
+  }
+
+  
+
+  
+
+
+}
+
+int k2node_sip_join(struct k2node_sip_input input, TREE_DEPTH_T cut_depth, TREE_DEPTH_T treedepth){
+  struct k2node **current_nodes = malloc(sizeof(struct k2node *) * input.join_size);
+  memcpy(current_nodes, input.nodes, sizeof(struct k2node *) * input.join_size);
+
+  struct morton_code mc;
+
+  init_morton_code(&mc, treedepth);
+
+  struct vector_pair2dl_t acc_blocks;
+  vector_block_ptr_t__init_vector_with_capacity(&acc_blocks, 8);
+
+  struct sip_ipoint *join_coords = malloc(sizeof(struct sip_ipoint) * input.join_size);
+  memcpy(join_coords, input.join_coords, sizeof(struct sip_ipoint) * input.join_size);
+
+  CHECK_ERR(k2node_sip_join_rec(input, 0, treedepth, cut_depth, &mc, &acc_blocks, current_nodes, join_coords));
+
+
+  vector_block_ptr_t__free_vector(&acc_blocks);
+  clean_morton_code(&mc);
+  free(current_nodes);
+  free(join_coords);
+}

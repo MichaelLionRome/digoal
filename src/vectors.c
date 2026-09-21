@@ -24,3 +24,4 @@ SOFTWARE.
 #include "vectors.h"
 
 declare_cvector(pair2dl_t, long)
+declare_cvector(block_ptr_t, int)

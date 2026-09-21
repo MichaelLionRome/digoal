@@ -40,6 +40,12 @@ struct k2node {
   } k2subtree;
 };
 
+struct k2node_sip_input{
+  struct k2node ** nodes;
+  struct sip_ipoint *join_coords;
+  int join_size;
+};
+
 int k2node_has_point(struct k2node *k2node, ulong col, ulong row,
                      struct k2qstate *st, int *result);
 int k2node_insert_point(struct k2node *input_node, ulong col, ulong row,
@@ -66,6 +72,8 @@ int k2node_report_row_interactively(struct k2node *input_node, ulong row,
                                     struct k2qstate *st,
                                     point_reporter_fun_t point_reporter,
                                     void *report_state);
+
+
 
 struct k2node *create_k2node(void);
 int free_rec_k2node(struct k2node *input_node, ulong current_depth,
