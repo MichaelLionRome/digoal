@@ -433,82 +433,166 @@ int clean_k2qstate(struct k2qstate *st) {
   return SUCCESS_ECODE_K2T;
 }
 
-
 static inline void sip_select_child(long coord, coord_t coord_type,
-                                    int *selected_child_1,
-                                    int *selected_child_2, long half_length) {
+                                    int *selected_children, long half_length) {
   switch (coord_type) {
   case COLUMN_COORD:
     if (coord < half_length) {
-      *selected_child_1 = 0;
-      *selected_child_2 = 1;
+      selected_children[0] = 0;
+      selected_children[1] = 1;
     } else {
-      *selected_child_1 = 2;
-      *selected_child_2 = 3;
+      selected_children[0] = 2;
+      selected_children[1] = 3;
     }
     break;
   case ROW_COORD:
   default:
     if (coord < half_length) {
-      *selected_child_1 = 0;
-      *selected_child_2 = 2;
+      selected_children[0] = 0;
+      selected_children[1] = 2;
     } else {
-      *selected_child_1 = 1;
-      *selected_child_2 = 3;
+      selected_children[0] = 1;
+      selected_children[1] = 3;
     }
     break;
   }
 }
 
-static inline int sip_assign_valid_part(int *valid_part_1, int *valid_part_2,
-                                        int selected_child_1,
-                                        int selected_child_2) {
-  
+static inline void sip_assign_valid_part(int *valid_parts,
+                                         int *selected_children, int index,
+                                         struct k2node **current_nodes) {
+  for (int i = 0; i < 2; i++) {
+    if (valid_parts[i])
+      valid_parts[i] =
+          (current_nodes[index]->k2subtree.children[selected_children[i]] !=
+           NULL);
+  }
 }
 
-static int k2node_sip_join_rec(struct k2node_sip_input input, TREE_DEPTH_T current_depth, TREE_DEPTH_T treedepth, TREE_DEPTH_T cut_depth, struct morton_code *mc, struct vector_block_ptr_t *acc_blocks, struct k2node **current_nodes, struct sip_ipoint *join_coords){
-  if(current_depth == cut_depth){
+struct intermediate_reporter_data {
+  coord_reporter_fun_t rep_fun;
+  void *report_state;
+  ulong base_coord;
+};
 
-    
-    // vector_block_ptr_t__insert_element(acc_blocks, current_nodes)
-    return SUCCESS_ECODE_K2T;  
+static void intermediate_reporter(ulong coord, void *report_state) {
+  struct intermediate_reporter_data *ird =
+      (struct intermediate_reporter_data *)report_state;
+  ird->rep_fun(coord + ird->base_coord, ird->report_state);
+}
+
+static int
+k2node_sip_join_rec(struct k2node_sip_input input, TREE_DEPTH_T current_depth,
+                    TREE_DEPTH_T treedepth, TREE_DEPTH_T cut_depth,
+                    struct morton_code *mc, struct k2node **current_nodes,
+                    struct sip_ipoint *join_coords,
+                    coord_reporter_fun_t coord_reporter, void *report_state) {
+
+  if (current_depth == cut_depth) {
+    struct pair2dl pair;
+    convert_morton_code_to_coordinates(mc, &pair);
+    ulong base_coord;
+    switch (join_coords[input.join_size - 1].coord_type) {
+    case COLUMN_COORD:
+      base_coord = pair.row;
+      break;
+    case ROW_COORD:
+    default:
+      base_coord = pair.col;
+      break;
+    }
+    base_coord = base_coord << (treedepth - cut_depth);
+
+    struct sip_join_input sji;
+    sji.blocks = input._blocks;
+    sji.qss = input._qss;
+    sji.join_coords = join_coords + current_depth * input.join_size;
+    sji.join_size = input.join_size;
+    for (int j = 0; j < input.join_size; j++) {
+      int jindex = current_depth * input.join_size + j;
+      struct block *root_block = current_nodes[jindex]->k2subtree.block_child;
+      sji.blocks[j] = root_block;
+      sji.qss[j] = &input.sts[j]->qs;
+    }
+
+    struct intermediate_reporter_data ird;
+    ird.base_coord = base_coord;
+    ird.rep_fun = coord_reporter;
+    ird.report_state = report_state;
+
+    return sip_join(sji, intermediate_reporter, &ird);
   }
 
-  ulong side_length = 1UL << ((ulong)treedepth - current_depth);
-  ulong half_length = side_length >> 1;
+  ulong half_length = 1UL << ((ulong)treedepth - current_depth - 1);
 
   int valid_parts[2] = {TRUE, TRUE};
   int selected_children[2];
-  for(int i = 0; i < input.join_size; i++){
-    sip_select_child()
+
+  for (int j = 0; j < input.join_size; j++) {
+    int jindex = input.join_size * current_depth + j;
+    sip_select_child(join_coords[jindex].coord, join_coords[jindex].coord_type,
+                     selected_children, half_length);
+
+    sip_assign_valid_part(valid_parts, selected_children, jindex,
+                          current_nodes);
   }
 
-  
+  for (int i = 0; i < 2; i++) {
+    if (valid_parts[i]) {
+      // Will always be the last given band
+      for (int j = 0; j < input.join_size; j++) {
+        int jindex = current_depth * input.join_size + j;
+        int next_jindex = (current_depth + 1) * input.join_size + j;
+        sip_select_child(join_coords[jindex].coord,
+                         join_coords[jindex].coord_type, selected_children,
+                         half_length);
+        current_nodes[next_jindex] =
+            current_nodes[jindex]->k2subtree.children[selected_children[i]];
+        join_coords[next_jindex].coord_type = join_coords[jindex].coord_type;
+        join_coords[next_jindex].coord =
+            join_coords[jindex].coord % half_length;
+      }
+      add_element_morton_code(mc, current_depth, selected_children[i]);
+      CHECK_ERR(k2node_sip_join_rec(input, current_depth + 1, treedepth,
+                                    cut_depth, mc, current_nodes, join_coords,
+                                    coord_reporter, report_state));
+    }
+  }
 
-  
-
-
+  return SUCCESS_ECODE_K2T;
 }
 
-int k2node_sip_join(struct k2node_sip_input input, TREE_DEPTH_T cut_depth, TREE_DEPTH_T treedepth){
-  struct k2node **current_nodes = malloc(sizeof(struct k2node *) * input.join_size);
+int k2node_sip_join(struct k2node_sip_input input,
+                    coord_reporter_fun_t coord_reporter, void *report_state) {
+
+  TREE_DEPTH_T treedepth = input.sts[0]->k2tree_depth;
+  TREE_DEPTH_T cut_depth = input.sts[0]->cut_depth;
+  struct k2node **current_nodes =
+      malloc(sizeof(struct k2node *) * input.join_size * (cut_depth + 1));
   memcpy(current_nodes, input.nodes, sizeof(struct k2node *) * input.join_size);
 
   struct morton_code mc;
 
-  init_morton_code(&mc, treedepth);
+  init_morton_code(&mc, cut_depth);
 
-  struct vector_pair2dl_t acc_blocks;
-  vector_block_ptr_t__init_vector_with_capacity(&acc_blocks, 8);
+  struct sip_ipoint *join_coords =
+      malloc(sizeof(struct sip_ipoint) * input.join_size * (cut_depth + 1));
+  memcpy(join_coords, input.join_coords,
+         sizeof(struct sip_ipoint) * input.join_size);
 
-  struct sip_ipoint *join_coords = malloc(sizeof(struct sip_ipoint) * input.join_size);
-  memcpy(join_coords, input.join_coords, sizeof(struct sip_ipoint) * input.join_size);
+  input._qss = (struct queries_state **)malloc(sizeof(struct queries_state *) *
+                                               input.join_size);
+  input._blocks =
+      (struct block **)malloc(sizeof(struct block *) * input.join_size);
 
-  CHECK_ERR(k2node_sip_join_rec(input, 0, treedepth, cut_depth, &mc, &acc_blocks, current_nodes, join_coords));
+  CHECK_ERR(k2node_sip_join_rec(input, 0, treedepth, cut_depth, &mc,
+                                current_nodes, join_coords, coord_reporter,
+                                report_state));
 
-
-  vector_block_ptr_t__free_vector(&acc_blocks);
   clean_morton_code(&mc);
+  free(input._qss);
+  free(input._blocks);
   free(current_nodes);
   free(join_coords);
+  return SUCCESS_ECODE_K2T;
 }

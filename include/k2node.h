@@ -25,6 +25,7 @@ SOFTWARE.
 #define _K2NODE_H_
 
 #include "block.h"
+#include "vectors.h"
 
 struct k2qstate {
   struct queries_state qs;
@@ -40,10 +41,14 @@ struct k2node {
   } k2subtree;
 };
 
-struct k2node_sip_input{
-  struct k2node ** nodes;
+struct k2node_sip_input {
+  struct k2node **nodes;
+  struct k2qstate **sts;
   struct sip_ipoint *join_coords;
   int join_size;
+
+  struct block **_blocks;
+  struct queries_state **_qss;
 };
 
 int k2node_has_point(struct k2node *k2node, ulong col, ulong row,
@@ -73,8 +78,6 @@ int k2node_report_row_interactively(struct k2node *input_node, ulong row,
                                     point_reporter_fun_t point_reporter,
                                     void *report_state);
 
-
-
 struct k2node *create_k2node(void);
 int free_rec_k2node(struct k2node *input_node, ulong current_depth,
                     ulong cut_depth);
@@ -84,5 +87,8 @@ int init_k2qstate(struct k2qstate *st, TREE_DEPTH_T treedepth,
 int clean_k2qstate(struct k2qstate *st);
 struct k2tree_measurement k2node_measure_tree_size(struct k2node *input_node,
                                                    ulong cut_depth);
+
+int k2node_sip_join(struct k2node_sip_input input,
+                    coord_reporter_fun_t coord_reporter, void *report_state);
 
 #endif

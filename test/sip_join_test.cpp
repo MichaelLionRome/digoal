@@ -62,14 +62,13 @@ TEST(sip_tests, test_join_four) {
   insert_point(blocks[1], 4, 13, qss[1]);
   insert_point(blocks[0], 13, 2, qss[0]);
 
-  ulong side =  1UL << treedepth;
-  for(ulong col = 0; col < side; col++){
-    for(ulong row = 0; row < side; row++){
+  ulong side = 1UL << treedepth;
+  for (ulong col = 0; col < side; col++) {
+    for (ulong row = 0; row < side; row++) {
       insert_point(blocks[3], col, row, qss[3]);
     }
   }
-  
-  
+
   struct sip_join_input sji;
 
   sji.blocks = blocks;
@@ -120,15 +119,14 @@ TEST(sip_tests, test_join_two_exhaustive) {
     init_queries_state(qss[i], treedepth, MAX_NODES_IN_BLOCK, blocks[i]);
   }
 
-  ulong side =  1UL << treedepth;
-  for(ulong col = 0; col < side; col++){
-    for(ulong row = 0; row < side; row++){
+  ulong side = 1UL << treedepth;
+  for (ulong col = 0; col < side; col++) {
+    for (ulong row = 0; row < side; row++) {
       insert_point(blocks[0], col, row, qss[0]);
       insert_point(blocks[1], col, row, qss[1]);
     }
   }
-  
-  
+
   struct sip_join_input sji;
 
   sji.blocks = blocks;
@@ -149,11 +147,10 @@ TEST(sip_tests, test_join_two_exhaustive) {
       },
       &coords);
 
-  
   ASSERT_EQ(coords.size(), side);
 
   std::sort(coords.begin(), coords.end());
-  for(size_t i = 0; i < coords.size(); i++){
+  for (size_t i = 0; i < coords.size(); i++) {
     ASSERT_EQ(coords[i], i);
   }
 

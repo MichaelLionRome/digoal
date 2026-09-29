@@ -25,13 +25,9 @@ SOFTWARE.
 #define _VECTORS_H_
 
 #include "definitions.h"
-#include "block.h"
 
 #include <vector.h>
 
-typedef struct block * block_ptr_t;
-
 define_cvector(pair2dl_t, long)
-define_cvector(block_ptr_t, int)
 
 #endif
