@@ -50,22 +50,23 @@ TEST(sip_tests, test_join_four) {
     init_queries_state(qss[i], treedepth, MAX_NODES_IN_BLOCK, blocks[i]);
   }
 
+  int already_exists;
   for (int i = 0; i < 10; i++) {
-    insert_point(blocks[0], i, 2, qss[0]);
-    insert_point(blocks[1], 4, i, qss[1]);
+    insert_point(blocks[0], i, 2, qss[0], &already_exists);
+    insert_point(blocks[1], 4, i, qss[1], &already_exists);
   }
 
-  insert_point(blocks[2], 0, 7, qss[2]);
-  insert_point(blocks[2], 5, 7, qss[2]);
-  insert_point(blocks[2], 13, 7, qss[2]);
+  insert_point(blocks[2], 0, 7, qss[2], &already_exists);
+  insert_point(blocks[2], 5, 7, qss[2], &already_exists);
+  insert_point(blocks[2], 13, 7, qss[2], &already_exists);
 
-  insert_point(blocks[1], 4, 13, qss[1]);
-  insert_point(blocks[0], 13, 2, qss[0]);
+  insert_point(blocks[1], 4, 13, qss[1], &already_exists);
+  insert_point(blocks[0], 13, 2, qss[0], &already_exists);
 
   ulong side = 1UL << treedepth;
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
-      insert_point(blocks[3], col, row, qss[3]);
+      insert_point(blocks[3], col, row, qss[3], &already_exists);
     }
   }
 
@@ -120,10 +121,11 @@ TEST(sip_tests, test_join_two_exhaustive) {
   }
 
   ulong side = 1UL << treedepth;
+  int already_exists;
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
-      insert_point(blocks[0], col, row, qss[0]);
-      insert_point(blocks[1], col, row, qss[1]);
+      insert_point(blocks[0], col, row, qss[0], &already_exists);
+      insert_point(blocks[1], col, row, qss[1], &already_exists);
     }
   }
 

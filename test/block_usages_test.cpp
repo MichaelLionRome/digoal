@@ -57,8 +57,10 @@ TEST(usages, naive_scan_1) {
                                                {3, 15}, {30, 31}, {31, 8}};
 
   int qty = init_elements.size();
+  int already_exists;
   for (int i = 0; i < qty; i++) {
-    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
+    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs,
+                 &already_exists);
   }
 
   struct vector_pair2dl_t result;
@@ -126,8 +128,10 @@ TEST(usages, report_column_test_1) {
                                                {3, 30}, {3, 2},   {3, 29}};
 
   int qty = init_elements.size();
+  int already_exists;
   for (int i = 0; i < qty; i++) {
-    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
+    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs,
+                 &already_exists);
   }
 
   struct vector_pair2dl_t result;
@@ -164,8 +168,10 @@ TEST(usages, report_row_test_1) {
       {3, 30}, {3, 2}, {3, 29}, {8, 15}, {9, 15},  {15, 15}};
 
   int qty = init_elements.size();
+  int already_exists;
   for (int i = 0; i < qty; i++) {
-    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
+    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs,
+                 &already_exists);
   }
 
   struct vector_pair2dl_t result;

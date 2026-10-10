@@ -68,7 +68,8 @@ public:
   }
 
   void insert(unsigned long col, unsigned long row) {
-    int err_check = insert_point(b, col, row, &qs);
+    int already_exists;
+    int err_check = insert_point(b, col, row, &qs, &already_exists);
     if (err_check)
       throw runtime_error("CANT INSERT, ERROR CODE= " + to_string(err_check));
   }
@@ -146,7 +147,8 @@ public:
 
   void bitset(uint32_t position) {
     int err_check;
-    if ((err_check = bit_set(b, position))) {
+    int was_set_already;
+    if ((err_check = bit_set(b, position, &was_set_already))) {
       throw runtime_error("bitset: BITSET ERROR, CODE = " +
                           to_string(err_check));
     }

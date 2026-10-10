@@ -100,24 +100,16 @@ BenchmarkResult space_benchmark_random_insertion_by_depth_and_node_count(
   struct queries_state qs;
   init_queries_state(&qs, treedepth, node_count, root_block);
 
-  // auto random_seq_1 = create_shuffled_sequence(points_count, side);
-  // auto random_seq_2 = create_shuffled_sequence(points_count, side);
-
-  /*
-  for (size_t i = 0; i < points_count; i++) {
-    insert_point(root_block, cols[i], rows[i], &qs);
-  }
-  */
-
   auto start = std::chrono::high_resolution_clock::now();
   unsigned long inserted_points = 0;
+  int point_exists;
   for (size_t i = 0; i < cols.size(); i++) {
     if (i * rows.size() > points_count)
       break;
     for (size_t j = 0; j < rows.size(); j++) {
       if (i * rows.size() + j > points_count)
         break;
-      insert_point(root_block, cols[i], rows[j], &qs);
+      insert_point(root_block, cols[i], rows[j], &qs, &point_exists);
       inserted_points++;
     }
   }

@@ -47,9 +47,10 @@ TEST(k2node_tests, can_insert_1) {
 
       ulong side = 1 << treedepth;
 
+      int already_exists;
       for (ulong col = 0; col < side; col++) {
         for (ulong row = 0; row < side; row++) {
-          k2node_insert_point(root_node, col, row, &st);
+          k2node_insert_point(root_node, col, row, &st, &already_exists);
           for (ulong col_check = 0; col_check < col; col_check++) {
             for (ulong row_check = 0; row_check < row; row_check++) {
               int has_the_point;

@@ -35,10 +35,11 @@ int main(void) {
     struct queries_state qs;
     init_queries_state(&qs, treedepth, MAX_NODES_IN_BLOCK, root_block);
 
+    int point_exists;
     for (ulong col = 0; col < side; col++) {
       for (ulong row = 0; row < side; row++) {
         // printf("inserting col=%lu, row=%lu\n", col, row);
-        insert_point(root_block, col, row, &qs);
+        insert_point(root_block, col, row, &qs, &point_exists);
       }
     }
 

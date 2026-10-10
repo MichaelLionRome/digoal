@@ -37,8 +37,9 @@ int main(void) {
 
   unsigned long col, row;
 
+  int point_exists;
   while (fscanf(fp, "%lu %lu", &col, &row) == 2) {
-    insert_point(root_block, col, row, &qs);
+    insert_point(root_block, col, row, &qs, &point_exists);
     int has_it;
     has_point(root_block, col, row, &qs, &has_it);
     printf("Has point?(%lu, %lu): %s\n", col, row, has_it ? "YES" : "NO");

@@ -52,13 +52,14 @@ TEST(sip_tests, test_join_two) {
     init_k2qstate(sts[i], treedepth, MAX_NODES_IN_BLOCK, cut_depth);
   }
 
+  int already_exists;
   for (int i = 0; i < 10; i++) {
-    k2node_insert_point(nodes[0], i, 2, sts[0]);
-    k2node_insert_point(nodes[1], 4, i, sts[1]);
+    k2node_insert_point(nodes[0], i, 2, sts[0], &already_exists);
+    k2node_insert_point(nodes[1], 4, i, sts[1], &already_exists);
   }
 
-  k2node_insert_point(nodes[0], 13, 2, sts[0]);
-  k2node_insert_point(nodes[1], 4, 13, sts[1]);
+  k2node_insert_point(nodes[0], 13, 2, sts[0], &already_exists);
+  k2node_insert_point(nodes[1], 4, 13, sts[1], &already_exists);
 
   struct k2node_sip_input ksi;
 
@@ -104,23 +105,23 @@ TEST(sip_tests, test_join_four) {
     sts[i] = new struct k2qstate;
     init_k2qstate(sts[i], treedepth, MAX_NODES_IN_BLOCK, cut_depth);
   }
-
+  int already_exists;
   for (int i = 0; i < 10; i++) {
-    k2node_insert_point(nodes[0], i, 2, sts[0]);
-    k2node_insert_point(nodes[1], 4, i, sts[1]);
+    k2node_insert_point(nodes[0], i, 2, sts[0], &already_exists);
+    k2node_insert_point(nodes[1], 4, i, sts[1], &already_exists);
   }
 
-  k2node_insert_point(nodes[0], 13, 2, sts[0]);
-  k2node_insert_point(nodes[1], 4, 13, sts[1]);
+  k2node_insert_point(nodes[0], 13, 2, sts[0], &already_exists);
+  k2node_insert_point(nodes[1], 4, 13, sts[1], &already_exists);
 
-  k2node_insert_point(nodes[2], 0, 7, sts[2]);
-  k2node_insert_point(nodes[2], 5, 7, sts[2]);
-  k2node_insert_point(nodes[2], 13, 7, sts[2]);
+  k2node_insert_point(nodes[2], 0, 7, sts[2], &already_exists);
+  k2node_insert_point(nodes[2], 5, 7, sts[2], &already_exists);
+  k2node_insert_point(nodes[2], 13, 7, sts[2], &already_exists);
 
   ulong side = 1UL << treedepth;
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
-      k2node_insert_point(nodes[3], col, row, sts[3]);
+      k2node_insert_point(nodes[3], col, row, sts[3], &already_exists);
     }
   }
 
@@ -177,10 +178,11 @@ TEST(sip_tests, test_join_two_exhaustive) {
   }
 
   ulong side = 1UL << treedepth;
+  int already_exists;
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
-      k2node_insert_point(nodes[0], col, row, sts[0]);
-      k2node_insert_point(nodes[1], col, row, sts[1]);
+      k2node_insert_point(nodes[0], col, row, sts[0], &already_exists);
+      k2node_insert_point(nodes[1], col, row, sts[1], &already_exists);
     }
   }
 

@@ -45,11 +45,12 @@ int main(void) {
 
   // struct pair2dl array_pairs[] = {{0, 0}, {3, 3}};
   int qty = input_pairs.nof_items;
+  int point_exists;
   for (int i = 0; i < qty; i++) {
     struct pair2dl current = input_pairs.data[i];
 
     printf("inserting %lu, %lu\n", current.col, current.row);
-    insert_point(root_block, current.col, current.row, &qs);
+    insert_point(root_block, current.col, current.row, &qs, &point_exists);
     int does_have_point;
     has_point(root_block, current.col, current.row, &qs, &does_have_point);
     if (!does_have_point) {

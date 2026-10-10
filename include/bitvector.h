@@ -31,7 +31,8 @@ int init_bitvector(struct block *input_bitvector, NODES_BV_T nodes_count_);
 int clean_bitvector(struct block *input_bitvector);
 
 int bit_read(struct block *input_bitvector, uint32_t position, int *result);
-int bit_set(struct block *input_bitvector, uint32_t position);
+int bit_set(struct block *input_bitvector, uint32_t position,
+            int *bit_was_set_already);
 int bit_clear(struct block *input_bitvector, uint32_t position);
 int bits_write(struct block *input_bitvector, uint32_t from, uint32_t to,
                BVCTYPE to_write);

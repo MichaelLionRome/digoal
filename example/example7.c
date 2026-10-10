@@ -16,10 +16,11 @@ int main(void) {
   struct k2qstate st;
   init_k2qstate(&st, treedepth, 255, cut_depth);
 
+  int point_exists;
   ulong side = 1 << treedepth;
   for (ulong col = 0; col < side; col++) {
     for (ulong row = 0; row < side; row++) {
-      k2node_insert_point(root_node, col, row, &st);
+      k2node_insert_point(root_node, col, row, &st, &point_exists);
     }
   }
 

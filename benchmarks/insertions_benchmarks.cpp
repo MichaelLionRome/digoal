@@ -66,8 +66,10 @@ void random_benchmark_by_depth(uint32_t treedepth, uint32_t points_count) {
             << treedepth << " and points_count = " << points_count << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
 
+  int point_exists;
   for (size_t i = 0; i < points_count; i++) {
-    insert_point(root_block, random_seq_1[i], random_seq_2[i], &qs);
+    insert_point(root_block, random_seq_1[i], random_seq_2[i], &qs,
+                 &point_exists);
   }
 
   auto stop = std::chrono::high_resolution_clock::now();
@@ -161,9 +163,12 @@ void random_benchmark_by_depth_dense(uint32_t treedepth,
             << treedepth << " and points_count = " << points_count << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
 
+  int point_exists;
+
   for (size_t i = 0; i < points_count; i++) {
     for (size_t j = 0; j < points_count; j++) {
-      insert_point(root_block, random_seq_1[i], random_seq_2[j], &qs);
+      insert_point(root_block, random_seq_1[i], random_seq_2[j], &qs,
+                   &point_exists);
     }
   }
 

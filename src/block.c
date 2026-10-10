@@ -163,7 +163,7 @@ int reset_sequential_scan_child(struct queries_state *qs);
 
 int insert_point_at(struct block *insertion_block,
                     struct insertion_location *il, struct queries_state *qs,
-                    TREE_DEPTH_T block_depth);
+                    TREE_DEPTH_T block_depth, int *already_existed);
 
 int naive_scan_points_rec(struct block *input_block, struct queries_state *qs,
                           struct vector_pair2dl_t *result,
@@ -836,8 +836,8 @@ int split_block(struct block *input_block, struct queries_state *qs,
  */
 int insert_point_at(struct block *insertion_block,
                     struct insertion_location *il, struct queries_state *qs,
-                    TREE_DEPTH_T block_depth) {
-
+                    TREE_DEPTH_T block_depth, int *already_existed) {
+  int aux_was_set;
   if (block_has_enough_space(insertion_block, il)) {
     CHECK_ERR(make_room(insertion_block, il));
     struct child_result *lcresult =
@@ -850,22 +850,23 @@ int insert_point_at(struct block *insertion_block,
       CHECK_ERR(mark_child_in_node(
           insertion_block,
           il->parent_node.last_child_result_reached.resulting_node_idx,
-          node_code));
+          node_code, &aux_was_set));
 
       struct block *previous_block = lcresult->previous_block;
       if (lcresult->went_frontier) {
-        CHECK_ERR(mark_child_in_node(previous_block,
-                                     lcresult->previous_preorder,
-                                     lcresult->previous_to_current_index));
+        CHECK_ERR(mark_child_in_node(
+            previous_block, lcresult->previous_preorder,
+            lcresult->previous_to_current_index, &aux_was_set));
       }
     }
 
     if (il->remaining_depth == 0) {
       uint32_t leaf_child = leaf_child_morton_code(&qs->mc);
-      CHECK_ERR(
-          mark_child_in_node(insertion_block, il->insertion_index, leaf_child));
+      CHECK_ERR(mark_child_in_node(insertion_block, il->insertion_index,
+                                   leaf_child, already_existed));
     } else {
       CHECK_ERR(insert_point_mc(insertion_block, &qs->mc, il));
+      *already_existed = FALSE;
     }
 
     return SUCCESS_ECODE_K2T;
@@ -877,7 +878,8 @@ int insert_point_at(struct block *insertion_block,
   if (next_amount_of_nodes <= qs->max_nodes_count) {
     uint32_t next_block_sz = 1 << (uint32_t)ceil(log2(next_amount_of_nodes));
     CHECK_ERR(enlarge_block_size_to(insertion_block, next_block_sz));
-    return insert_point_at(insertion_block, il, qs, block_depth);
+    return insert_point_at(insertion_block, il, qs, block_depth,
+                           already_existed);
   }
 
   CHECK_ERR(split_block(insertion_block, qs, block_depth));
@@ -890,13 +892,14 @@ int insert_point_at(struct block *insertion_block,
 
   return insert_point_at(
       il_split.parent_node.last_child_result_reached.resulting_block, &il_split,
-      qs, il_split.parent_node.last_child_result_reached.block_depth);
+      qs, il_split.parent_node.last_child_result_reached.block_depth,
+      already_existed);
 }
 
 /**
  * @brief Recursive function to scan for all the points in the tree
  *
- * The scan is perfommed in a preorder dfs fashion
+ * The scan is performed in a preorder dfs fashion
  *
  * @param input_block Current block to scan recursively
  * @param qs queries state struct
@@ -1171,7 +1174,7 @@ int has_point(struct block *input_block, ulong col, ulong row,
 }
 
 int insert_point(struct block *input_block, ulong col, ulong row,
-                 struct queries_state *qs) {
+                 struct queries_state *qs, int *already_exists) {
   convert_coordinates_to_morton_code(col, row, qs->treedepth, &qs->mc);
   struct insertion_location il;
   CHECK_ERR(find_insertion_location(input_block, qs, &il, 0));
@@ -1179,7 +1182,8 @@ int insert_point(struct block *input_block, ulong col, ulong row,
       il.parent_node.last_child_result_reached.resulting_block;
   TREE_DEPTH_T insertion_block_depth =
       il.parent_node.last_child_result_reached.block_depth;
-  return insert_point_at(insertion_block, &il, qs, insertion_block_depth);
+  return insert_point_at(insertion_block, &il, qs, insertion_block_depth,
+                         already_exists);
 }
 
 int naive_scan_points(struct block *input_block, struct queries_state *qs,

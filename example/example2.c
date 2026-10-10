@@ -41,9 +41,11 @@ int main(void) {
 
   // struct pair2dl array_pairs[] = {{0, 0}, {3, 3}};
   int qty = sizeof(array_pairs) / sizeof(struct pair2dl);
+  int point_exists;
   for (int i = 0; i < qty; i++) {
     printf("inserting %lu, %lu\n", array_pairs[i].col, array_pairs[i].row);
-    insert_point(root_block, array_pairs[i].col, array_pairs[i].row, &qs);
+    insert_point(root_block, array_pairs[i].col, array_pairs[i].row, &qs,
+                 &point_exists);
     int does_have_point;
     has_point(root_block, array_pairs[i].col, array_pairs[i].row, &qs,
               &does_have_point);

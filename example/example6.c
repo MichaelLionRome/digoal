@@ -9,7 +9,8 @@ int main(void) {
   struct queries_state qs;
   init_queries_state(&qs, tree_depth, MAX_NODES_IN_BLOCK, root_block);
 
-  insert_point(root_block, 0, 0, &qs);
+  int point_exists;
+  insert_point(root_block, 0, 0, &qs, &point_exists);
 
   int found_point;
   has_point(root_block, 0, 0, &qs, &found_point);

@@ -340,7 +340,7 @@ int k2node_has_point(struct k2node *root_node, ulong col, ulong row,
 }
 
 int k2node_insert_point(struct k2node *root_node, ulong col, ulong row,
-                        struct k2qstate *st) {
+                        struct k2qstate *st, int *already_exists) {
   convert_coordinates_to_morton_code(col, row, st->k2tree_depth, &st->mc);
   struct k2_find_subtree_result tr_result =
       k2_find_subtree(root_node, st, col, row, 0);
@@ -350,7 +350,7 @@ int k2node_insert_point(struct k2node *root_node, ulong col, ulong row,
   }
   st->qs.root = tr_result.subtree_root;
   return insert_point(tr_result.subtree_root, tr_result.col, tr_result.row,
-                      &st->qs);
+                      &st->qs, already_exists);
 }
 
 int k2node_naive_scan_points(struct k2node *input_node, struct k2qstate *st,

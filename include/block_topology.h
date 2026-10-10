@@ -45,7 +45,7 @@ int shift_right_nodes_after(struct block *bt, NODES_COUNT_T node_index,
                             NODES_COUNT_T nodes_to_insert);
 NODES_COUNT_T get_allocated_nodes(struct block *bt);
 int mark_child_in_node(struct block *bt, NODES_COUNT_T node_index,
-                       uint32_t leaf_child);
+                       uint32_t leaf_child, int *was_marked_already);
 int insert_node_at(struct block *bt, NODES_COUNT_T node_index, uint32_t code);
 int extract_sub_bitvector(struct block *bt, uint32_t from, uint32_t to,
                           struct block *result);

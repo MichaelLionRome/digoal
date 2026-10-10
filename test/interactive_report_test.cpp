@@ -78,8 +78,10 @@ TEST(interactive_block_test, test1) {
       {3, 30}, {3, 2}, {3, 29}, {8, 15}, {9, 15},  {15, 15}};
 
   int qty = init_elements.size();
+  int already_exists;
   for (int i = 0; i < qty; i++) {
-    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs);
+    insert_point(root_block, init_elements[i].col, init_elements[i].row, &qs,
+                 &already_exists);
   }
 
   struct vector_pair2dl_t result;

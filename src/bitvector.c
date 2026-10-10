@@ -100,11 +100,11 @@ int bit_read(struct block *input_bitvector, uint32_t position, int *result) {
   return SUCCESS_ECODE;
 }
 
-int bit_set(struct block *input_bitvector, uint32_t position) {
+int bit_set(struct block *input_bitvector, uint32_t position,
+            int *bit_was_set_already) {
   CHECK_BOUNDARIES(input_bitvector, position);
-  int bit_is_set;
-  SAFE_OP(bit_read(input_bitvector, position, &bit_is_set));
-  if (bit_is_set)
+  SAFE_OP(bit_read(input_bitvector, position, bit_was_set_already));
+  if (*bit_was_set_already)
     return SUCCESS_ECODE;
 
   BVCTYPE *container = input_bitvector->container;

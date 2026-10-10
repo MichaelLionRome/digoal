@@ -209,8 +209,9 @@ NODES_COUNT_T get_allocated_nodes(struct block *input_block) {
 }
 
 int mark_child_in_node(struct block *input_block, NODES_COUNT_T node_index,
-                       uint32_t leaf_child) {
-  _SAFE_OP_K2(bit_set(input_block, 4 * node_index + leaf_child));
+                       uint32_t leaf_child, int *was_marked_already) {
+  _SAFE_OP_K2(
+      bit_set(input_block, 4 * node_index + leaf_child, was_marked_already));
   return SUCCESS_ECODE_K2T;
 }
 

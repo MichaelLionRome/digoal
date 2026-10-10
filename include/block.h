@@ -83,7 +83,7 @@ typedef void (*coord_reporter_fun_t)(ulong, void *);
 int has_point(struct block *input_block, ulong col, ulong row,
               struct queries_state *qs, int *result);
 int insert_point(struct block *input_block, ulong col, ulong row,
-                 struct queries_state *qs);
+                 struct queries_state *qs, int *already_exists);
 
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
                       struct vector_pair2dl_t *result);

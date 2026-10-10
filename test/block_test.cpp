@@ -43,8 +43,8 @@ TEST(block_test, test1) {
   struct block *root_block = create_block();
   struct queries_state *qs = new struct queries_state;
   init_queries_state(qs, tree_depth, MAX_NODES_IN_BLOCK, root_block);
-
-  insert_point(root_block, 1, 1, qs);
+  int already_exists;
+  insert_point(root_block, 1, 1, qs, &already_exists);
 
   int found_point;
   has_point(root_block, 1, 1, qs, &found_point);

@@ -36,10 +36,11 @@ int main(void){
     struct queries_state qs;
     init_queries_state(&qs, treedepth, block->max_node_count);
 
+    int point_already_exists;
     for (ulong col = 0; col < side; col++) {
         for (ulong row = 0; row < side; row++) {
             // printf("inserting col=%lu, row=%lu\n", col, row);
-            insert_point(root_block, col, row, &qs);
+            insert_point(root_block, col, row, &qs, &point_already_exists);
         }
     }
 
@@ -69,7 +70,7 @@ Also see examples.
 int has_point(struct block *input_block, ulong col, ulong row,
               struct queries_state *qs, int *result);
 int insert_point(struct block *input_block, ulong col, ulong row,
-                 struct queries_state *qs);
+                 struct queries_state *qs, int *already_exists);
 
 int naive_scan_points(struct block *input_block, struct queries_state *qs,
                       struct vector *result);

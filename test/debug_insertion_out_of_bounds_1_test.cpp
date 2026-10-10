@@ -51,7 +51,8 @@ TEST(insertion_out_of_bounds, test_1) {
   ulong col, row;
   while (ifstream >> col >> row) {
     std::cout << col << ", " << row << std::endl;
-    insert_point(root_block, col, row, &qs);
+    int already_exists;
+    insert_point(root_block, col, row, &qs, &already_exists);
     int has_it;
     has_point(root_block, col, row, &qs, &has_it);
     ASSERT_TRUE(has_it);

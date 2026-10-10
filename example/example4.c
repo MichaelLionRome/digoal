@@ -44,9 +44,10 @@ int main(void) {
 
   gettimeofday(&tval_before, NULL);
 
+  int point_exists;
   for (uint32_t col = 0; col < side; col++) {
     for (uint32_t row = 0; row < side; row++) {
-      insert_point(root_block, col, row, &qs);
+      insert_point(root_block, col, row, &qs, &point_exists);
     }
   }
 
