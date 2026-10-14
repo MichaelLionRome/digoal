@@ -36,6 +36,77 @@ extern "C" {
 #include <utility>
 #include <vector>
 
+TEST(k2node_tests, can_traverse_column) {
+
+  struct k2node *root_node = create_k2node();
+
+  struct k2qstate st;
+  TREE_DEPTH_T treedepth = 32;
+  TREE_DEPTH_T cutdepth = 10;
+  init_k2qstate(&st, treedepth, 255, cutdepth);
+
+  int already_exists;
+
+  ulong col_choice = 123123;
+  for (ulong row = 123123; row < 123123 + 1000; row++) {
+    k2node_insert_point(root_node, col_choice, row, &st, &already_exists);
+  }
+
+  struct vector_pair2dl_t result;
+  vector_pair2dl_t__init_vector(&result);
+  k2node_report_column(root_node, col_choice, &st, &result);
+
+  ASSERT_EQ(result.nof_items, 1000);
+  for (ulong i = 0; i < 1000; i++) {
+    ASSERT_EQ(result.data[i].row, 123123 + i) << "Failed at i=" << i;
+  }
+
+  vector_pair2dl_t__free_vector(&result);
+  free_rec_k2node(root_node, 0, st.cut_depth);
+  clean_k2qstate(&st);
+}
+
+void can_traverse_column_interactively_fun(unsigned long col, unsigned long row,
+                                           void *report_state) {
+  struct vector_pair2dl_t *result = (struct vector_pair2dl_t *)report_state;
+  struct pair2dl pair;
+  pair.col = col;
+  pair.row = row;
+  vector_pair2dl_t__insert_element(result, pair);
+}
+
+TEST(k2node_tests, can_traverse_column_interactively) {
+
+  struct k2node *root_node = create_k2node();
+
+  struct k2qstate st;
+  TREE_DEPTH_T treedepth = 32;
+  TREE_DEPTH_T cutdepth = 10;
+  init_k2qstate(&st, treedepth, 255, cutdepth);
+
+  int already_exists;
+
+  ulong col_choice = 123123;
+  for (ulong row = 123123; row < 123123 + 1000; row++) {
+    k2node_insert_point(root_node, col_choice, row, &st, &already_exists);
+  }
+
+  struct vector_pair2dl_t result;
+  vector_pair2dl_t__init_vector(&result);
+  k2node_report_column_interactively(root_node, col_choice, &st,
+                                     can_traverse_column_interactively_fun,
+                                     &result);
+
+  ASSERT_EQ(result.nof_items, 1000);
+  for (ulong i = 0; i < 1000; i++) {
+    ASSERT_EQ(result.data[i].row, 123123 + i) << "Failed at i=" << i;
+  }
+
+  vector_pair2dl_t__free_vector(&result);
+  free_rec_k2node(root_node, 0, st.cut_depth);
+  clean_k2qstate(&st);
+}
+
 TEST(k2node_tests, can_insert_1) {
 
   for (TREE_DEPTH_T treedepth = 3; treedepth < 7; treedepth++) {

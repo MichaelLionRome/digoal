@@ -189,7 +189,7 @@ int k2node_report_rec(struct k2node *node, ulong coord, int which_report,
   }
 
   ulong next_remaining_depth = remaining_depth - 1;
-  ulong half_level = (next_remaining_depth << 1);
+  ulong half_level = 1 << next_remaining_depth;
 
   for (int child_pos = 0; child_pos < 4; child_pos++) {
     if (!node->k2subtree.children[child_pos] ||
@@ -236,7 +236,7 @@ int k2node_report_interactively_rec(struct k2node *node, ulong coord,
   }
 
   ulong next_remaining_depth = remaining_depth - 1;
-  ulong half_level = (next_remaining_depth << 1);
+  ulong half_level = 1 << next_remaining_depth;
 
   for (int child_pos = 0; child_pos < 4; child_pos++) {
     if (!REPORT_CONTINUE_CONDITION(coord, half_level, which_report,
