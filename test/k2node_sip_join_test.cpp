@@ -38,6 +38,127 @@ extern "C" {
 
 #include <gtest/gtest.h>
 
+struct k2_data {
+  struct k2node *root;
+  struct k2qstate st;
+};
+
+static k2_data create_k2_line(TREE_DEPTH_T tree_depth, TREE_DEPTH_T cut_depth,
+                              coord_t coord_type, ulong position) {
+  k2_data result;
+  result.root = create_k2node();
+  init_k2qstate(&result.st, tree_depth, 255, cut_depth);
+  int already_exists;
+  for (ulong i = 0; i < (1 << tree_depth); i++) {
+    if (coord_type == COLUMN_COORD) {
+      k2node_insert_point(result.root, position, i, &result.st,
+                          &already_exists);
+    } else {
+      k2node_insert_point(result.root, i, position, &result.st,
+                          &already_exists);
+    }
+  }
+  return result;
+}
+
+static void clean_k2_line(k2_data &data) {
+  free_rec_k2node(data.root, 0, data.st.cut_depth);
+  clean_k2qstate(&data.st);
+}
+
+TEST(sip_tests, can_retrieve_single_elements_bands_1) {
+  const TREE_DEPTH_T tree_depth = 10;
+  const TREE_DEPTH_T cut_depth = 5;
+
+  for (int coord_type = 0; coord_type <= 1; coord_type++) {
+    for (ulong line_position = 0; line_position < (1 << tree_depth);
+         line_position++) {
+
+      coord_t line_coord_type = (coord_t)coord_type;
+      coord_t join_coord_type = (coord_t)(1 - coord_type);
+
+      auto data =
+          create_k2_line(tree_depth, cut_depth, line_coord_type, line_position);
+
+      for (ulong i = 0; i < (1 << tree_depth); i++) {
+
+        struct sip_ipoint sip_point;
+        sip_point.coord = i;
+        sip_point.coord_type = join_coord_type;
+        struct k2qstate *st_p = &data.st;
+
+        struct k2node_sip_input ksi;
+
+        ksi.nodes = &data.root;
+        ksi.join_size = 1;
+        ksi.join_coords = &sip_point;
+        ksi.sts = &st_p;
+
+        std::set<ulong> coords;
+        k2node_sip_join(
+            ksi,
+            [](ulong coord, void *report_state) {
+              auto &data = *reinterpret_cast<std::set<ulong> *>(report_state);
+              data.insert(coord);
+            },
+            &coords);
+
+        ASSERT_EQ(coords.size(), 1);
+        ASSERT_EQ(*coords.begin(), line_position);
+      }
+
+      clean_k2_line(data);
+    }
+  }
+}
+
+TEST(sip_tests, can_retrieve_band_with_single_sip) {
+  struct k2node *root_node = create_k2node();
+
+  struct k2qstate st;
+  TREE_DEPTH_T treedepth = 32;
+  TREE_DEPTH_T cutdepth = 10;
+  init_k2qstate(&st, treedepth, 255, cutdepth);
+
+  int already_exists;
+
+  ulong col_choice = 1 << 30;
+
+  for (ulong row = col_choice; row < col_choice + 1000; row++) {
+    k2node_insert_point(root_node, col_choice, row, &st, &already_exists);
+  }
+
+  struct k2node_sip_input ksi;
+
+  struct sip_ipoint sip_point;
+  sip_point.coord = col_choice;
+  sip_point.coord_type = COLUMN_COORD;
+
+  struct k2qstate *st_p = &st;
+
+  ksi.nodes = &root_node;
+  ksi.join_size = 1;
+  ksi.join_coords = &sip_point;
+  ksi.sts = &st_p;
+
+  std::set<ulong> coords;
+  k2node_sip_join(
+      ksi,
+      [](ulong coord, void *report_state) {
+        auto &data = *reinterpret_cast<std::set<ulong> *>(report_state);
+        data.insert(coord);
+      },
+      &coords);
+
+  size_t pos = 0;
+  for (auto it = coords.begin(); it != coords.end(); it++, pos++) {
+    ASSERT_EQ(*it, col_choice + pos);
+  }
+
+  free_rec_k2node(root_node, 0, cutdepth);
+  clean_k2qstate(&st);
+}
+
 TEST(sip_tests, test_join_two) {
   uint32_t treedepth = 5;
   uint32_t cut_depth = 3;
