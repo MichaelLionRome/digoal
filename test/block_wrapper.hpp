@@ -41,10 +41,11 @@ extern "C" {
 using namespace std;
 
 class BlockWrapper {
+
+public:
   struct block *b;
   struct queries_state qs;
 
-public:
   BlockWrapper(uint32_t tree_depth) {
     b = create_block();
     init_queries_state(&qs, tree_depth, MAX_NODES_IN_BLOCK, b);

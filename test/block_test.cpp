@@ -74,6 +74,7 @@ TEST(block_test, test2) {
       ASSERT_FALSE(b.has(col, row)) << "Block has point " << col << ", " << row;
     }
   }
+  ASSERT_EQ(debug_validate_block_rec(b.b), 0);
 }
 
 template <typename T, size_t N> constexpr size_t countof(T (&)[N]) { return N; }
@@ -172,6 +173,7 @@ TEST(block_test, fills_depth_3_test2) {
           << "failing at col=" << col << ", row=" << row;
     }
   }
+  ASSERT_EQ(debug_validate_block_rec(b.b), 0);
 }
 
 TEST(block_test, fills_depth_3) {
@@ -215,6 +217,7 @@ TEST(block_test, fills_depth_3) {
       ASSERT_TRUE(b.has(col, row)) << "No point " << col << ", " << row;
     }
   }
+  ASSERT_EQ(debug_validate_block_rec(b.b), 0);
 }
 
 string comp_d6[] = {
@@ -1035,6 +1038,7 @@ TEST(block_test, fills_till_depth_4_match) {
           << "failing at col=" << col << ", row=" << row;
     }
   }
+  ASSERT_EQ(debug_validate_block_rec(b.b), 0);
 }
 
 TEST(block_test, diagonal_test_depth4_1) {
@@ -1053,6 +1057,7 @@ TEST(block_test, diagonal_test_depth4_1) {
       }
     }
   }
+  ASSERT_EQ(debug_validate_block_rec(b.b), 0);
 }
 
 TEST(block_test, fills_till_depth_6_fail_known_1) {
@@ -1089,6 +1094,7 @@ TEST(block_test, fills_till_depth_6_fail_known_1) {
       }
     }
   }
+  ASSERT_EQ(debug_validate_block_rec(b.b), 0);
 }
 
 TEST(block_test, fills_till_depth_6) {
@@ -1134,6 +1140,7 @@ TEST(block_test, fills_till_depth_6) {
             << "(depth = " << treedepth << ") No point " << col << ", " << row;
       }
     }
+    ASSERT_EQ(debug_validate_block_rec(b.b), 0);
   }
 }
 
@@ -1154,6 +1161,7 @@ TEST(block_test, very_deep_1) {
           << "(depth = " << treedepth << ") No point " << col << ", " << row;
     }
   }
+  ASSERT_EQ(debug_validate_block_rec(b.b), 0);
 }
 
 TEST(block_test, very_deep_diagonal) {
@@ -1181,6 +1189,7 @@ TEST(block_test, very_very_deep_1) {
     ASSERT_TRUE(b.has(i, i))
         << "(depth = " << treedepth << ") No point " << i << ", " << i;
   }
+  ASSERT_EQ(debug_validate_block_rec(b.b), 0);
 }
 
 TEST(block_test, random_test_1) {
@@ -1218,6 +1227,7 @@ TEST(block_test, random_test_1) {
           }
         }
       }
+      ASSERT_EQ(debug_validate_block_rec(b.b), 0);
     }
   }
 }
@@ -1248,6 +1258,7 @@ TEST(block_test, random_test_2) {
         ASSERT_TRUE(b.has(col, row)) << "(depth = " << treedepth << ")"
                                      << "doesn't have " << col << ", " << row;
       }
+      ASSERT_EQ(debug_validate_block_rec(b.b), 0);
     }
   }
 }

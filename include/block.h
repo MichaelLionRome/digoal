@@ -116,4 +116,7 @@ int free_block(struct block *input_block);
 
 struct k2tree_measurement measure_tree_size(struct block *input_block);
 
+int debug_validate_block(struct block *input_block);
+int debug_validate_block_rec(struct block *input_block);
+
 #endif /* _BLOCK_H_ */

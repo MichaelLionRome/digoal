@@ -1452,3 +1452,34 @@ int sip_join(struct sip_join_input input, coord_reporter_fun_t coord_reporter,
 
   return SUCCESS_ECODE_K2T;
 }
+
+int debug_validate_block(struct block *input_block) {
+  for (int node_i = 0; node_i < input_block->nodes_count; node_i++) {
+    int container_i = (node_i * 4) / 32;
+    uint32_t part = input_block->container[container_i];
+    int node_in_part = (node_i * 4) % 32;
+    int empty_node = TRUE;
+    for (int j = 0; j < 4; j++) {
+      if (part & (1 << (31 - (node_in_part + j)))) {
+        empty_node = FALSE;
+        break;
+      }
+    }
+    if (empty_node)
+      return 1;
+  }
+  return 0;
+}
+
+int debug_validate_block_rec(struct block *input_block) {
+  if (debug_validate_block(input_block))
+    return 1;
+
+  for (int i = 0; i < input_block->children; i++) {
+    int res = debug_validate_block_rec(input_block->children_blocks[i]);
+    if (res)
+      return res + 1;
+  }
+
+  return 0;
+}
