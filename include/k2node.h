@@ -91,4 +91,9 @@ struct k2tree_measurement k2node_measure_tree_size(struct k2node *input_node,
 int k2node_sip_join(struct k2node_sip_input input,
                     coord_reporter_fun_t coord_reporter, void *report_state);
 
+int debug_validate_k2node(struct k2node *input_node, struct k2qstate *st,
+                          TREE_DEPTH_T current_depth);
+int debug_validate_k2node_rec(struct k2node *input_node, struct k2qstate *st,
+                              TREE_DEPTH_T current_depth);
+
 #endif

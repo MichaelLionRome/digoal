@@ -107,6 +107,8 @@ TEST(sip_tests, can_retrieve_single_elements_bands_1) {
         ASSERT_EQ(*coords.begin(), line_position);
       }
 
+      ASSERT_EQ(debug_validate_k2node_rec(data.root, &data.st, 0), 0);
+
       clean_k2_line(data);
     }
   }
@@ -154,6 +156,8 @@ TEST(sip_tests, can_retrieve_band_with_single_sip) {
   for (auto it = coords.begin(); it != coords.end(); it++, pos++) {
     ASSERT_EQ(*it, col_choice + pos);
   }
+
+  ASSERT_EQ(debug_validate_k2node_rec(root_node, &st, 0), 0);
 
   free_rec_k2node(root_node, 0, cutdepth);
   clean_k2qstate(&st);
@@ -204,6 +208,9 @@ TEST(sip_tests, test_join_two) {
       &coords);
 
   ASSERT_EQ(coords.size(), 11);
+
+  ASSERT_EQ(debug_validate_k2node_rec(nodes[0], sts[0], 0), 0);
+  ASSERT_EQ(debug_validate_k2node_rec(nodes[1], sts[1], 0), 0);
 
   delete[] ksi.join_coords;
   for (int i = 0; i < join_size; i++) {

@@ -596,3 +596,40 @@ int k2node_sip_join(struct k2node_sip_input input,
   free(join_coords);
   return SUCCESS_ECODE_K2T;
 }
+
+int debug_validate_k2node(struct k2node *input_node, struct k2qstate *st,
+                          TREE_DEPTH_T current_depth) {
+  if (current_depth == st->cut_depth) {
+    return input_node->k2subtree.block_child ? 0 : 1;
+  }
+
+  for (int i = 0; i < 4; i++) {
+    if (input_node->k2subtree.children[i])
+      return 0;
+  }
+
+  return 1;
+}
+
+int debug_validate_k2node_rec(struct k2node *input_node, struct k2qstate *st,
+                              TREE_DEPTH_T current_depth) {
+  if (debug_validate_k2node(input_node, st, current_depth)) {
+    return 1;
+  }
+
+  if (current_depth == st->cut_depth) {
+    int result = debug_validate_block_rec(input_node->k2subtree.block_child);
+    return result;
+  }
+
+  for (int i = 0; i < 4; i++) {
+    if (input_node->k2subtree.children[i]) {
+      int result = debug_validate_k2node_rec(input_node->k2subtree.children[i],
+                                             st, current_depth + 1);
+      if (result)
+        return result + 1;
+    }
+  }
+
+  return 0;
+}

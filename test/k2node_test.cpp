@@ -61,6 +61,8 @@ TEST(k2node_tests, can_traverse_column) {
     ASSERT_EQ(result.data[i].row, 123123 + i) << "Failed at i=" << i;
   }
 
+  ASSERT_EQ(debug_validate_k2node_rec(root_node, &st, 0), 0);
+
   vector_pair2dl_t__free_vector(&result);
   free_rec_k2node(root_node, 0, st.cut_depth);
   clean_k2qstate(&st);
@@ -102,6 +104,7 @@ TEST(k2node_tests, can_traverse_column_interactively) {
     ASSERT_EQ(result.data[i].row, 123123 + i) << "Failed at i=" << i;
   }
 
+  ASSERT_EQ(debug_validate_k2node_rec(root_node, &st, 0), 0);
   vector_pair2dl_t__free_vector(&result);
   free_rec_k2node(root_node, 0, st.cut_depth);
   clean_k2qstate(&st);
@@ -177,6 +180,8 @@ TEST(k2node_tests, can_insert_1) {
           }
         }
       }
+
+      ASSERT_EQ(debug_validate_k2node_rec(root_node, &st, 0), 0);
 
       free_rec_k2node(root_node, 0, st.cut_depth);
       clean_k2qstate(&st);
