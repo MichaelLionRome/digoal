@@ -38,6 +38,42 @@ extern "C" {
 
 using namespace std;
 
+TEST(block_test, problematic_input_seq_1_test) {
+  uint32_t tree_depth = 22;
+  struct block *root_block = create_block();
+  struct queries_state qs {};
+  init_queries_state(&qs, tree_depth, 256, root_block);
+
+  std::vector<std::pair<ulong, ulong>> pairs = {
+
+      {2435942, 1822678}, {2462421, 1920115}, {2366760, 1595921},
+      {2117488, 1141805}, {2113889, 1131953}, {2385134, 1624246},
+      {2408969, 1678218}, {2335783, 1541134}, {2449482, 1876875},
+      {2436055, 1823182}, {2474962, 1960901}, {2037784, 960877},
+      {2436135, 1823442}, {2012038, 896833},  {2417018, 1717381},
+      {2413589, 1701903}, {2462344, 1919937}, {2367773, 1597498},
+      {2430360, 1788087}, {2437050, 1826803}, {2419887, 1736674},
+      {2328978, 1531403}, {2196922, 1299801}, {2431635, 1794752},
+      {2210236, 1323004}, {2444318, 1854880}, {2339694, 1546957},
+  };
+
+  int i = 0;
+  for (const auto &pair : pairs) {
+    int already_exists;
+    insert_point(root_block, pair.first, pair.second, &qs, &already_exists);
+    // printf("------current tree after inserting (%lu, %lu)------\n\n",
+    // pair.first, pair.second); debug_print_block_rec(root_block);
+    // printf("------            ------\n\n\n");
+    ASSERT_EQ(debug_validate_block_rec(root_block), 0)
+        << "failing at the " << i << "th pair (" << pair.first << ", "
+        << pair.second << ")";
+    i++;
+  }
+
+  finish_queries_state(&qs);
+  free_rec_block(root_block);
+}
+
 TEST(block_test, test1) {
   uint32_t tree_depth = 3;
   struct block *root_block = create_block();

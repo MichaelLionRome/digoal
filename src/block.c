@@ -618,7 +618,7 @@ int make_room(struct block *input_block, struct insertion_location *il) {
     return SUCCESS_ECODE_K2T;
   }
 
-  if (occupied_nodes < next_node_index + nodes_to_insert) {
+  if (occupied_nodes <= next_node_index) {
     CHECK_ERR(
         enlarge_block_size_to(input_block, occupied_nodes + nodes_to_insert));
     uint32_t nodes_count = get_nodes_count(input_block);
@@ -1482,4 +1482,35 @@ int debug_validate_block_rec(struct block *input_block) {
   }
 
   return 0;
+}
+
+void debug_print_block(struct block *b) {
+  printf("nodes count: %d, container size: %d\n", b->nodes_count,
+         b->container_size);
+  for (unsigned int i = 0; i < b->container_size; i++) {
+    if ((i * 32) >= 4 * b->nodes_count)
+      break;
+    for (unsigned int j = 0; j < 32; j++) {
+      if ((i * 32 + j) >= 4 * b->nodes_count)
+        break;
+      int bit_on = !!(b->container[i] & (1U << (31 - j)));
+      if (j % 8 == 0 && j != 0)
+        printf(" ");
+      printf("%d", bit_on);
+    }
+    printf("  ");
+  }
+  printf("\n");
+
+  for (unsigned int i = 0; i < b->children; i++) {
+    printf("%d,", b->preorders[i]);
+  }
+  printf("\n\n");
+}
+
+void debug_print_block_rec(struct block *b) {
+  debug_print_block(b);
+  for (int i = 0; i < b->children; i++) {
+    debug_print_block_rec(b->children_blocks[i]);
+  }
 }

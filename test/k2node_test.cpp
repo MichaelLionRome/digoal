@@ -36,6 +36,45 @@ extern "C" {
 #include <utility>
 #include <vector>
 
+TEST(k2node_tests, problematic_input_seq_1_test) {
+  std::vector<std::pair<ulong, ulong>> pairs = {
+      {2435942, 1822678}, {2462421, 1920115}, {2366760, 1595921},
+      {2117488, 1141805}, {2113889, 1131953}, {2385134, 1624246},
+      {2408969, 1678218}, {2335783, 1541134}, {2449482, 1876875},
+      {2436055, 1823182}, {2474962, 1960901}, {2037784, 960877},
+      {2436135, 1823442}, {2012038, 896833},  {2417018, 1717381},
+      {2413589, 1701903}, {2462344, 1919937}, {2367773, 1597498},
+      {2430360, 1788087}, {2437050, 1826803}, {2419887, 1736674},
+      {2328978, 1531403}, {2196922, 1299801}, {2431635, 1794752},
+      {2210236, 1323004}, {2444318, 1854880}, {2339694, 1546957},
+
+  };
+
+  struct k2node *root_node = create_k2node();
+
+  struct k2qstate st;
+  TREE_DEPTH_T treedepth = 32;
+  TREE_DEPTH_T cutdepth = 10;
+  init_k2qstate(&st, treedepth, 256, cutdepth);
+
+  int already_exists;
+  int i = 0;
+
+  for (const auto &pair : pairs) {
+    if (i == (int)pairs.size() - 1) {
+      already_exists = 0; // debug point
+    }
+    k2node_insert_point(root_node, pair.first, pair.second, &st,
+                        &already_exists);
+    i++;
+  }
+
+  ASSERT_EQ(debug_validate_k2node_rec(root_node, &st, 0), 0);
+
+  free_rec_k2node(root_node, 0, st.cut_depth);
+  clean_k2qstate(&st);
+}
+
 TEST(k2node_tests, can_traverse_column) {
 
   struct k2node *root_node = create_k2node();
