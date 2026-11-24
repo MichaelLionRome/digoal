@@ -49,7 +49,7 @@ static k2_data create_k2_line(TREE_DEPTH_T tree_depth, TREE_DEPTH_T cut_depth,
   result.root = create_k2node();
   init_k2qstate(&result.st, tree_depth, 255, cut_depth);
   int already_exists;
-  for (ulong i = 0; i < (1 << tree_depth); i++) {
+  for (ulong i = 0; i < (ulong)(1 << tree_depth); i++) {
     if (coord_type == COLUMN_COORD) {
       k2node_insert_point(result.root, position, i, &result.st,
                           &already_exists);
