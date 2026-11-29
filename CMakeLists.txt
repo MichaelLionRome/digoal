@@ -98,6 +98,7 @@ add_executable(bitvector_test test/bitvector_test.cpp)
 add_executable(k2node_test test/k2node_test.cpp)
 add_executable(sip_join_test test/sip_join_test.cpp)
 add_executable(k2node_sip_join_test test/k2node_sip_join_test.cpp)
+add_executable(lazy_scan_test test/lazy_scan_test.cpp)
 
 target_link_libraries(block_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn)
 target_link_libraries(block_leak_test  ${GTEST_BOTH_LIBRARIES} pthread k2dyn)
@@ -109,6 +110,7 @@ target_link_libraries(bitvector_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 target_link_libraries(k2node_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 target_link_libraries(sip_join_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 target_link_libraries(k2node_sip_join_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
+target_link_libraries(lazy_scan_test   k2dyn ${GTEST_BOTH_LIBRARIES} pthread)
 
 
 add_test(NAME block_test COMMAND ./block_test)
@@ -119,5 +121,6 @@ add_test(NAME interactive_report_test COMMAND ./interactive_report_test)
 add_test(NAME k2node_test COMMAND ./k2node_test)
 add_test(NAME sip_join_test COMMAND ./sip_join_test)
 add_test(NAME k2node_sip_join_test COMMAND ./k2node_sip_join_test)
+add_test(NAME lazy_scan_test COMMAND ./lazy_scan_test)
 
 endif()

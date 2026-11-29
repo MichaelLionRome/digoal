@@ -39,26 +39,6 @@ SOFTWARE.
 #include <sys/time.h>
 #endif
 
-struct child_result {
-  struct block *resulting_block;
-  uint32_t resulting_node_idx;
-  TREE_DEPTH_T resulting_relative_depth;
-  TREE_DEPTH_T block_depth;
-  int is_leaf_result;
-  int exists;
-
-  /* Variables to handle frontier issues */
-  int check_frontier; /* True if descended into a frontier node and couldn't
-                         find the requested node there */
-
-  int went_frontier; /* True if descended into a frontier node */
-
-  struct block *previous_block;
-  uint32_t previous_preorder;
-  uint32_t previous_to_current_index;
-  TREE_DEPTH_T previous_depth;
-};
-
 struct point_search_result {
   struct child_result last_child_result_reached;
   TREE_DEPTH_T depth_reached;
@@ -108,7 +88,7 @@ static inline int block_has_enough_space(struct block *input_block,
          (allocated_nodes - get_nodes_count(input_block));
 }
 
-static inline int clean_child_result(struct child_result *cresult) {
+int clean_child_result(struct child_result *cresult) {
   cresult->resulting_block = NULL;
   cresult->block_depth = 0;
   cresult->resulting_node_idx = 0;
@@ -1514,3 +1494,233 @@ void debug_print_block_rec(struct block *b) {
     debug_print_block_rec(b->children_blocks[i]);
   }
 }
+int naive_scan_points_lazy_init(
+    struct block *input_block, struct queries_state *qs,
+    struct lazy_handler_naive_scan_t *lazy_handler) {
+
+  init_lazy_naive_state_stack(&lazy_handler->states_stack, qs->treedepth * 4);
+  lazy_handler->qs = qs;
+  lazy_handler->has_next = FALSE;
+
+  lazy_naive_state first_state;
+  first_state.block_depth = 0;
+  first_state.input_block = input_block;
+  first_state.last_iteration = 0;
+  clean_child_result(&first_state.cr);
+
+  push_lazy_naive_state_stack(&lazy_handler->states_stack, first_state);
+  naive_scan_points_lazy_next(lazy_handler, &lazy_handler->next_result);
+
+  return SUCCESS_ECODE_K2T;
+}
+
+int naive_scan_points_lazy_clean(
+    struct lazy_handler_naive_scan_t *lazy_handler) {
+  free_lazy_naive_state_stack(&lazy_handler->states_stack);
+  return SUCCESS_ECODE_K2T;
+}
+
+int naive_scan_points_lazy_next(struct lazy_handler_naive_scan_t *lazy_handler,
+                                pair2dl_t *result) {
+  *result = lazy_handler->next_result;
+  while (!empty_lazy_naive_state_stack(&lazy_handler->states_stack)) {
+    lazy_naive_state current =
+        pop_lazy_naive_state_stack(&lazy_handler->states_stack);
+    struct queries_state *qs = lazy_handler->qs;
+    struct block *input_block = current.input_block;
+    struct child_result *cresult = &current.cr;
+
+    TREE_DEPTH_T real_depth =
+        cresult->resulting_relative_depth + current.block_depth;
+    for (uint32_t child_pos = current.last_iteration; child_pos < 4;
+         child_pos++) {
+      if (real_depth == qs->treedepth - 1) {
+        int does_child_exist;
+        child_exists(input_block, cresult->resulting_node_idx, child_pos,
+                     &does_child_exist);
+        if (does_child_exist) {
+          add_element_morton_code(&qs->mc, real_depth, child_pos);
+          convert_morton_code_to_coordinates(&qs->mc,
+                                             &lazy_handler->next_result);
+          lazy_naive_state next_state;
+          next_state.block_depth = current.block_depth;
+          next_state.input_block = current.input_block;
+          next_state.cr = current.cr;
+          next_state.last_iteration = child_pos + 1;
+          lazy_handler->has_next = TRUE;
+          push_lazy_naive_state_stack(&lazy_handler->states_stack, next_state);
+
+          return SUCCESS_ECODE_K2T;
+        }
+        continue;
+      }
+
+      struct child_result cr;
+      int err = child(input_block, cresult->resulting_node_idx, child_pos,
+                      cresult->resulting_relative_depth, &cr, qs,
+                      current.block_depth);
+
+      if (err == DOES_NOT_EXIST_CHILD_ERR) {
+        continue;
+      } else if (err != 0) {
+        return err;
+      }
+      add_element_morton_code(&qs->mc, real_depth, child_pos);
+
+      if (child_pos < 3) {
+        lazy_naive_state sibling_state;
+        sibling_state.block_depth = current.block_depth;
+        sibling_state.input_block = current.input_block;
+        sibling_state.cr = current.cr;
+        sibling_state.last_iteration = child_pos + 1;
+        push_lazy_naive_state_stack(&lazy_handler->states_stack, sibling_state);
+      }
+
+      lazy_naive_state next_state;
+      next_state.block_depth = cr.block_depth;
+      next_state.input_block = cr.resulting_block;
+      next_state.cr = cr;
+      next_state.last_iteration = 0;
+      push_lazy_naive_state_stack(&lazy_handler->states_stack, next_state);
+      break;
+    }
+  }
+  lazy_handler->has_next = FALSE;
+  return SUCCESS_ECODE_K2T;
+}
+
+int naive_scan_points_lazy_has_next(
+    struct lazy_handler_naive_scan_t *lazy_handler, int *result) {
+  *result = lazy_handler->has_next;
+  return SUCCESS_ECODE_K2T;
+}
+
+int report_band_next(struct lazy_handler_report_band_t *lazy_handler,
+                     uint64_t *result) {
+  *result = lazy_handler->next_result;
+  struct queries_state *qs = lazy_handler->qs;
+  while (!empty_lazy_report_band_state_t_stack(&lazy_handler->stack)) {
+    lazy_report_band_state_t current_state =
+        pop_lazy_report_band_state_t_stack(&lazy_handler->stack);
+    struct child_result *current_cr = &current_state.current_cr;
+    struct block *current_block = current_cr->resulting_block;
+    TREE_DEPTH_T current_block_depth = current_cr->block_depth;
+    TREE_DEPTH_T tree_depth = qs->treedepth;
+    TREE_DEPTH_T relative_depth = current_cr->resulting_relative_depth;
+    TREE_DEPTH_T real_depth = relative_depth + current_block_depth;
+
+    ulong side_length = 1UL << ((ulong)tree_depth - real_depth);
+    ulong half_length = side_length >> 1;
+
+    for (uint32_t child_pos = current_state.last_iteration; child_pos < 4;
+         child_pos++) {
+      if (!REPORT_CONTINUE_CONDITION(current_state.current_coord, half_length,
+                                     lazy_handler->which_report, child_pos)) {
+        continue;
+      }
+
+      if (real_depth + 1 == tree_depth) {
+        int does_child_exist;
+        child_exists(current_block, current_cr->resulting_node_idx, child_pos,
+                     &does_child_exist);
+        if (does_child_exist) {
+          struct pair2dl pair;
+          add_element_morton_code(&qs->mc, real_depth, child_pos);
+          convert_morton_code_to_coordinates(&qs->mc, &pair);
+          if (lazy_handler->which_report == REPORT_COLUMN)
+            lazy_handler->next_result = pair.row;
+          else
+            lazy_handler->next_result = pair.col;
+
+          lazy_report_band_state_t next_state;
+          next_state.current_coord = current_state.current_coord;
+          next_state.current_cr = current_state.current_cr;
+          next_state.last_iteration = child_pos + 1;
+          lazy_handler->has_next = TRUE;
+          push_lazy_report_band_state_t_stack(&lazy_handler->stack, next_state);
+          return SUCCESS_ECODE_K2T;
+        }
+        continue;
+      }
+      uint32_t current_node_index = current_cr->resulting_node_idx;
+      struct child_result next_cr = *current_cr;
+      CHECK_CHILD_ERR(child(current_block, current_node_index, child_pos,
+                            relative_depth, &next_cr, qs, current_block_depth));
+      if (next_cr.exists) {
+
+        add_element_morton_code(&qs->mc, real_depth, child_pos);
+        if (child_pos < 3) {
+          lazy_report_band_state_t sibling_state;
+          sibling_state.current_coord = current_state.current_coord;
+          sibling_state.current_cr = current_state.current_cr;
+          sibling_state.last_iteration = child_pos + 1;
+          push_lazy_report_band_state_t_stack(&lazy_handler->stack,
+                                              sibling_state);
+        }
+        lazy_report_band_state_t next_state;
+        next_state.current_coord = current_state.current_coord % half_length;
+        next_state.current_cr = next_cr;
+        next_state.last_iteration = 0;
+        push_lazy_report_band_state_t_stack(&lazy_handler->stack, next_state);
+        break;
+      }
+    }
+  }
+
+  lazy_handler->has_next = FALSE;
+  return SUCCESS_ECODE_K2T;
+}
+
+int report_band_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
+                          struct block *input_block, struct queries_state *qs,
+                          int which_report, uint64_t coord);
+
+int report_band_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
+                          struct block *input_block, struct queries_state *qs,
+                          int which_report, uint64_t coord) {
+
+  lazy_handler->which_report = which_report;
+  lazy_handler->has_next = FALSE;
+  lazy_handler->qs = qs;
+
+  init_lazy_report_band_state_t_stack(&lazy_handler->stack,
+                                      lazy_handler->qs->treedepth * 4);
+
+  lazy_report_band_state_t first_state;
+  first_state.current_coord = coord;
+  clean_child_result(&first_state.current_cr);
+  first_state.current_cr.resulting_block = input_block;
+  first_state.last_iteration = 0;
+
+  push_lazy_report_band_state_t_stack(&lazy_handler->stack, first_state);
+  report_band_next(lazy_handler, &lazy_handler->next_result);
+
+  return SUCCESS_ECODE_K2T;
+}
+
+int report_column_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
+                            struct block *input_block, struct queries_state *qs,
+                            uint64_t coord) {
+  report_band_lazy_init(lazy_handler, input_block, qs, REPORT_COLUMN, coord);
+  return SUCCESS_ECODE_K2T;
+}
+int report_row_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
+                         struct block *input_block, struct queries_state *qs,
+                         uint64_t coord) {
+  report_band_lazy_init(lazy_handler, input_block, qs, REPORT_ROW, coord);
+  return SUCCESS_ECODE_K2T;
+}
+
+int report_band_lazy_clean(struct lazy_handler_report_band_t *lazy_handler) {
+  free_lazy_report_band_state_t_stack(&lazy_handler->stack);
+  return SUCCESS_ECODE_K2T;
+}
+
+int report_band_has_next(struct lazy_handler_report_band_t *lazy_handler,
+                         int *result) {
+  *result = lazy_handler->has_next;
+  return SUCCESS_ECODE_K2T;
+}
+
+declare_stack_of_type(lazy_naive_state)
+    declare_stack_of_type(lazy_report_band_state_t)

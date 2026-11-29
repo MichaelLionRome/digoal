@@ -633,3 +633,279 @@ int debug_validate_k2node_rec(struct k2node *input_node, struct k2qstate *st,
 
   return 0;
 }
+int k2node_naive_scan_points_lazy_init(
+    struct k2node *input_node, struct k2qstate *st,
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler) {
+  lazy_handler->st = st;
+  lazy_handler->has_next = FALSE;
+  init_k2node_lazy_naive_state_stack(&lazy_handler->states_stack,
+                                     st->cut_depth * 4);
+  init_lazy_naive_state_stack(&lazy_handler->sub_handler.states_stack,
+                              (st->k2tree_depth - st->cut_depth) * 4);
+  lazy_handler->sub_handler.qs = &st->qs;
+  lazy_handler->sub_handler.has_next = FALSE;
+  lazy_handler->at_leaf = FALSE;
+
+  k2node_lazy_naive_state first_state;
+  first_state.current_depth = 0;
+  first_state.input_node = input_node;
+  first_state.last_iteration = 0;
+  push_k2node_lazy_naive_state_stack(&lazy_handler->states_stack, first_state);
+  k2node_naive_scan_points_lazy_next(lazy_handler, &lazy_handler->next_result);
+
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_naive_scan_points_lazy_clean(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler) {
+  free_k2node_lazy_naive_state_stack(&lazy_handler->states_stack);
+  free_lazy_naive_state_stack(&lazy_handler->sub_handler.states_stack);
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_naive_scan_points_lazy_next(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler, pair2dl_t *result) {
+  *result = lazy_handler->next_result;
+  struct k2qstate *st = lazy_handler->st;
+  while (!empty_k2node_lazy_naive_state_stack(&lazy_handler->states_stack)) {
+    k2node_lazy_naive_state current_state =
+        pop_k2node_lazy_naive_state_stack(&lazy_handler->states_stack);
+    ulong current_depth = current_state.current_depth;
+    struct k2node *node = current_state.input_node;
+
+    if (current_depth == st->cut_depth) {
+      if (!lazy_handler->at_leaf) {
+        struct pair2dl high_level_coordinates;
+        convert_morton_code_to_coordinates_select_treedepth(
+            &st->mc, &high_level_coordinates, st->cut_depth);
+        lazy_handler->base_col = high_level_coordinates.col
+                                 << (st->k2tree_depth - st->cut_depth);
+        lazy_handler->base_row = high_level_coordinates.row
+                                 << (st->k2tree_depth - st->cut_depth);
+
+        lazy_handler->sub_handler.has_next = FALSE;
+
+        lazy_naive_state first_state;
+        first_state.block_depth = 0;
+        first_state.input_block = node->k2subtree.block_child;
+        first_state.last_iteration = 0;
+        clean_child_result(&first_state.cr);
+
+        push_lazy_naive_state_stack(&lazy_handler->sub_handler.states_stack,
+                                    first_state);
+        naive_scan_points_lazy_next(&lazy_handler->sub_handler,
+                                    &lazy_handler->sub_handler.next_result);
+        lazy_handler->at_leaf = TRUE;
+      }
+
+      int sub_has_next;
+      naive_scan_points_lazy_has_next(&lazy_handler->sub_handler,
+                                      &sub_has_next);
+      if (!sub_has_next) {
+        lazy_handler->at_leaf = FALSE;
+      } else {
+        naive_scan_points_lazy_next(&lazy_handler->sub_handler,
+                                    &lazy_handler->next_result);
+        lazy_handler->next_result.col += (long)lazy_handler->base_col;
+        lazy_handler->next_result.row += (long)lazy_handler->base_row;
+        lazy_handler->has_next = TRUE;
+        push_k2node_lazy_naive_state_stack(&lazy_handler->states_stack,
+                                           current_state);
+        return SUCCESS_ECODE_K2T;
+      }
+      continue;
+    }
+
+    for (uint32_t child_index = current_state.last_iteration; child_index < 4;
+         child_index++) {
+      if (node->k2subtree.children[child_index] != NULL) {
+        add_element_morton_code(&st->mc, current_depth, child_index);
+
+        if (child_index < 3) {
+          k2node_lazy_naive_state sibling_state;
+          sibling_state.last_iteration = child_index + 1;
+          sibling_state.input_node = current_state.input_node;
+          sibling_state.current_depth = current_state.current_depth;
+          push_k2node_lazy_naive_state_stack(&lazy_handler->states_stack,
+                                             sibling_state);
+        }
+
+        k2node_lazy_naive_state child_state;
+        child_state.last_iteration = 0;
+        child_state.input_node = node->k2subtree.children[child_index];
+        child_state.current_depth = current_depth + 1;
+        push_k2node_lazy_naive_state_stack(&lazy_handler->states_stack,
+                                           child_state);
+        break;
+      }
+    }
+  }
+  lazy_handler->has_next = FALSE;
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_naive_scan_points_lazy_has_next(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler, int *result) {
+  *result = lazy_handler->has_next;
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_report_band_lazy_init(
+    struct k2node_lazy_handler_report_band_t *lazy_handler,
+    struct k2node *input_node, struct k2qstate *st, uint64_t coord,
+    int which_report);
+
+int k2node_report_band_lazy_init(
+    struct k2node_lazy_handler_report_band_t *lazy_handler,
+    struct k2node *input_node, struct k2qstate *st, uint64_t coord,
+    int which_report) {
+  lazy_handler->st = st;
+  lazy_handler->has_next = FALSE;
+  init_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack,
+                                             st->cut_depth * 4);
+  init_lazy_report_band_state_t_stack(&lazy_handler->sub_handler.stack,
+                                      (st->k2tree_depth - st->cut_depth) * 4);
+
+  lazy_handler->sub_handler.qs = &st->qs;
+  lazy_handler->sub_handler.has_next = FALSE;
+  lazy_handler->at_leaf = FALSE;
+  lazy_handler->which_report = which_report;
+
+  k2node_lazy_report_band_state_t first_state;
+
+  first_state.current_depth = 0;
+  first_state.input_node = input_node;
+  first_state.last_iteration = 0;
+  first_state.current_coord = coord;
+  push_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack, first_state);
+  k2node_report_band_next(lazy_handler, &lazy_handler->next_result);
+
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_report_row_lazy_init(
+    struct k2node_lazy_handler_report_band_t *lazy_handler,
+    struct k2node *input_node, struct k2qstate *st, uint64_t coord) {
+  return k2node_report_band_lazy_init(lazy_handler, input_node, st, coord,
+                                      ROW_COORD);
+}
+
+int k2node_report_column_lazy_init(
+    struct k2node_lazy_handler_report_band_t *lazy_handler,
+    struct k2node *input_node, struct k2qstate *st, uint64_t coord) {
+  return k2node_report_band_lazy_init(lazy_handler, input_node, st, coord,
+                                      COLUMN_COORD);
+}
+
+int k2node_report_band_lazy_clean(
+    struct k2node_lazy_handler_report_band_t *lazy_handler) {
+  report_band_lazy_clean(&lazy_handler->sub_handler);
+  free_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack);
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_report_band_next(
+    struct k2node_lazy_handler_report_band_t *lazy_handler, uint64_t *result) {
+  *result = lazy_handler->next_result;
+  struct k2qstate *st = lazy_handler->st;
+  while (!empty_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack)) {
+    k2node_lazy_report_band_state_t current_state =
+        pop_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack);
+
+    ulong current_depth = current_state.current_depth;
+    ulong remaining_depth = st->k2tree_depth - current_depth;
+    struct k2node *node = current_state.input_node;
+
+    if (current_depth == st->cut_depth) {
+
+      if (!lazy_handler->at_leaf) {
+        struct pair2dl high_level_coordinates;
+        convert_morton_code_to_coordinates_select_treedepth(
+            &st->mc, &high_level_coordinates, st->cut_depth);
+
+        lazy_handler->base_col = high_level_coordinates.col
+                                 << (st->k2tree_depth - st->cut_depth);
+        lazy_handler->base_row = high_level_coordinates.row
+                                 << (st->k2tree_depth - st->cut_depth);
+
+        lazy_handler->sub_handler.has_next = FALSE;
+        lazy_handler->sub_handler.which_report = lazy_handler->which_report;
+        lazy_handler->sub_handler.qs = &lazy_handler->st->qs;
+
+        lazy_report_band_state_t first_state;
+        first_state.current_coord = current_state.current_coord;
+        clean_child_result(&first_state.current_cr);
+        first_state.last_iteration = 0;
+        first_state.current_cr.resulting_block = node->k2subtree.block_child;
+
+        push_lazy_report_band_state_t_stack(&lazy_handler->sub_handler.stack,
+                                            first_state);
+        report_band_next(&lazy_handler->sub_handler,
+                         &lazy_handler->sub_handler.next_result);
+        lazy_handler->at_leaf = TRUE;
+      }
+
+      int sub_has_next;
+      report_band_has_next(&lazy_handler->sub_handler, &sub_has_next);
+      if (!sub_has_next) {
+        lazy_handler->at_leaf = FALSE;
+      } else {
+        report_band_next(&lazy_handler->sub_handler,
+                         &lazy_handler->next_result);
+
+        if (lazy_handler->which_report == REPORT_COLUMN) {
+          lazy_handler->next_result += lazy_handler->base_row;
+        } else {
+          lazy_handler->next_result += lazy_handler->base_col;
+        }
+
+        lazy_handler->has_next = TRUE;
+        push_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack,
+                                                   current_state);
+        return SUCCESS_ECODE_K2T;
+      }
+      continue;
+    }
+
+    ulong next_remaining_depth = remaining_depth - 1;
+    ulong half_level = 1 << next_remaining_depth;
+
+    for (uint32_t child_pos = current_state.last_iteration; child_pos < 4;
+         child_pos++) {
+      if (!REPORT_CONTINUE_CONDITION(current_state.current_coord, half_level,
+                                     lazy_handler->which_report, child_pos) ||
+          !node->k2subtree.children[child_pos])
+        continue;
+      add_element_morton_code(&st->mc, current_depth, child_pos);
+
+      if (child_pos < 3) {
+        k2node_lazy_report_band_state_t sibling_state;
+        sibling_state.current_coord = current_state.current_coord;
+        sibling_state.last_iteration = child_pos + 1;
+        sibling_state.current_depth = current_state.current_depth;
+        sibling_state.input_node = current_state.input_node;
+        push_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack,
+                                                   sibling_state);
+      }
+      k2node_lazy_report_band_state_t child_state;
+      child_state.current_coord = current_state.current_coord % half_level;
+      child_state.last_iteration = 0;
+      child_state.current_depth = current_state.current_depth + 1;
+      child_state.input_node = node->k2subtree.children[child_pos];
+      push_k2node_lazy_report_band_state_t_stack(&lazy_handler->stack,
+                                                 child_state);
+      break;
+    }
+  }
+  lazy_handler->has_next = FALSE;
+  return SUCCESS_ECODE_K2T;
+}
+
+int k2node_report_band_has_next(
+    struct k2node_lazy_handler_report_band_t *lazy_handler, int *result) {
+  *result = lazy_handler->has_next;
+  return SUCCESS_ECODE_K2T;
+}
+
+declare_stack_of_type(k2node_lazy_naive_state)
+    declare_stack_of_type(k2node_lazy_report_band_state_t)

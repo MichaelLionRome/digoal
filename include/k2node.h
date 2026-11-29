@@ -95,5 +95,72 @@ int debug_validate_k2node(struct k2node *input_node, struct k2qstate *st,
                           TREE_DEPTH_T current_depth);
 int debug_validate_k2node_rec(struct k2node *input_node, struct k2qstate *st,
                               TREE_DEPTH_T current_depth);
+typedef struct {
+  struct k2node *input_node;
+  uint32_t last_iteration;
+  ulong current_depth;
+} k2node_lazy_naive_state;
+
+define_stack_of_type(k2node_lazy_naive_state)
+
+    struct k2node_lazy_handler_naive_scan_t {
+  struct k2qstate *st;
+  struct k2node_lazy_naive_state_stack states_stack;
+  pair2dl_t next_result;
+  int has_next;
+  struct lazy_handler_naive_scan_t sub_handler;
+  int at_leaf;
+  ulong base_col;
+  ulong base_row;
+};
+
+typedef struct {
+  struct k2node *input_node;
+  uint64_t current_coord;
+  uint32_t last_iteration;
+  ulong current_depth;
+} k2node_lazy_report_band_state_t;
+
+define_stack_of_type(k2node_lazy_report_band_state_t)
+
+    struct k2node_lazy_handler_report_band_t {
+  struct k2qstate *st;
+  struct k2node_lazy_report_band_state_t_stack stack;
+  struct lazy_handler_report_band_t sub_handler;
+  int which_report;
+  int at_leaf;
+  uint64_t next_result;
+  int has_next;
+  ulong base_col;
+  ulong base_row;
+};
+
+int k2node_naive_scan_points_lazy_init(
+    struct k2node *input_node, struct k2qstate *st,
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler);
+
+int k2node_naive_scan_points_lazy_clean(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler);
+
+int k2node_naive_scan_points_lazy_next(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler, pair2dl_t *result);
+
+int k2node_naive_scan_points_lazy_has_next(
+    struct k2node_lazy_handler_naive_scan_t *lazy_handler, int *result);
+
+int k2node_report_row_lazy_init(
+    struct k2node_lazy_handler_report_band_t *lazy_handler,
+    struct k2node *input_node, struct k2qstate *st, uint64_t coord);
+int k2node_report_column_lazy_init(
+    struct k2node_lazy_handler_report_band_t *lazy_handler,
+    struct k2node *input_node, struct k2qstate *st, uint64_t coord);
+
+int k2node_report_band_lazy_clean(
+    struct k2node_lazy_handler_report_band_t *lazy_handler);
+int k2node_report_band_next(
+    struct k2node_lazy_handler_report_band_t *lazy_handler, uint64_t *result);
+
+int k2node_report_band_has_next(
+    struct k2node_lazy_handler_report_band_t *lazy_handler, int *result);
 
 #endif

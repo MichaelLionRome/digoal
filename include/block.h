@@ -23,6 +23,7 @@ SOFTWARE.
 */
 #ifndef _BLOCK_H_
 #define _BLOCK_H_
+
 #include <stdint.h>
 
 #include "bitvector.h"
@@ -77,11 +78,33 @@ struct sip_join_input {
   struct sip_ipoint *_join_coords;
 };
 
+struct child_result {
+  struct block *resulting_block;
+  uint32_t resulting_node_idx;
+  TREE_DEPTH_T resulting_relative_depth;
+  TREE_DEPTH_T block_depth;
+  int is_leaf_result;
+  int exists;
+
+  /* Variables to handle frontier issues */
+  int check_frontier; /* True if descended into a frontier node and couldn't
+                       find the requested node there */
+
+  int went_frontier; /* True if descended into a frontier node */
+
+  struct block *previous_block;
+  uint32_t previous_preorder;
+  uint32_t previous_to_current_index;
+  TREE_DEPTH_T previous_depth;
+};
+
 typedef void (*point_reporter_fun_t)(ulong, ulong, void *);
+
 typedef void (*coord_reporter_fun_t)(ulong, void *);
 
 int has_point(struct block *input_block, ulong col, ulong row,
               struct queries_state *qs, int *result);
+
 int insert_point(struct block *input_block, ulong col, ulong row,
                  struct queries_state *qs, int *already_exists);
 
@@ -95,6 +118,7 @@ int scan_points_interactively(struct block *input_block,
 
 int report_column(struct block *input_block, ulong col,
                   struct queries_state *qs, struct vector_pair2dl_t *result);
+
 int report_row(struct block *input_block, ulong row, struct queries_state *qs,
                struct vector_pair2dl_t *result);
 
@@ -102,6 +126,7 @@ int report_column_interactively(struct block *input_block, ulong col,
                                 struct queries_state *qs,
                                 point_reporter_fun_t point_reporter,
                                 void *report_state);
+
 int report_row_interactively(struct block *input_block, ulong row,
                              struct queries_state *qs,
                              point_reporter_fun_t point_reporter,
@@ -111,7 +136,9 @@ int sip_join(struct sip_join_input input, coord_reporter_fun_t coord_reporter,
              void *report_state);
 
 struct block *create_block(void);
+
 int free_rec_block(struct block *input_block);
+
 int free_block(struct block *input_block);
 
 struct k2tree_measurement measure_tree_size(struct block *input_block);
@@ -121,5 +148,65 @@ int debug_validate_block_rec(struct block *input_block);
 
 void debug_print_block(struct block *b);
 void debug_print_block_rec(struct block *b);
+typedef struct {
+  struct block *input_block;
+  struct child_result cr;
+  TREE_DEPTH_T block_depth;
+  uint32_t last_iteration;
+} lazy_naive_state;
+
+define_stack_of_type(lazy_naive_state)
+
+    struct lazy_handler_naive_scan_t {
+  struct queries_state *qs;
+  struct lazy_naive_state_stack states_stack;
+  pair2dl_t next_result;
+  int has_next;
+};
+
+typedef struct {
+  struct child_result current_cr;
+  uint64_t current_coord;
+  uint32_t last_iteration;
+} lazy_report_band_state_t;
+
+define_stack_of_type(lazy_report_band_state_t)
+
+    struct lazy_handler_report_band_t {
+  struct queries_state *qs;
+  struct lazy_report_band_state_t_stack stack;
+  int which_report;
+  uint64_t next_result;
+  int has_next;
+};
+
+int naive_scan_points_lazy_init(struct block *input_block,
+                                struct queries_state *qs,
+                                struct lazy_handler_naive_scan_t *lazy_handler);
+
+int naive_scan_points_lazy_clean(
+    struct lazy_handler_naive_scan_t *lazy_handler);
+
+int naive_scan_points_lazy_next(struct lazy_handler_naive_scan_t *lazy_handler,
+                                pair2dl_t *result);
+
+int naive_scan_points_lazy_has_next(
+    struct lazy_handler_naive_scan_t *lazy_handler, int *result);
+
+int report_row_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
+                         struct block *input_block, struct queries_state *qs,
+                         uint64_t coord);
+int report_column_lazy_init(struct lazy_handler_report_band_t *lazy_handler,
+                            struct block *input_block, struct queries_state *qs,
+                            uint64_t coord);
+
+int report_band_lazy_clean(struct lazy_handler_report_band_t *lazy_handler);
+int report_band_next(struct lazy_handler_report_band_t *lazy_handler,
+                     uint64_t *result);
+
+int report_band_has_next(struct lazy_handler_report_band_t *lazy_handler,
+                         int *result);
+
+int clean_child_result(struct child_result *cresult);
 
 #endif /* _BLOCK_H_ */

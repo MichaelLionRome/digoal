@@ -46,6 +46,9 @@ SOFTWARE.
 #define K2TREE_ERR_NULL_BITVECTOR_CONTAINER 11
 #define INVALID_MC_VALUE 12
 
+// non error
+#define LAZY_STOP_ECODE_K2T 100
+
 #define CHECK_ERR(err)                                                         \
   do {                                                                         \
     if (err != SUCCESS_ECODE_K2T) {                                            \

@@ -68,6 +68,13 @@ public:
           to_string(err_check));
   }
 
+  struct block *get_root() {
+    return b;
+  }
+  struct queries_state *get_qs() {
+    return &qs;
+  }
+
   void insert(unsigned long col, unsigned long row) {
     int already_exists;
     int err_check = insert_point(b, col, row, &qs, &already_exists);
